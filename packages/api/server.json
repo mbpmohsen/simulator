@@ -1,0 +1,608 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Game Server API",
+    "description": "API for managing and monitoring the game server.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/admin/start_game": {
+      "get": {
+        "tags": [
+          "Game Control"
+        ],
+        "summary": "Start Game Endpoint",
+        "description": "Start the game.\n\nEnsure all configurations are complete before starting.",
+        "operationId": "start_game_endpoint_admin_start_game_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/configure_events": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Configure Events",
+        "description": "Configure events for a game. These are saved separately and persist until changed.",
+        "operationId": "configure_events_admin_configure_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/add_events": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Add Events",
+        "description": "Add new events to existing events configuration.",
+        "operationId": "add_events_admin_add_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/delete_event/{event_name}": {
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Delete Event",
+        "description": "Delete a specific event by name.",
+        "operationId": "delete_event_admin_delete_event__event_name__delete",
+        "parameters": [
+          {
+            "name": "event_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/clear_events": {
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Clear Events",
+        "description": "Clear all events (not game-specific, affects all future games)",
+        "operationId": "clear_events_admin_clear_events_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/get_current_events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Get Current Events",
+        "description": "Get events for the current active game",
+        "operationId": "get_current_events_admin_get_current_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/configure_all": {
+      "post": {
+        "summary": "Configure All",
+        "description": "Configure all settings in a single request.\nOrder:\n1) Sides\n2) Teams\n3) Turns\n4) Teams & Players\n5) Side Assignments\n6) Point Threshold\n7) Actions\n8) Team specific action probabilities with growth factors\n9) Credits allocation\n10) Black market items\n11) Load events",
+        "operationId": "configure_all_admin_configure_all_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureAllRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BlackMarketItemConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "item_type": {
+            "type": "string",
+            "title": "Item Type"
+          },
+          "effect_type": {
+            "type": "string",
+            "title": "Effect Type"
+          },
+          "target_action": {
+            "type": "string",
+            "title": "Target Action"
+          },
+          "target_action_type": {
+            "type": "string",
+            "title": "Target Action Type"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "duration": {
+            "type": "integer",
+            "title": "Duration"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "item_type",
+          "effect_type",
+          "target_action",
+          "target_action_type",
+          "value",
+          "duration",
+          "cost"
+        ],
+        "title": "BlackMarketItemConfig"
+      },
+      "ConfigureAllRequest": {
+        "properties": {
+          "side_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Side Names"
+          },
+          "team_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Team Names"
+          },
+          "num_turns": {
+            "type": "integer",
+            "title": "Num Turns"
+          },
+          "teams_and_players": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/PlayerConfig"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Teams And Players"
+          },
+          "side_assignments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Side Assignments"
+          },
+          "point_threshold": {
+            "type": "integer",
+            "title": "Point Threshold"
+          },
+          "actions": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Actions"
+          },
+          "team_growth_factors": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Team Growth Factors"
+          },
+          "team_tech_factors": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "type": "object"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Tech Factors"
+          },
+          "side_credits": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Side Credits"
+          },
+          "black_market_items": {
+            "items": {
+              "$ref": "#/components/schemas/BlackMarketItemConfig"
+            },
+            "type": "array",
+            "title": "Black Market Items"
+          },
+          "player_codes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Player Codes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "side_names",
+          "team_names",
+          "num_turns",
+          "teams_and_players",
+          "side_assignments",
+          "point_threshold",
+          "actions",
+          "team_growth_factors",
+          "side_credits",
+          "black_market_items"
+        ],
+        "title": "ConfigureAllRequest"
+      },
+      "ConfigureEventsRequest": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/GameEventConfig"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "ConfigureEventsRequest"
+      },
+      "DetailResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "DetailResponse"
+      },
+      "GameEventConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "effect_type": {
+            "type": "string",
+            "title": "Effect Type"
+          },
+          "target_action": {
+            "type": "string",
+            "title": "Target Action"
+          },
+          "target_action_type": {
+            "type": "string",
+            "title": "Target Action Type"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "start_turn": {
+            "type": "integer",
+            "title": "Start Turn"
+          },
+          "duration": {
+            "type": "integer",
+            "title": "Duration"
+          },
+          "modifier_type": {
+            "type": "string",
+            "title": "Modifier Type",
+            "default": "increase"
+          },
+          "affected_sides": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Sides"
+          },
+          "limit_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Type"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "effect_type",
+          "target_action",
+          "target_action_type",
+          "value",
+          "start_turn",
+          "duration"
+        ],
+        "title": "GameEventConfig"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PlayerConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_leader": {
+            "type": "boolean",
+            "title": "Is Leader",
+            "default": false
+          },
+          "vote_weight": {
+            "type": "number",
+            "title": "Vote Weight",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "PlayerConfig"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

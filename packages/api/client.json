@@ -1,0 +1,349 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Game Client API",
+    "description": "API for testing the game client functionality.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/client/wait_for_phase": {
+      "post": {
+        "tags": [
+          "Game State"
+        ],
+        "summary": "Wait For Phase",
+        "description": "Block until the active client's state reaches the requested phase or until timeout.\n\nAlways returns a 200 with a small status object so orchestrators (Postman) can branch:\n    { finished: bool, timeout: bool, phase: str, player_code: Optional[str] }\n\nSemantics:\n    - If disconnected (no ACTIVE_PLAYER_CODE or state), we assume game ended and return finished=true.\n    - If stop_on_finish is true and phase becomes 'finished', return finished=true immediately.\n    - If the current phase matches the requested phase, return finished=false, timeout=false.\n    - If timeout elapses, return timeout=true with the last observed phase.",
+        "operationId": "wait_for_phase_client_wait_for_phase_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitForPhaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/game_state": {
+      "get": {
+        "tags": [
+          "Game State"
+        ],
+        "summary": "Get Game State",
+        "operationId": "get_game_state_client_game_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/actions/{player_code}": {
+      "get": {
+        "tags": [
+          "Game State"
+        ],
+        "summary": "Get Available Actions",
+        "operationId": "get_available_actions_client_actions__player_code__get",
+        "parameters": [
+          {
+            "name": "player_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Player Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/targets/{player_code}": {
+      "get": {
+        "tags": [
+          "Game State"
+        ],
+        "summary": "Get Available Targets",
+        "description": "Get available targets for the player.",
+        "operationId": "get_available_targets_client_targets__player_code__get",
+        "parameters": [
+          {
+            "name": "player_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Player Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/connect/{player_code}": {
+      "post": {
+        "tags": [
+          "Connection"
+        ],
+        "summary": "Connect Client",
+        "description": "Connect client using player code from server",
+        "operationId": "connect_client_client_connect__player_code__post",
+        "parameters": [
+          {
+            "name": "player_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Player Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/vote_action": {
+      "post": {
+        "tags": [
+          "Client Actions"
+        ],
+        "summary": "Client Vote Action",
+        "description": "Vote action using existing connection.",
+        "operationId": "client_vote_action_client_vote_action_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClientActionRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "black_market_item_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Black Market Item Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "ClientActionRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WaitForPhaseRequest": {
+        "properties": {
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase",
+            "default": "voting"
+          },
+          "timeout_sec": {
+            "type": "integer",
+            "title": "Timeout Sec",
+            "default": 30
+          },
+          "poll_ms": {
+            "type": "integer",
+            "title": "Poll Ms",
+            "default": 200
+          },
+          "stop_on_finish": {
+            "type": "boolean",
+            "title": "Stop On Finish",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "WaitForPhaseRequest"
+      }
+    }
+  }
+}

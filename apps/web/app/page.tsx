@@ -2,6 +2,7 @@ import { Button } from "@workspace/ui/components/button";
 import { KbdDemo } from "@/components/KbdDemo";
 import { ModeToggle } from "@/components/ModeToggle";
 import PlayerCard from "@/components/PlayerCard";
+import {Greeting} from "@/components/greeting";
 
 export default function Page() {
 	return (
@@ -13,6 +14,7 @@ export default function Page() {
 				<ModeToggle />
 				<KbdDemo />
 				<PlayerCard />
+				<Greeting />
 			</div>
 		</div>
 	);

@@ -63,9 +63,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@tanstack/react-query':
+        specifier: ^4.36.1
+        version: 4.41.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@trpc/client':
+        specifier: ^10.45.0
+        version: 10.45.2(@trpc/server@10.45.2)
+      '@trpc/server':
+        specifier: ^10.45.0
+        version: 10.45.2
       '@types/howler':
         specifier: ^2.2.12
         version: 2.2.12
+      '@workspace/trpc':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -90,6 +102,9 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
+      superjson:
+        specifier: ^1.13.3
+        version: 1.13.3
     devDependencies:
       '@types/node':
         specifier: ^20.19.9
