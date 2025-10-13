@@ -1,19 +1,19 @@
-import {Kbd, KbdGroup} from "@workspace/ui/components/kbd";
+import { Kbd, KbdGroup } from "@workspace/ui/components/kbd";
 
 export function KbdDemo() {
-    return (
-        <div className="flex flex-col items-center gap-4">
-            <KbdGroup>
-                <Kbd>⌘</Kbd>
-                <Kbd>⇧</Kbd>
-                <Kbd>⌥</Kbd>
-                <Kbd>⌃</Kbd>
-            </KbdGroup>
-            <KbdGroup>
-                <Kbd>Ctrl</Kbd>
-                <span>+</span>
-                <Kbd>P</Kbd>
-            </KbdGroup>
-        </div>
-    )
+	return (
+		<div className="flex flex-col items-center gap-4">
+			<KbdGroup>
+				<Kbd>⌘</Kbd>
+				<Kbd>⇧</Kbd>
+				<Kbd>⌥</Kbd>
+				<Kbd>⌃</Kbd>
+			</KbdGroup>
+			<KbdGroup>
+				<Kbd>Ctrl</Kbd>
+				<span>+</span>
+				<Kbd>P</Kbd>
+			</KbdGroup>
+		</div>
+	);
 }
