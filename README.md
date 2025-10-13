@@ -1,4 +1,4 @@
-# shadcn/ui monorepo template
+# Simulator
 
 This template is for creating a monorepo with shadcn/ui.
 
