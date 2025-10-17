@@ -1,8 +1,9 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 import { Providers } from "@/components/providers";
 import {TRPCProvider} from "@/providers/trpc-provider";
+import "./style.css";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -14,18 +15,24 @@ const fontMono = Geist_Mono({
 	variable: "--font-mono",
 });
 
+const fontVazir = Vazirmatn({
+	subsets: ["arabic"],
+	variable: "--font-vazir",
+});
+
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang="fa" suppressHydrationWarning dir="rtl">
 			<body
-				className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
+				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
 			>
 			<TRPCProvider>
-				<Providers>{children}</Providers>
+				<Providers>
+					{children}</Providers>
 			</TRPCProvider>
 			</body>
 		</html>

@@ -15,7 +15,15 @@ function fmt(seconds = 0) {
 
 type Track = { title: string; src: string };
 
-export default function CompactPlayerCard() {
+interface CompactPlayerCardProps {
+	onPlaybackStateChange?: (isPlaying: boolean) => void;
+	autoPlay?: boolean;
+}
+
+export default function CompactPlayerCard({
+											  onPlaybackStateChange,
+											  autoPlay = true
+										  }: CompactPlayerCardProps) {
 	const tracks: Track[] = useMemo(
 		() => [
 			{
@@ -30,7 +38,7 @@ export default function CompactPlayerCard() {
 	const rafRef = useRef<number | null>(null);
 
 	const [currentIndex, setCurrentIndex] = useState(0);
-	const [isPlaying, setIsPlaying] = useState(false);
+	const [isPlaying, setIsPlaying] = useState(autoPlay);
 	const [position, setPosition] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [isLoaded, setIsLoaded] = useState(false);
@@ -56,10 +64,17 @@ export default function CompactPlayerCard() {
 			onplay: () => {
 				setIsPlaying(true);
 				setDuration(h.duration() || 0);
+				onPlaybackStateChange?.(true);
 				if (rafRef.current == null) tick();
 			},
-			onpause: () => setIsPlaying(false),
-			onstop: () => setIsPlaying(false),
+			onpause: () => {
+				setIsPlaying(false);
+				onPlaybackStateChange?.(false);
+			},
+			onstop: () => {
+				setIsPlaying(false);
+				onPlaybackStateChange?.(false);
+			},
 			onloaderror: (id, err) => {
 				console.error("Howl load error:", id, err);
 			},
@@ -72,7 +87,7 @@ export default function CompactPlayerCard() {
 		setPosition(0);
 		setIsLoaded(false);
 		return h;
-	}, []);
+	}, [onPlaybackStateChange]);
 
 	const tick = useCallback(() => {
 		const h = howlRef.current;
@@ -92,11 +107,14 @@ export default function CompactPlayerCard() {
 		h.once("load", () => {
 			setDuration(h.duration() || 0);
 			setIsLoaded(true);
-			try {
-				h.play();
-			} catch (err) {
-				console.warn("Autoplay prevented or play error:", err);
-				setIsPlaying(false);
+			if (autoPlay) {
+				try {
+					h.play();
+				} catch (err) {
+					console.warn("Autoplay prevented or play error:", err);
+					setIsPlaying(false);
+					onPlaybackStateChange?.(false);
+				}
 			}
 		});
 
@@ -105,15 +123,16 @@ export default function CompactPlayerCard() {
 				cancelAnimationFrame(rafRef.current);
 				rafRef.current = null;
 			}
-			if (howlRef.current) {
-				try {
-					howlRef.current.stop();
-					howlRef.current.unload();
-				} catch {}
-				howlRef.current = null;
-			}
+			// Don't stop the music when component unmounts - keep it playing
+			// if (howlRef.current) {
+			//   try {
+			//     howlRef.current.stop();
+			//     howlRef.current.unload();
+			//   } catch {}
+			//   howlRef.current = null;
+			// }
 		};
-	}, [currentIndex, createHowl, tracks]);
+	}, [currentIndex, createHowl, tracks, autoPlay, onPlaybackStateChange]);
 
 	const togglePlay = useCallback(() => {
 		const h = howlRef.current;
@@ -126,14 +145,8 @@ export default function CompactPlayerCard() {
 		}
 		if (isPlaying) {
 			h.pause();
-			setIsPlaying(false);
-			if (rafRef.current) {
-				cancelAnimationFrame(rafRef.current);
-				rafRef.current = null;
-			}
 		} else {
 			h.play();
-			setIsPlaying(true);
 			if (rafRef.current == null) tick();
 		}
 	}, [isPlaying, createHowl, currentIndex, tracks, tick]);
@@ -196,6 +209,7 @@ export default function CompactPlayerCard() {
 				</AnimatePresence>
 
 				<div className="relative z-10 flex items-center h-full px-3 gap-3">
+					{/* ... rest of your player card JSX remains the same ... */}
 					<motion.div
 						whileHover={{ scale: 1.05 }}
 						whileTap={{ scale: 0.95 }}
