@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardContent } from "@workspace/ui/components/card";
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+} from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/utils";
 import { Progress } from "@workspace/ui/components/progress";
 import { Shield, Bug, Database } from "lucide-react";
@@ -75,17 +80,23 @@ export default function AttackStatusPanel() {
 	// simulate XP progression
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setWeb(prev =>
-				prev.map(a => ({
+			setWeb((prev) =>
+				prev.map((a) => ({
 					...a,
-					current: Math.min(a.target, a.current + Math.floor(Math.random() * 2)),
-				}))
+					current: Math.min(
+						a.target,
+						a.current + Math.floor(Math.random() * 2),
+					),
+				})),
 			);
-			setNetwork(prev =>
-				prev.map(a => ({
+			setNetwork((prev) =>
+				prev.map((a) => ({
 					...a,
-					current: Math.min(a.target, a.current + Math.floor(Math.random() * 10)),
-				}))
+					current: Math.min(
+						a.target,
+						a.current + Math.floor(Math.random() * 10),
+					),
+				})),
 			);
 		}, 2000);
 		return () => clearInterval(interval);
@@ -129,7 +140,10 @@ export default function AttackStatusPanel() {
 									</p>
 									<Progress
 										value={progress}
-										className={cn("h-1 mt-1", progress >= 100 && "bg-green-500")}
+										className={cn(
+											"h-1 mt-1",
+											progress >= 100 && "bg-green-500",
+										)}
 									/>
 								</div>
 							</motion.div>

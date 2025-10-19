@@ -21,9 +21,9 @@ interface CompactPlayerCardProps {
 }
 
 export default function CompactPlayerCard({
-											  onPlaybackStateChange,
-											  autoPlay = true
-										  }: CompactPlayerCardProps) {
+	onPlaybackStateChange,
+	autoPlay = true,
+}: CompactPlayerCardProps) {
 	const tracks: Track[] = useMemo(
 		() => [
 			{
@@ -43,51 +43,54 @@ export default function CompactPlayerCard({
 	const [duration, setDuration] = useState(0);
 	const [isLoaded, setIsLoaded] = useState(false);
 
-	const createHowl = useCallback((trackSrc: string, loop = true) => {
-		if (howlRef.current) {
-			try {
-				howlRef.current.stop();
-				howlRef.current.unload();
-			} catch {}
-			howlRef.current = null;
-		}
+	const createHowl = useCallback(
+		(trackSrc: string, loop = true) => {
+			if (howlRef.current) {
+				try {
+					howlRef.current.stop();
+					howlRef.current.unload();
+				} catch {}
+				howlRef.current = null;
+			}
 
-		const h = new Howl({
-			src: [trackSrc],
-			html5: true,
-			loop,
-			volume: 0.8,
-			onload: () => {
-				setDuration(h.duration() || 0);
-				setIsLoaded(true);
-			},
-			onplay: () => {
-				setIsPlaying(true);
-				setDuration(h.duration() || 0);
-				onPlaybackStateChange?.(true);
-				if (rafRef.current == null) tick();
-			},
-			onpause: () => {
-				setIsPlaying(false);
-				onPlaybackStateChange?.(false);
-			},
-			onstop: () => {
-				setIsPlaying(false);
-				onPlaybackStateChange?.(false);
-			},
-			onloaderror: (id, err) => {
-				console.error("Howl load error:", id, err);
-			},
-			onplayerror: (id, err) => {
-				console.warn("Howl play error:", id, err);
-			},
-		});
+			const h = new Howl({
+				src: [trackSrc],
+				html5: true,
+				loop,
+				volume: 0.8,
+				onload: () => {
+					setDuration(h.duration() || 0);
+					setIsLoaded(true);
+				},
+				onplay: () => {
+					setIsPlaying(true);
+					setDuration(h.duration() || 0);
+					onPlaybackStateChange?.(true);
+					if (rafRef.current == null) tick();
+				},
+				onpause: () => {
+					setIsPlaying(false);
+					onPlaybackStateChange?.(false);
+				},
+				onstop: () => {
+					setIsPlaying(false);
+					onPlaybackStateChange?.(false);
+				},
+				onloaderror: (id, err) => {
+					console.error("Howl load error:", id, err);
+				},
+				onplayerror: (id, err) => {
+					console.warn("Howl play error:", id, err);
+				},
+			});
 
-		howlRef.current = h;
-		setPosition(0);
-		setIsLoaded(false);
-		return h;
-	}, [onPlaybackStateChange]);
+			howlRef.current = h;
+			setPosition(0);
+			setIsLoaded(false);
+			return h;
+		},
+		[onPlaybackStateChange],
+	);
 
 	const tick = useCallback(() => {
 		const h = howlRef.current;
@@ -102,7 +105,7 @@ export default function CompactPlayerCard({
 	}, []);
 
 	useEffect(() => {
-		const track = tracks[currentIndex];
+		const track = tracks[currentIndex]!;
 		const h = createHowl(track.src, true);
 		h.once("load", () => {
 			setDuration(h.duration() || 0);
@@ -137,7 +140,8 @@ export default function CompactPlayerCard({
 	const togglePlay = useCallback(() => {
 		const h = howlRef.current;
 		if (!h) {
-			const nt = createHowl(tracks[currentIndex].src, true);
+			const track = tracks[currentIndex]!;
+			const nt = createHowl(track.src, true);
 			try {
 				nt.play();
 			} catch {}
@@ -255,7 +259,7 @@ export default function CompactPlayerCard({
 							animate={{ x: 0, opacity: 1 }}
 							className="text-sm font-medium text-white truncate"
 						>
-							{tracks[currentIndex].title}
+							{tracks[currentIndex]!.title}
 						</motion.div>
 						<div className="text-xs text-slate-400 mt-0.5">
 							{fmt(position)} / {fmt(duration)}

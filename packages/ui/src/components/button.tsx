@@ -20,8 +20,7 @@ const buttonVariants = cva(
 					"hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
 				link: "text-primary underline-offset-4 hover:underline",
 				// New color variants
-				blue:
-					"bg-[#0088FF] text-white shadow-xs hover:bg-[#0088FF]/90 focus-visible:ring-[#0088FF]/20 dark:focus-visible:ring-[#0088FF]/40",
+				blue: "bg-[#0088FF] text-white shadow-xs hover:bg-[#0088FF]/90 focus-visible:ring-[#0088FF]/20 dark:focus-visible:ring-[#0088FF]/40",
 				green:
 					"bg-green-600 text-white shadow-xs hover:bg-green-600/90 focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
 			},

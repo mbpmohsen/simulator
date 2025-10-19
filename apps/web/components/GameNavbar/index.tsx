@@ -25,7 +25,6 @@ const GameNavbar: FC<GameNavbarProps> = ({
 				<div className="flex items-center gap-1 text-sm text-gray-300">
 					<span>8500</span>
 					<Badge
-						variant="outline"
 						className="bg-zinc-800 border-zinc-700 text-xs"
 					>
 						🪙

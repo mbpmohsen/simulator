@@ -33,7 +33,7 @@ export default function LoginPage() {
 		e.preventDefault();
 		try {
 			// const res = await connectMutation.mutateAsync({ player_code: playerCode });
-			console.log("connectClient response:", res);
+			console.log("connectClient response:");
 			// proceed on success (navigate, show UI, etc.)
 		} catch (err) {
 			console.error("connect failed", err);
