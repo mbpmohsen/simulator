@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
+		"start": "turbo start",
 		"lint": "turbo lint",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
 		"format-and-lint": "biome check .",
@@ -19,8 +20,8 @@
 		"turbo": "^2.5.5",
 		"typescript": "5.7.3"
 	},
-	"packageManager": "pnpm@10.4.1",
+	"packageManager": "pnpm@10.18.3",
 	"engines": {
-		"node": ">=20"
+		"node": ">=24"
 	}
 }
