@@ -2,8 +2,8 @@ import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 import { Providers } from "@/components/providers";
-import { TRPCProvider } from "@/providers/trpc-provider";
 import "./style.css";
+import {TRPCProvider} from "@/app/_trpc/Provider.tsx";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -23,7 +23,7 @@ const fontVazir = Vazirmatn({
 export default function RootLayout({
 	children,
 }: Readonly<{
-	children: React.ReactNode;
+	children: React.ReactNode; 
 }>) {
 	return (
 		<html lang="fa" suppressHydrationWarning dir="rtl">
