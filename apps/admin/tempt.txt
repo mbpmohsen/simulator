@@ -1,0 +1,806 @@
+
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@workspace/ui/components/accordion";
+import { Button } from "@workspace/ui/components/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@workspace/ui/components/select";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@workspace/ui/components/tabs";
+import { Textarea } from "@workspace/ui/components/textarea";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+
+// ---------------------------------------------------------------------
+// 1. Zod schemas – exactly the same as the ones used in the router
+// ---------------------------------------------------------------------
+const PlayerConfigSchema = z.object({
+	name: z.string().min(1, "نام بازیکن الزامی است"),
+	is_leader: z.boolean().optional(),
+	vote_weight: z.number().min(0).optional(),
+});
+
+const ActionConfigSchema = z.object({
+	probability: z.number().min(0).max(100),
+	counter_actions: z.string(),
+	growth: z.number().optional(),
+	tech: z.number().optional(),
+	cost: z.number().min(0),
+});
+
+const BlackMarketItemSchema = z.object({
+	name: z.string(),
+	item_type: z.enum(["probability", "growth", "cost", "tech"]),
+	effect_type: z.enum(["increase", "decrease", "multiply"]),
+	target_action: z.string(),
+	target_action_type: z.enum(["attack", "defense", "both"]).optional(),
+	value: z.number(),
+	duration: z.number().int().positive(),
+	cost: z.number().min(0),
+});
+
+const ConfigureAllSchema = z.object({
+	side_names: z.array(z.string()).min(1, "حداقل یک طرف لازم است"),
+	team_names: z.array(z.string()).min(1, "حداقل یک تیم لازم است"),
+	num_turns: z.number().int().positive("تعداد دور باید مثبت باشد"),
+	// teams_and_players: z.record(z.array(PlayerConfigSchema)),
+	// side_assignments: z.record(z.string()),
+	point_threshold: z.number().int().positive("آستانه امتیاز باید مثبت باشد"),
+	// actions: z.object({
+	//     attack: z.record(ActionConfigSchema),
+	//     defense: z.record(ActionConfigSchema),
+	// }),
+	// team_growth_factors: z.record(
+	//     z.object({
+	//         attack: z.record(z.number()),
+	//         defense: z.record(z.number()),
+	//     })
+	// ).optional(),
+	// team_tech_factors: z.record(
+	//     z.object({
+	//         attack: z.record(z.number()),
+	//         defense: z.record(z.number()),
+	//     })
+	// ).optional(),
+	// side_credits: z.record(z.number().min(0)),
+	black_market_items: z.array(BlackMarketItemSchema).optional(),
+});
+
+const GameEventSchema = z.object({
+	name: z.string(),
+	effect_type: z.enum(["probability", "growth", "cost", "limit", "tech"]),
+	target_action: z.string().or(z.literal("all")),
+	target_action_type: z.enum(["attack", "defense", "both"]),
+	value: z.number(),
+	start_turn: z.number().int().positive(),
+	duration: z.number().int().positive(),
+	modifier_type: z.enum(["increase", "decrease", "multiply"]),
+	affected_sides: z.array(z.string()).optional(),
+	limit_type: z.string().optional(),
+	limit_value: z.number().optional(),
+});
+
+type ConfigureAllForm = z.infer<typeof ConfigureAllSchema>;
+type GameEventForm = z.infer<typeof GameEventSchema>;
+
+// ---------------------------------------------------------------------
+// 2. Helper to call the tRPC-style admin endpoints (plain fetch)
+// ---------------------------------------------------------------------
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+	const res = await fetch(path, {
+		...init,
+		headers: { "Content-Type": "application/json", ...init?.headers },
+	});
+	if (!res.ok) {
+		const err = await res.json();
+		throw new Error(err.error ?? `HTTP ${res.status}`);
+	}
+	return res.json();
+}
+
+// ---------------------------------------------------------------------
+// 3. Main page component
+// ---------------------------------------------------------------------
+export default function GameConfigPage() {
+	const [currentEvents, setCurrentEvents] = useState<GameEventForm[]>([]);
+	const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// -----------------------------------------------------------------
+	//   Load current events on mount
+	// -----------------------------------------------------------------
+	useEffect(() => {
+		setIsLoadingEvents(true);
+		api<{ events: GameEventForm[] }>("/api/trpc/gameServer.getCurrentEvents")
+			.then((d) => setCurrentEvents(d.events ?? []))
+			// .catch(() => toast({ title: 'خطا', description: 'بارگذاری رویدادها ناموفق بود' }))
+			.finally(() => setIsLoadingEvents(false));
+	}, []);
+
+	// -----------------------------------------------------------------
+	//   Configure-All form
+	// -----------------------------------------------------------------
+	const {
+		register,
+		control,
+		handleSubmit: handleAllSubmit,
+		formState: { errors: allErrors },
+		reset: resetAll,
+	} = useForm<ConfigureAllForm>({
+		resolver: zodResolver(ConfigureAllSchema),
+		defaultValues: {
+			side_names: ["قرمز", "آبی"],
+			team_names: ["تیم ۱", "تیم ۲"],
+			num_turns: 10,
+			point_threshold: 5,
+			// side_credits: { قرمز: 100, آبی: 100 },
+			actions: {
+				attack: {
+					DDOS: { probability: 90, counter_actions: "DDOS_DEFENSE", cost: 10 },
+					SQL_INJECTION: {
+						probability: 40,
+						counter_actions: "SQL_INJECTION_DEFENSE",
+						cost: 15,
+					},
+				},
+				defense: {
+					DDOS_DEFENSE: { probability: 90, counter_actions: "DDOS", cost: 8 },
+					SQL_INJECTION_DEFENSE: {
+						probability: 40,
+						counter_actions: "SQL_INJECTION",
+						cost: 12,
+					},
+				},
+			},
+		},
+	});
+
+	const onConfigureAll = async (data: ConfigureAllForm) => {
+		// here
+		axios("http://185.252.86.33:8000/admin/configure_all", {
+			method: "POST",
+			data: {
+				side_names: ["Red", "Blue"],
+				team_names: ["Team1", "Team2"],
+				num_turns: 10,
+				teams_and_players: {
+					Team1: [{ name: "Player1", is_leader: true, vote_weight: 2.0 }],
+					Team2: [{ name: "Player3", is_leader: true, vote_weight: 2.0 }],
+				},
+				side_assignments: { Team1: "Red", Team2: "Blue" },
+				point_threshold: 7,
+				actions: {
+					attack: {
+						DDOS: {
+							probability: 90,
+							counter_actions: "DDOS_DEFENSE",
+							cost: 10.0,
+						},
+						SQL_INJECTION: {
+							probability: 40,
+							counter_actions: "SQL_INJECTION_DEFENSE",
+							cost: 15.0,
+						},
+					},
+					defense: {
+						DDOS_DEFENSE: {
+							probability: 90,
+							counter_actions: "DDOS",
+							cost: 8.0,
+						},
+						SQL_INJECTION_DEFENSE: {
+							probability: 40,
+							counter_actions: "SQL_INJECTION",
+							cost: 12.0,
+						},
+					},
+				},
+				team_growth_factors: {
+					Team1: {
+						attack: { DDOS: 2.0, SQL_INJECTION: 1.0 },
+						defense: { DDOS_DEFENSE: 1.5, SQL_INJECTION_DEFENSE: 1.0 },
+					},
+					Team2: {
+						attack: { DDOS: 2.0, SQL_INJECTION: 1.0 },
+						defense: { DDOS_DEFENSE: 1.5, SQL_INJECTION_DEFENSE: 1.0 },
+					},
+				},
+				team_tech_factors: {
+					Team1: {
+						attack: { DDOS: 1.2, SQL_INJECTION: 1.0 },
+						defense: { DDOS_DEFENSE: 1.1, SQL_INJECTION_DEFENSE: 1.0 },
+					},
+					Team2: {
+						attack: { DDOS: 1.2, SQL_INJECTION: 1.0 },
+						defense: { DDOS_DEFENSE: 1.1, SQL_INJECTION_DEFENSE: 1.0 },
+					},
+				},
+				side_credits: { Red: 200.0, Blue: 200.0 },
+				black_market_items: [
+					{
+						name: "Attack Booster",
+						item_type: "probability",
+						effect_type: "increase",
+						target_action: "DDOS",
+						target_action_type: "attack",
+						value: 20.0,
+						duration: 3,
+						cost: 25.0,
+					},
+					{
+						name: "Growth Enhancer",
+						item_type: "growth",
+						effect_type: "multiply",
+						target_action: "SQL_INJECTION",
+						target_action_type: "attack",
+						value: 2.0,
+						duration: 2,
+						cost: 30.0,
+					},
+					{
+						name: "Cost Reducer",
+						item_type: "cost",
+						effect_type: "multiply",
+						target_action: "DDOS_DEFENSE",
+						target_action_type: "defense",
+						value: 0.5,
+						duration: 4,
+						cost: 20.0,
+					},
+					{
+						name: "Tech Uplink",
+						item_type: "tech",
+						effect_type: "multiply",
+						target_action: "DDOS",
+						target_action_type: "attack",
+						value: 1.5,
+						duration: 3,
+						cost: 28.0,
+					},
+				],
+			},
+		});
+		// fetch("http://185.252.86.33:8000/admin/configure_all", {
+		// 	method: "post",
+		// 	body: JSON.stringify(),
+		// });
+		// setIsSubmitting(true);
+		// try {
+		//     await api('/api/trpc/gameServer.configureAll', {
+		//         method: 'POST',
+		//         body: JSON.stringify(data),
+		//     });
+		//     // toast({ title: 'موفق', description: 'تنظیمات کلی با موفقیت اعمال شد' });
+		// } catch (e: any) {
+		//     // toast({ title: 'خطا', description: e.message });
+		// } finally {
+		//     setIsSubmitting(false);
+		// }
+	};
+
+	// -----------------------------------------------------------------
+	//   Events form (add / replace)
+	// -----------------------------------------------------------------
+	const {
+		register: regEvent,
+		handleSubmit: handleEventSubmit,
+		reset: resetEvent,
+		formState: { errors: eventErrors },
+	} = useForm<{ events: GameEventForm[] }>({
+		resolver: zodResolver(z.object({ events: z.array(GameEventSchema) })),
+		defaultValues: {
+			events: [
+				{
+					name: "",
+					effect_type: "probability" as const,
+					target_action: "",
+					target_action_type: "attack" as const,
+					value: 0,
+					start_turn: 1,
+					duration: 1,
+					modifier_type: "increase" as const,
+				},
+			],
+		},
+	});
+
+	const onReplaceEvents = async (data: { events: GameEventForm[] }) => {
+		setIsSubmitting(true);
+		try {
+			await api("/api/trpc/gameServer.configureEvents", {
+				method: "POST",
+				body: JSON.stringify(data),
+			});
+			setCurrentEvents(data.events);
+			// toast({ title: 'موفق', description: 'رویدادها جایگزین شدند' });
+			resetEvent();
+		} catch (e: any) {
+			// toast({ title: 'خطا', description: e.message });
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const onAddEvents = async (data: { events: GameEventForm[] }) => {
+		setIsSubmitting(true);
+		try {
+			await api("/api/trpc/gameServer.addEvents", {
+				method: "POST",
+				body: JSON.stringify(data),
+			});
+			setCurrentEvents((prev) => [...prev, ...data.events]);
+			// toast({ title: 'موفق', description: 'رویدادها اضافه شدند' });
+			resetEvent();
+		} catch (e: any) {
+			// toast({ title: 'خطا', description: e.message });
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	// -----------------------------------------------------------------
+	//   Delete / clear events
+	// -----------------------------------------------------------------
+	const deleteEvent = async (name: string) => {
+		try {
+			await api(
+				`/api/trpc/gameServer.deleteEvent?input=${encodeURIComponent(JSON.stringify({ event_name: name }))}`,
+				{
+					method: "DELETE",
+				},
+			);
+			setCurrentEvents((prev) => prev.filter((e) => e.name !== name));
+			// toast({ title: 'حذف شد', description: `رویداد ${name} حذف شد` });
+		} catch (e: any) {
+			// toast({ title: 'خطا', description: e.message });
+		}
+	};
+
+	const clearAllEvents = async () => {
+		try {
+			await api("/api/trpc/gameServer.clearEvents", { method: "DELETE" });
+			setCurrentEvents([]);
+			// toast({ title: 'پاک شد', description: 'همه رویدادها پاک شدند' });
+		} catch (e: any) {
+			// toast({ title: 'خطا', description: e.message });
+		}
+	};
+
+	// -----------------------------------------------------------------
+	//   Start game
+	// -----------------------------------------------------------------
+	const startGame = async () => {
+		setIsSubmitting(true);
+		try {
+			await api("/api/trpc/gameServer.startGame");
+			// toast({ title: 'شروع شد', description: 'بازی با موفقیت شروع شد' });
+		} catch (e: any) {
+			// toast({ title: 'خطا', description: e.message });
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	// -----------------------------------------------------------------
+	//   Render
+	// -----------------------------------------------------------------
+	return (
+		<div dir="rtl" className="min-h-screen bg-background p-6">
+			<div className="max-w-5xl mx-auto space-y-8">
+				{/* Header */}
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-2xl">پیکربندی سرور بازی</CardTitle>
+						<CardDescription>
+							تمام تنظیمات را اینجا انجام دهید و سپس بازی را شروع کنید.
+						</CardDescription>
+					</CardHeader>
+				</Card>
+
+				<Tabs defaultValue="all" className="w-full">
+					<TabsList className="grid w-full grid-cols-3">
+						<TabsTrigger value="all">تنظیمات کلی</TabsTrigger>
+						<TabsTrigger value="events">رویدادها</TabsTrigger>
+						<TabsTrigger value="start">شروع بازی</TabsTrigger>
+					</TabsList>
+
+					{/* ======================  تنظیمات کلی  ====================== */}
+					<TabsContent value="all">
+						<Card>
+							<CardHeader>
+								<CardTitle>پیکربندی کامل (configureAll)</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<form
+									onSubmit={handleAllSubmit(onConfigureAll)}
+									className="space-y-6"
+								>
+									{/* side_names */}
+									<div>
+										<Label>نام طرف‌ها (مثال: قرمز، آبی)</Label>
+										<Controller
+											control={control}
+											name="side_names"
+											render={({ field }) => (
+												<Textarea
+													placeholder='["قرمز","آبی"]'
+													value={JSON.stringify(field.value)}
+													onChange={(e) =>
+														field.onChange(JSON.parse(e.target.value))
+													}
+												/>
+											)}
+										/>
+										{allErrors.side_names && (
+											<p className="text-destructive">
+												{allErrors.side_names.message}
+											</p>
+										)}
+									</div>
+
+									{/* team_names */}
+									<div>
+										<Label>نام تیم‌ها</Label>
+										<Controller
+											control={control}
+											name="team_names"
+											render={({ field }) => (
+												<Textarea
+													placeholder='["تیم ۱","تیم ۲"]'
+													value={JSON.stringify(field.value)}
+													onChange={(e) =>
+														field.onChange(JSON.parse(e.target.value))
+													}
+												/>
+											)}
+										/>
+									</div>
+
+									{/* num_turns & point_threshold */}
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<Label>تعداد دورها</Label>
+											<Input
+												type="number"
+												{...register("num_turns", { valueAsNumber: true })}
+											/>
+										</div>
+										<div>
+											<Label>آستانه امتیاز</Label>
+											<Input
+												type="number"
+												{...register("point_threshold", {
+													valueAsNumber: true,
+												})}
+											/>
+										</div>
+									</div>
+
+									{/* side_credits */}
+									<div>
+										<Label>اعتبار اولیه طرف‌ها (JSON)</Label>
+										<Controller
+											control={control}
+											name="side_credits"
+											render={({ field }) => (
+												<Textarea
+													placeholder='{"قرمز":100,"آبی":100}'
+													value={JSON.stringify(field.value)}
+													onChange={(e) =>
+														field.onChange(JSON.parse(e.target.value))
+													}
+												/>
+											)}
+										/>
+									</div>
+
+									{/* actions – attack */}
+									<div>
+										<Label>اقدام‌های حمله (JSON)</Label>
+										<Controller
+											control={control}
+											name="actions.attack"
+											render={({ field }) => (
+												<Textarea
+													rows={6}
+													placeholder='{"DDOS":{"probability":90,"counter_actions":"DDOS_DEFENSE","cost":10}}'
+													value={JSON.stringify(field.value, null, 2)}
+													onChange={(e) =>
+														field.onChange(JSON.parse(e.target.value))
+													}
+												/>
+											)}
+										/>
+									</div>
+
+									{/* actions – defense */}
+									<div>
+										<Label>اقدام‌های دفاع (JSON)</Label>
+										<Controller
+											control={control}
+											name="actions.defense"
+											render={({ field }) => (
+												<Textarea
+													rows={6}
+													placeholder='{"DDOS_DEFENSE":{"probability":90,"counter_actions":"DDOS","cost":8}}'
+													value={JSON.stringify(field.value, null, 2)}
+													onChange={(e) =>
+														field.onChange(JSON.parse(e.target.value))
+													}
+												/>
+											)}
+										/>
+									</div>
+
+									<Button
+										type="submit"
+										disabled={isSubmitting}
+										className="w-full"
+									>
+										{isSubmitting ? "در حال ارسال..." : "اعمال تنظیمات کلی"}
+									</Button>
+								</form>
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					{/* ======================  رویدادها  ====================== */}
+					<TabsContent value="events">
+						<div className="space-y-6">
+							{/* Current events list */}
+							<Card>
+								<CardHeader>
+									<CardTitle>رویدادهای فعلی</CardTitle>
+								</CardHeader>
+								<CardContent>
+									{isLoadingEvents ? (
+										<div className="space-y-2">
+											{Array.from({ length: 3 }).map((_, i) => (
+												<Skeleton key={i} className="h-10 w-full" />
+											))}
+										</div>
+									) : currentEvents.length === 0 ? (
+										<p className="text-muted-foreground">
+											هیچ رویدادی تعریف نشده است.
+										</p>
+									) : (
+										<ScrollArea className="h-64">
+											<Accordion type="single" collapsible>
+												{currentEvents.map((ev, idx) => (
+													<AccordionItem key={idx} value={`ev-${idx}`}>
+														<AccordionTrigger>{ev.name}</AccordionTrigger>
+														<AccordionContent>
+															<pre className="text-xs">
+																{JSON.stringify(ev, null, 2)}
+															</pre>
+															<Button
+																variant="destructive"
+																size="sm"
+																className="mt-2"
+																onClick={() => deleteEvent(ev.name)}
+															>
+																حذف
+															</Button>
+														</AccordionContent>
+													</AccordionItem>
+												))}
+											</Accordion>
+										</ScrollArea>
+									)}
+									<div className="mt-4 flex justify-end">
+										<Button
+											variant="outline"
+											onClick={clearAllEvents}
+											disabled={currentEvents.length === 0}
+										>
+											پاک کردن همه
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+
+							{/* Add / Replace form */}
+							<Card>
+								<CardHeader>
+									<CardTitle>افزودن یا جایگزینی رویدادها</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<form className="space-y-4">
+										{/* One event – for simplicity we allow only one at a time */}
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<Label>نام رویداد</Label>
+												<Input {...regEvent("events.0.name")} />
+											</div>
+											<div>
+												<Label>نوع اثر</Label>
+												<Controller
+													control={control}
+													name="events.0.effect_type"
+													render={({ field }) => (
+														<Select
+															onValueChange={field.onChange}
+															value={field.value}
+														>
+															<SelectTrigger>
+																<SelectValue />
+															</SelectTrigger>
+															<SelectContent>
+																<SelectItem value="probability">
+																	احتمال
+																</SelectItem>
+																<SelectItem value="growth">رشد</SelectItem>
+																<SelectItem value="cost">هزینه</SelectItem>
+																<SelectItem value="limit">محدودیت</SelectItem>
+																<SelectItem value="tech">فناوری</SelectItem>
+															</SelectContent>
+														</Select>
+													)}
+												/>
+											</div>
+										</div>
+
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<Label>هدف (action یا all)</Label>
+												<Input {...regEvent("events.0.target_action")} />
+											</div>
+											<div>
+												<Label>نوع هدف</Label>
+												<Controller
+													control={control}
+													name="events.0.target_action_type"
+													render={({ field }) => (
+														<Select
+															onValueChange={field.onChange}
+															value={field.value}
+														>
+															<SelectTrigger>
+																<SelectValue />
+															</SelectTrigger>
+															<SelectContent>
+																<SelectItem value="attack">حمله</SelectItem>
+																<SelectItem value="defense">دفاع</SelectItem>
+																<SelectItem value="both">هر دو</SelectItem>
+															</SelectContent>
+														</Select>
+													)}
+												/>
+											</div>
+										</div>
+
+										<div className="grid grid-cols-3 gap-4">
+											<div>
+												<Label>مقدار</Label>
+												<Input
+													type="number"
+													step="any"
+													{...regEvent("events.0.value", {
+														valueAsNumber: true,
+													})}
+												/>
+											</div>
+											<div>
+												<Label>شروع دور</Label>
+												<Input
+													type="number"
+													{...regEvent("events.0.start_turn", {
+														valueAsNumber: true,
+													})}
+												/>
+											</div>
+											<div>
+												<Label>مدت (دور)</Label>
+												<Input
+													type="number"
+													{...regEvent("events.0.duration", {
+														valueAsNumber: true,
+													})}
+												/>
+											</div>
+										</div>
+
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<Label>نوع تغییر</Label>
+												<Controller
+													control={control}
+													name="events.0.modifier_type"
+													render={({ field }) => (
+														<Select
+															onValueChange={field.onChange}
+															value={field.value}
+														>
+															<SelectTrigger>
+																<SelectValue />
+															</SelectTrigger>
+															<SelectContent>
+																<SelectItem value="increase">افزایش</SelectItem>
+																<SelectItem value="decrease">کاهش</SelectItem>
+																<SelectItem value="multiply">ضرب</SelectItem>
+															</SelectContent>
+														</Select>
+													)}
+												/>
+											</div>
+											<div>
+												<Label>طرف‌های تحت تأثیر (اختیاری، JSON array)</Label>
+												<Input
+													placeholder='["قرمز"]'
+													{...regEvent("events.0.affected_sides")}
+												/>
+											</div>
+										</div>
+
+										<div className="flex gap-2 justify-end">
+											<Button
+												type="button"
+												variant="secondary"
+												onClick={handleEventSubmit(onReplaceEvents)}
+												disabled={isSubmitting}
+											>
+												جایگزینی رویدادها
+											</Button>
+											<Button
+												type="button"
+												onClick={handleEventSubmit(onAddEvents)}
+												disabled={isSubmitting}
+											>
+												افزودن رویداد
+											</Button>
+										</div>
+									</form>
+								</CardContent>
+							</Card>
+						</div>
+					</TabsContent>
+
+					{/* ======================  شروع بازی  ====================== */}
+					<TabsContent value="start">
+						<Card>
+							<CardHeader>
+								<CardTitle>شروع بازی</CardTitle>
+								<CardDescription>
+									بعد از اطمینان از تنظیمات کلی و رویدادها، بازی را شروع کنید.
+								</CardDescription>
+							</CardHeader>
+							<CardContent className="flex justify-center">
+								<Button size="lg" onClick={startGame} disabled={isSubmitting}>
+									{isSubmitting ? "در حال شروع..." : "شروع بازی"}
+								</Button>
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
+			</div>
+		</div>
+	);
+}
