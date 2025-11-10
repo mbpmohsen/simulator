@@ -201,7 +201,7 @@ export default function AdminSummaryDialog({
 
       // final local sanity: ensure required top-level fields exist
       // (optionally add additional validation here)
-      const res = await fetch("http://185.252.86.33:8000/admin/configure_all", {
+      const res = await fetch("https://185.252.86.33:8000/admin/configure_all", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prepared),

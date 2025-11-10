@@ -24,7 +24,7 @@ export default function Page() {
 
     async function startGame(): Promise<StartGameResponse> {
         try {
-            const response = await fetch('http://185.252.86.33:8000/admin/start_game', {
+            const response = await fetch('https://185.252.86.33:8000/admin/start_game', {
                 method: 'GET',
                 headers: {
                     'accept': 'application/json',
