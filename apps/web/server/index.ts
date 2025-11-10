@@ -5,5 +5,3 @@ export const appRouter = createTRPCRouter({
         return [1,2,3,4,5];
     })
 })
-
-export type AppRouter = ReturnType<typeof appRouter>;

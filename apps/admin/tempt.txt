@@ -185,7 +185,7 @@ export default function GameConfigPage() {
 
 	const onConfigureAll = async (data: ConfigureAllForm) => {
 		// here
-		axios("http://185.252.86.33:8000/admin/configure_all", {
+		axios("https://185.252.86.33:8000/admin/configure_all", {
 			method: "POST",
 			data: {
 				side_names: ["Red", "Blue"],
@@ -288,7 +288,7 @@ export default function GameConfigPage() {
 				],
 			},
 		});
-		// fetch("http://185.252.86.33:8000/admin/configure_all", {
+		// fetch("https://185.252.86.33:8000/admin/configure_all", {
 		// 	method: "post",
 		// 	body: JSON.stringify(),
 		// });
