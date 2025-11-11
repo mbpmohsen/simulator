@@ -1,6 +1,10 @@
 {
 	"extends": "@workspace/typescript-config/nextjs.json",
 	"compilerOptions": {
+		"types": ["node", "react"],
+		"lib": ["dom", "esnext"],
+		"target": "esnext",
+		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./*"],

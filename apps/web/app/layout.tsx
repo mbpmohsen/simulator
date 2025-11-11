@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 import "@workspace/ui/globals.css";
 import { Providers } from "@/components/providers";
 import "./style.css";
+import {TRPCProvider} from "@/app/providers.tsx";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -29,7 +30,7 @@ export default function RootLayout({
 			<body
 				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
 			>
-			<Providers>{children}</Providers>
+			<TRPCProvider><Providers>{children}</Providers></TRPCProvider>
 			</body>
 		</html>
 	);
