@@ -2,7 +2,7 @@ import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 
 import "@workspace/ui/styles/globals.css";
 import { Providers } from "@/components/providers.tsx";
-import "./style.css";
+import MatrixBackground from "@/components/MatrixBackground.tsx";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -29,6 +29,14 @@ export default function RootLayout({
 			<body
 				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
 			>
+			<MatrixBackground
+				hue={120}
+				fontSize={18}
+				speed={{ min: 1, max: 6 }}
+				trailAlpha={0.08}
+				columnStepFactor={1}
+				direction="down"
+			/>
 			<Providers>{children}</Providers>
 			</body>
 		</html>

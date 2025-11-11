@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@workspace/ui/components/button";
+import { Button } from "@workspace/ui/components/button.tsx";
 import {
 	Card,
 	CardContent,
@@ -8,12 +8,13 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
+} from "@workspace/ui/components/card.tsx";
+import { Input } from "@workspace/ui/components/input.tsx";
+import { Label } from "@workspace/ui/components/label.tsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { Howl } from "howler";
-import { useEffect, useState, useRef } from "react";
+import { Gamepad2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function LoginPage() {
 	const [step, setStep] = useState<"intro" | "playing" | "login">("intro");
@@ -64,10 +65,11 @@ export default function LoginPage() {
 					<h1 className="text-6xl font-extrabold mb-8">بازی جنگ</h1>
 					<Button
 						variant="green"
+						size="lg"
 						onClick={handleStart}
-						className="text-lg px-8 py-4"
+						className="text-lg px-12 py-4"
 					>
-						شروع بازی 🎮
+						شروع بازی <Gamepad2 />
 					</Button>
 				</motion.div>
 			)}
@@ -86,7 +88,7 @@ export default function LoginPage() {
 						className="relative w-32 h-32 flex items-center justify-center"
 						initial={{ scale: 0.8, opacity: 0 }}
 						animate={{ scale: 1, opacity: 1 }}
-						transition={{ duration: 0.6, ease: 'easeOut' }}
+						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
 						{/* Outer ring */}
 						<motion.div
@@ -110,9 +112,6 @@ export default function LoginPage() {
 					</motion.div>
 				</motion.div>
 			)}
-
-
-
 
 			{/* === Section 3: Login === */}
 			{step === "login" && (
