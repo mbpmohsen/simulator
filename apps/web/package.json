@@ -19,6 +19,7 @@
 		"@types/howler": "^2.2.12",
 		"@workspace/trpc": "workspace:*",
 		"@workspace/ui": "workspace:*",
+		"classnames": "^2.5.1",
 		"client-only": "^0.0.1",
 		"framer-motion": "^12.23.24",
 		"howler": "^2.2.4",

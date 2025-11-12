@@ -12,6 +12,9 @@ import VulnerabilitiesPage from "@/components/VulnerabilitiesPage";
 import HistoryOfGamePage from "@/components/HistoryOfGamePage";
 import PlayersList from "@/components/PlayersList";
 import WaitingPopup from "@/components/WaitingPopup";
+import AnimatedBattleBackground from "@/components/MainBackground";
+import {Crosshair, Flame, Shield, Zap} from "lucide-react";
+import PlayerAttackCard from "@/components/Attack";
 
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
@@ -54,7 +57,41 @@ export default function Page() {
 					</>
 				);
 			case GameTabs.ATTACK:
-				return <div>محتوای بخش حمله</div>;
+				return <PlayerAttackCard
+					playerName="Mohsen"
+					rank="Elite IV"
+					attacks={[
+						{
+							name: "SQL Injection",
+							damage: 85,
+							xp: 12500,
+							cooldown: 8,
+							icon: <Flame className="w-4 h-4 text-green-400" />,
+						},
+						{
+							name: "Cross-Site Scripting",
+							damage: 60,
+							xp: 9200,
+							cooldown: 10,
+							icon: <Zap className="w-4 h-4 text-emerald-400" />,
+						},
+						{
+							name: "Phishing Attack",
+							damage: 40,
+							xp: 6400,
+							cooldown: 6,
+							icon: <Crosshair className="w-4 h-4 text-lime-400" />,
+						},
+						{
+							name: "Firewall Breach",
+							damage: 70,
+							xp: 10300,
+							cooldown: 12,
+							icon: <Shield className="w-4 h-4 text-green-500" />,
+						},
+					]}
+				/>
+					;
 			case GameTabs.PLAYERS:
 				return <PlayersList />;
 			case GameTabs.BLACK_MARKET:
@@ -70,6 +107,7 @@ export default function Page() {
 
 	return (
 		<div className="w-screen h-screen bg-black text-white relative overflow-hidden">
+			<AnimatedBattleBackground />
 			<div className="absolute top-0 left-0 right-0 h-16 z-10">
 				<GameNavbar activeTab={activeTab} onTabChange={handleChangeTab} />
 			</div>
