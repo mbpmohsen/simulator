@@ -35,7 +35,7 @@ export default function RootLayout({
 			<body
 				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
 			>
-				<AnimatedBattleBackground />
+				{/*<AnimatedBattleBackground />*/}
 				<Providers>{children}</Providers>
 			</body>
 		</html>

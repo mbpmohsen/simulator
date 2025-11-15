@@ -13,8 +13,7 @@ import HistoryOfGamePage from "@/components/HistoryOfGamePage";
 import PlayersList from "@/components/PlayersList";
 import WaitingPopup from "@/components/WaitingPopup";
 import AnimatedBattleBackground from "@/components/MainBackground";
-import {Crosshair, Flame, Shield, Zap} from "lucide-react";
-import PlayerAttackCard from "@/components/Attack";
+import PlayerAttackCard from "@/components/PlayerAttackCard";
 
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
@@ -57,40 +56,7 @@ export default function Page() {
 					</>
 				);
 			case GameTabs.ATTACK:
-				return <PlayerAttackCard
-					playerName="Mohsen"
-					rank="Elite IV"
-					attacks={[
-						{
-							name: "SQL Injection",
-							damage: 85,
-							xp: 12500,
-							cooldown: 8,
-							icon: <Flame className="w-4 h-4 text-green-400" />,
-						},
-						{
-							name: "Cross-Site Scripting",
-							damage: 60,
-							xp: 9200,
-							cooldown: 10,
-							icon: <Zap className="w-4 h-4 text-emerald-400" />,
-						},
-						{
-							name: "Phishing Attack",
-							damage: 40,
-							xp: 6400,
-							cooldown: 6,
-							icon: <Crosshair className="w-4 h-4 text-lime-400" />,
-						},
-						{
-							name: "Firewall Breach",
-							damage: 70,
-							xp: 10300,
-							cooldown: 12,
-							icon: <Shield className="w-4 h-4 text-green-500" />,
-						},
-					]}
-				/>
+				return <PlayerAttackCard   />
 					;
 			case GameTabs.PLAYERS:
 				return <PlayersList />;
