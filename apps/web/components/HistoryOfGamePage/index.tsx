@@ -19,7 +19,6 @@ interface Player {
 }
 
 export default function HistoryOfGamePage() {
-	// mock data generation
 	const redTeam = useMemo<Player[]>(
 		() =>
 			Array.from({ length: 5 }).map((_, i) => ({
@@ -46,107 +45,154 @@ export default function HistoryOfGamePage() {
 	const blueTotalRank = blueTeam.reduce((acc, cur) => acc + cur.rank, 0);
 
 	return (
-		<div className="w-screen h-[calc(100svh-158px)] mt-20 bg-black text-white flex overflow-hidden p-6 gap-6">
-			{/* Red Team */}
+		<div
+			className="
+				w-full h-[calc(100vh-166px)]
+				mt-16 px-6
+				text-white
+				flex gap-6
+				overflow-hidden
+			"
+		>
+			{/* Red Team Card */}
 			<motion.div
-				initial={{ opacity: 0, x: -30 }}
+				initial={{ opacity: 0, x: -40 }}
 				animate={{ opacity: 1, x: 0 }}
-				transition={{ duration: 0.6 }}
-				className="w-1/2 bg-gradient-to-br from-red-950 via-black to-red-900 rounded-2xl border border-red-700 p-6 shadow-lg"
+				transition={{ duration: 0.4 }}
+				className="
+					w-1/2
+					bg-black/40 backdrop-blur-md
+					border border-red-800/50
+					rounded-xl shadow-[0_0_25px_-5px_#ff2a2a]
+					overflow-hidden
+					flex flex-col
+				"
 			>
-				<Card className="bg-transparent border-none text-white">
-					<CardHeader className="flex flex-col items-center gap-2">
-						<CardTitle className="text-red-400 flex items-center gap-2 text-xl">
+				<Card className="bg-transparent border-none h-full flex flex-col">
+					<CardHeader
+						className="
+							border-b border-red-900/50
+							bg-gradient-to-l from-red-900/10 to-transparent
+							text-center pt-6 pb-4
+						"
+					>
+						<CardTitle className="text-red-400 text-xl flex justify-center items-center gap-2">
 							<Flame className="h-5 w-5 text-red-500" />
 							تیم قرمز
 						</CardTitle>
+
 						<Badge
 							variant="secondary"
-							className="bg-red-600/30 text-red-300 flex items-center gap-1"
+							className="bg-red-700/30 text-red-200 border border-red-800/40 flex items-center gap-1 mt-2"
 						>
-							<Trophy className="h-4 w-4" /> مجموع رتبه: {redTotalRank}
+							<Trophy className="h-4 w-4" />
+							مجموع رتبه: {redTotalRank}
 						</Badge>
 					</CardHeader>
 
-					<CardContent>
-						<table className="w-full border-collapse text-sm">
-							<thead className="text-red-300 border-b border-red-700">
-								<tr>
-									<th className="py-2 text-right">نام بازیکن</th>
-									<th className="py-2 text-center">درصد آسیب</th>
-									<th className="py-2 text-center">تعداد ضربه</th>
-									<th className="py-2 text-center">رتبه</th>
-								</tr>
+					{/* Table body scrolls */}
+					<CardContent className="p-0 overflow-auto flex-1">
+						<table className="w-full text-sm">
+							<thead className="bg-red-900/20 text-red-200 border-b border-red-800/40 sticky top-0 backdrop-blur-md">
+							<tr>
+								<th className="py-2 px-2 text-right">نام بازیکن</th>
+								<th className="py-2 px-2 text-center">درصد آسیب</th>
+								<th className="py-2 px-2 text-center">تعداد ضربه</th>
+								<th className="py-2 px-2 text-center">رتبه</th>
+							</tr>
 							</thead>
+
 							<tbody>
-								{redTeam.map((p) => (
-									<tr
-										key={p.name}
-										className="border-b border-red-900/50 hover:bg-red-900/20 transition"
-									>
-										<td className="py-2 pr-2 text-right">{p.name}</td>
-										<td className="py-2 text-center text-red-300">
-											{p.damagePercent}%
-										</td>
-										<td className="py-2 text-center">{p.damageCount}</td>
-										<td className="py-2 text-center font-bold text-yellow-300">
-											{p.rank}
-										</td>
-									</tr>
-								))}
+							{redTeam.map((p) => (
+								<tr
+									key={p.name}
+									className="
+											border-b border-red-900/30
+											hover:bg-red-900/20 transition
+										"
+								>
+									<td className="py-2 px-2 text-right">{p.name}</td>
+									<td className="py-2 px-2 text-center text-red-300">
+										{p.damagePercent}%
+									</td>
+									<td className="py-2 px-2 text-center">{p.damageCount}</td>
+									<td className="py-2 px-2 text-center text-yellow-300 font-bold">
+										{p.rank}
+									</td>
+								</tr>
+							))}
 							</tbody>
 						</table>
 					</CardContent>
 				</Card>
 			</motion.div>
 
-			{/* Blue Team */}
+			{/* Blue Team Card */}
 			<motion.div
-				initial={{ opacity: 0, x: 30 }}
+				initial={{ opacity: 0, x: 40 }}
 				animate={{ opacity: 1, x: 0 }}
-				transition={{ duration: 0.6 }}
-				className="w-1/2 bg-gradient-to-br from-blue-950 via-black to-blue-900 rounded-2xl border border-blue-700 p-6 shadow-lg"
+				transition={{ duration: 0.4 }}
+				className="
+					w-1/2
+					bg-black/40 backdrop-blur-md
+					border border-blue-800/50
+					rounded-xl shadow-[0_0_25px_-5px_#2a87ff]
+					overflow-hidden
+					flex flex-col
+				"
 			>
-				<Card className="bg-transparent border-none text-white">
-					<CardHeader className="flex flex-col items-center gap-2">
-						<CardTitle className="text-blue-400 flex items-center gap-2 text-xl">
+				<Card className="bg-transparent border-none h-full flex flex-col">
+					<CardHeader
+						className="
+							border-b border-blue-900/50
+							bg-gradient-to-l from-blue-900/10 to-transparent
+							text-center pt-6 pb-4
+						"
+					>
+						<CardTitle className="text-blue-400 text-xl flex justify-center items-center gap-2">
 							<Shield className="h-5 w-5 text-blue-500" />
 							تیم آبی
 						</CardTitle>
+
 						<Badge
 							variant="secondary"
-							className="bg-blue-600/30 text-blue-300 flex items-center gap-1"
+							className="bg-blue-700/30 text-blue-200 border border-blue-800/40 flex items-center gap-1 mt-2"
 						>
-							<Trophy className="h-4 w-4" /> مجموع رتبه: {blueTotalRank}
+							<Trophy className="h-4 w-4" />
+							مجموع رتبه: {blueTotalRank}
 						</Badge>
 					</CardHeader>
 
-					<CardContent>
-						<table className="w-full border-collapse text-sm">
-							<thead className="text-blue-300 border-b border-blue-700">
-								<tr>
-									<th className="py-2 text-right">نام بازیکن</th>
-									<th className="py-2 text-center">درصد آسیب</th>
-									<th className="py-2 text-center">تعداد ضربه</th>
-									<th className="py-2 text-center">رتبه</th>
-								</tr>
+					<CardContent className="p-0 overflow-auto flex-1">
+						<table className="w-full text-sm">
+							<thead className="bg-blue-900/20 text-blue-200 border-b border-blue-800/40 sticky top-0 backdrop-blur-md">
+							<tr>
+								<th className="py-2 px-2 text-right">نام بازیکن</th>
+								<th className="py-2 px-2 text-center">درصد آسیب</th>
+								<th className="py-2 px-2 text-center">تعداد ضربه</th>
+								<th className="py-2 px-2 text-center">رتبه</th>
+							</tr>
 							</thead>
+
 							<tbody>
-								{blueTeam.map((p) => (
-									<tr
-										key={p.name}
-										className="border-b border-blue-900/50 hover:bg-blue-900/20 transition"
-									>
-										<td className="py-2 pr-2 text-right">{p.name}</td>
-										<td className="py-2 text-center text-blue-300">
-											{p.damagePercent}%
-										</td>
-										<td className="py-2 text-center">{p.damageCount}</td>
-										<td className="py-2 text-center font-bold text-yellow-300">
-											{p.rank}
-										</td>
-									</tr>
-								))}
+							{blueTeam.map((p) => (
+								<tr
+									key={p.name}
+									className="
+											border-b border-blue-900/30
+											hover:bg-blue-900/20 transition
+										"
+								>
+									<td className="py-2 px-2 text-right">{p.name}</td>
+									<td className="py-2 px-2 text-center text-blue-300">
+										{p.damagePercent}%
+									</td>
+									<td className="py-2 px-2 text-center">{p.damageCount}</td>
+									<td className="py-2 px-2 text-center text-yellow-300 font-bold">
+										{p.rank}
+									</td>
+								</tr>
+							))}
 							</tbody>
 						</table>
 					</CardContent>
