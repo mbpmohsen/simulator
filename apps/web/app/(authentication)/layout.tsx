@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 import "@workspace/ui/styles/globals.css";
 import { Providers } from "@/components/providers.tsx";
 import MatrixBackground from "@/components/MatrixBackground.tsx";
+import {vazir} from "@/fonts/fonts.ts";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -19,6 +20,8 @@ const fontVazir = Vazirmatn({
 	variable: "--font-vazir",
 });
 
+
+
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -27,7 +30,7 @@ export default function RootLayout({
 	return (
 		<html lang="fa" suppressHydrationWarning dir="rtl">
 			<body
-				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
+				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className} font-sans antialiased `}
 			>
 			<MatrixBackground
 				hue={120}
