@@ -325,7 +325,7 @@ const getAvailableActions = () => {
 									<SelectItem value="none" className="text-white text-right">
 										انتخاب کنید...
 									</SelectItem>
-									{groups.map((group) => (
+									{groups?.map((group) => (
 										<SelectItem
 											key={group.id}
 											value={group.id}

@@ -167,8 +167,6 @@ export default function DashboardPage() {
 		setCurrentDialog(null);
 	};
 
-	console.log("value", currentDialog);
-
 	const handleNextStep = () => {
 		switch (currentDialog) {
 			case DialogType.GAME_SETUP:

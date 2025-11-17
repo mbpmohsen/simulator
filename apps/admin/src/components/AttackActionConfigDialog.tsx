@@ -131,7 +131,7 @@ const AttackActionConfigDialog: FC<IProps> = ({
 		try {
 			setLoading(true);
 			const response = await fetch(
-				`/api/attack-data?groupId=${groupId}&lang=en`,
+				`/api/attack-data?groupId=${groupId}&lang=fa`,
 			);
 			const data = await response.json();
 			setGroupDetail(data);
@@ -287,7 +287,7 @@ const AttackActionConfigDialog: FC<IProps> = ({
 									<SelectValue placeholder="Choose an attack group..." />
 								</SelectTrigger>
 								<SelectContent className="bg-gray-800 border-gray-700 max-h-[300px]">
-									{groups.map((group) => (
+									{groups?.map((group) => (
 										<SelectItem
 											key={group.id}
 											value={group.id}
