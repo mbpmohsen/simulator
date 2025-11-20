@@ -8,14 +8,14 @@ import { useState } from "react";
 import AdminLoginBackground from "@/assets/admin-login-bg.svg";
 import AwardLogo from "@/assets/award-logo.svg";
 import XP from "@/assets/XP.svg";
+import AdminResultDialog from "@/components/AdminResultDialog";
 import AdminSummaryDialog from "@/components/AdminSummaryDialog";
 import AttackActionConfigDialog from "@/components/AttackActionConfigDialog";
 import BlackMarketDialog from "@/components/BlackMarketDialog";
 import GameSetupDialog from "@/components/GameSetupDialog";
 import TeamMembersDialog from "@/components/TeamMembersDialog";
 import { DialogType } from "@/types/dialog.types";
-import { ConfigureAllResponse } from "@/types/types";
-import AdminResultDialog from "@/components/AdminResultDialog";
+import type { ConfigureAllResponse } from "@/types/types";
 
 interface SecurityRecord {
 	id: string;
@@ -152,16 +152,18 @@ const SecurityRecordsCard = () => {
 export default function DashboardPage() {
 	const [currentDialog, setCurrentDialog] = useState<DialogType | null>(null);
 	const [resultOpen, setResultOpen] = useState(false);
-  	const [resultData, setResultData] = useState<ConfigureAllResponse | null>(null);
+	const [resultData, setResultData] = useState<ConfigureAllResponse | null>(
+		null,
+	);
 
 	const handleStartGame = () => {
 		setCurrentDialog(DialogType.GAME_SETUP);
 	};
 
-	  const handleSubmitSuccess = (data: ConfigureAllResponse) => {
-    setResultData(data);
-    setResultOpen(true);
-  };
+	const handleSubmitSuccess = (data: ConfigureAllResponse) => {
+		setResultData(data);
+		setResultOpen(true);
+	};
 
 	const handleClose = () => {
 		setCurrentDialog(null);
@@ -317,12 +319,12 @@ export default function DashboardPage() {
 				onSuccess={handleSubmitSuccess}
 			/>
 			{resultData && (
-        <AdminResultDialog
-          isOpen={resultOpen}
-          onClose={() => setResultOpen(false)}
-          data={resultData}
-        />
-      )}
+				<AdminResultDialog
+					isOpen={resultOpen}
+					onClose={() => setResultOpen(false)}
+					data={resultData}
+				/>
+			)}
 		</div>
 	);
 }

@@ -24,7 +24,6 @@ import {
 	selectBlackMarket,
 	useGameConfigStore,
 } from "@/store/store";
-import {DialogType} from "@/types/dialog.types";
 
 interface BlackMarketItem {
 	name: string;
@@ -63,10 +62,10 @@ interface BlackMarketDialogProps {
 }
 
 const BlackMarketDialog: React.FC<BlackMarketDialogProps> = ({
-	isOpen,
-	onClose,
-	handleNextStep,
-}) => {
+																 isOpen,
+																 onClose,
+																 handleNextStep,
+															 }) => {
 	// store helpers
 	const storeActions = useGameConfigStore(selectActions);
 	const setBlackMarketItems = useGameConfigStore((s) => s.setBlackMarketItems);
@@ -202,13 +201,13 @@ const BlackMarketDialog: React.FC<BlackMarketDialogProps> = ({
 	};
 
 	// Get available actions based on selected type
-const getAvailableActions = () => {
-  const list =
-    newItem.target_action_type === "attack"
-      ? attackActionsList
-      : defenseActionsList;
-  return Object.keys(list).filter((key) => key.trim() !== "");
-};
+	const getAvailableActions = () => {
+		const list =
+			newItem.target_action_type === "attack"
+				? attackActionsList
+				: defenseActionsList;
+		return Object.keys(list).filter((key) => key.trim() !== "");
+	};
 
 	const validateItem = (): string[] => {
 		const validationErrors: string[] = [];
@@ -299,18 +298,19 @@ const getAvailableActions = () => {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-6xl bg-gray-900 border-gray-700 p-0 gap-0 max-h-[90vh] overflow-hidden">
-				<DialogHeader className="px-6 py-4 border-b border-gray-700">
+			<DialogContent className="max-w-6xl bg-gray-900 border-gray-700 p-0 gap-0 max-h-[90vh] overflow-hidden flex flex-col">
+				<DialogHeader className="px-6 py-4 border-b border-gray-700 shrink-0">
 					<DialogTitle className="text-white text-xl text-right">
 						بازار سیاه
 					</DialogTitle>
 				</DialogHeader>
 
-				<div className="flex h-[700px] overflow-hidden">
+				{/* Main Content Area - FIXED: Proper flex constraints */}
+				<div className="flex flex-1 min-h-0 overflow-hidden">
 					{/* Left Panel - ATT&CK Groups and New Item Form */}
-					<div className="w-2/5 border-r border-gray-700 flex flex-col">
-						{/* ATT&CK Group Selection */}
-						<div className="p-4 border-b border-gray-700 bg-gray-800">
+					<div className="w-2/5 border-r border-gray-700 flex flex-col min-h-0">
+						{/* ATT&CK Group Selection - FIXED: Added shrink-0 */}
+						<div className="p-4 border-b border-gray-700 bg-gray-800 shrink-0">
 							<Label className="text-gray-300 text-sm mb-2 block text-right">
 								انتخاب گروه حمله (اختیاری)
 							</Label>
@@ -338,9 +338,9 @@ const getAvailableActions = () => {
 							</Select>
 						</div>
 
-						{/* New Item Form */}
-						<ScrollArea className="flex-1 p-4">
-							<div className="space-y-4">
+						{/* New Item Form - FIXED: Proper scroll container */}
+						<ScrollArea className="flex-1 min-h-0">
+							<div className="p-4 space-y-4">
 								<h4 className="text-white font-semibold text-right mb-4">
 									افزودن آیتم جدید به بازار سیاه
 								</h4>
@@ -461,8 +461,6 @@ const getAvailableActions = () => {
 								</div>
 
 								{/* Target Action */}
-
-								{/* Target Action */}
 								<div>
 									<Label className="text-gray-300 text-sm mb-2 block text-right">
 										عمل هدف
@@ -559,7 +557,7 @@ const getAvailableActions = () => {
 
 							{/* ATT&CK Techniques Preview */}
 							{groupDetail && groupDetail.techniques.length > 0 && (
-								<div className="mt-6 bg-gray-800 rounded-lg p-3">
+								<div className="mt-6 bg-gray-800 rounded-lg p-3 mx-4 mb-4">
 									<h5 className="text-white font-semibold mb-3 text-right">
 										تکنیک‌های گروه {groupDetail.name}
 									</h5>
@@ -583,115 +581,119 @@ const getAvailableActions = () => {
 						</ScrollArea>
 					</div>
 
-					{/* Right Panel - Items List */}
-					<div className="flex-1 flex flex-col">
-						<div className="p-4 border-b border-gray-700 bg-gray-800">
+					{/* Right Panel - Items List - FIXED: Proper flex constraints */}
+					<div className="flex-1 flex flex-col min-h-0">
+						{/* Header - FIXED: Added shrink-0 */}
+						<div className="p-4 border-b border-gray-700 bg-gray-800 shrink-0">
 							<h4 className="text-white font-semibold text-right">
 								آیتم‌های بازار سیاه ({localItems.length})
 							</h4>
 						</div>
 
-						<ScrollArea className="flex-1 p-6">
-							{localItems.length === 0 ? (
-								<div className="text-center py-12 text-gray-500">
-									هنوز آیتمی به بازار سیاه اضافه نشده است
-								</div>
-							) : (
-								<div className="space-y-3">
-									{localItems.map((item, index) => (
-										<div
-											key={index}
-											className="bg-gray-800 rounded-lg p-4 border border-gray-700"
-										>
-											<div className="flex items-start justify-between mb-3">
-												<div className="flex-1 text-right">
-													<h5 className="text-white font-semibold text-lg mb-2">
-														{item.name}
-													</h5>
-													<div className="grid grid-cols-2 gap-4 text-sm">
-														<div className="space-y-1">
-															<div className="flex justify-between">
-																<span className="text-gray-400">نوع آیتم:</span>
-																<Badge
-																	variant="outline"
-																	className="bg-blue-900/30 text-blue-300"
-																>
-																	{getItemTypeLabel(item.item_type)}
-																</Badge>
+						{/* Items List - FIXED: Proper scroll container */}
+						<ScrollArea className="flex-1 min-h-0">
+							<div className="p-6">
+								{localItems.length === 0 ? (
+									<div className="text-center py-12 text-gray-500">
+										هنوز آیتمی به بازار سیاه اضافه نشده است
+									</div>
+								) : (
+									<div className="space-y-3">
+										{localItems.map((item, index) => (
+											<div
+												key={index}
+												className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+											>
+												<div className="flex items-start justify-between mb-3">
+													<div className="flex-1 text-right">
+														<h5 className="text-white font-semibold text-lg mb-2">
+															{item.name}
+														</h5>
+														<div className="grid grid-cols-2 gap-4 text-sm">
+															<div className="space-y-1">
+																<div className="flex justify-between">
+																	<span className="text-gray-400">نوع آیتم:</span>
+																	<Badge
+																		variant="outline"
+																		className="bg-blue-900/30 text-blue-300"
+																	>
+																		{getItemTypeLabel(item.item_type)}
+																	</Badge>
+																</div>
+																<div className="flex justify-between">
+																	<span className="text-gray-400">نوع اثر:</span>
+																	<Badge
+																		variant="outline"
+																		className="bg-green-900/30 text-green-300"
+																	>
+																		{getEffectTypeLabel(item.effect_type)}
+																	</Badge>
+																</div>
 															</div>
-															<div className="flex justify-between">
-																<span className="text-gray-400">نوع اثر:</span>
-																<Badge
-																	variant="outline"
-																	className="bg-green-900/30 text-green-300"
-																>
-																	{getEffectTypeLabel(item.effect_type)}
-																</Badge>
+															<div className="space-y-1">
+																<div className="flex justify-between">
+																	<span className="text-gray-400">عمل هدف:</span>
+																	<span className="text-white">
+																		{item.target_action}
+																	</span>
+																</div>
+																<div className="flex justify-between">
+																	<span className="text-gray-400">نوع عمل:</span>
+																	<Badge
+																		variant="outline"
+																		className={
+																			item.target_action_type === "attack"
+																				? "bg-red-900/30 text-red-300"
+																				: "bg-blue-900/30 text-blue-300"
+																		}
+																	>
+																		{getActionTypeLabel(item.target_action_type)}
+																	</Badge>
+																</div>
 															</div>
 														</div>
-														<div className="space-y-1">
-															<div className="flex justify-between">
-																<span className="text-gray-400">عمل هدف:</span>
-																<span className="text-white">
-																	{item.target_action}
-																</span>
+														<div className="grid grid-cols-3 gap-4 mt-3 text-sm">
+															<div className="text-center">
+																<div className="text-gray-400">مقدار</div>
+																<div className="text-yellow-400 font-semibold">
+																	{item.value}
+																</div>
 															</div>
-															<div className="flex justify-between">
-																<span className="text-gray-400">نوع عمل:</span>
-																<Badge
-																	variant="outline"
-																	className={
-																		item.target_action_type === "attack"
-																			? "bg-red-900/30 text-red-300"
-																			: "bg-blue-900/30 text-blue-300"
-																	}
-																>
-																	{getActionTypeLabel(item.target_action_type)}
-																</Badge>
+															<div className="text-center">
+																<div className="text-gray-400">مدت</div>
+																<div className="text-green-400 font-semibold">
+																	{item.duration} دوره
+																</div>
+															</div>
+															<div className="text-center">
+																<div className="text-gray-400">هزینه</div>
+																<div className="text-red-400 font-semibold">
+																	{item.cost}
+																</div>
 															</div>
 														</div>
 													</div>
-													<div className="grid grid-cols-3 gap-4 mt-3 text-sm">
-														<div className="text-center">
-															<div className="text-gray-400">مقدار</div>
-															<div className="text-yellow-400 font-semibold">
-																{item.value}
-															</div>
-														</div>
-														<div className="text-center">
-															<div className="text-gray-400">مدت</div>
-															<div className="text-green-400 font-semibold">
-																{item.duration} دوره
-															</div>
-														</div>
-														<div className="text-center">
-															<div className="text-gray-400">هزینه</div>
-															<div className="text-red-400 font-semibold">
-																{item.cost}
-															</div>
-														</div>
-													</div>
+													<Button
+														onClick={() => removeItem(index)}
+														variant="ghost"
+														size="sm"
+														className="text-red-400 hover:text-red-300 hover:bg-red-900/20 shrink-0"
+													>
+														<Trash2 className="w-4 h-4" />
+													</Button>
 												</div>
-												<Button
-													onClick={() => removeItem(index)}
-													variant="ghost"
-													size="sm"
-													className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-												>
-													<Trash2 className="w-4 h-4" />
-												</Button>
 											</div>
-										</div>
-									))}
-								</div>
-							)}
+										))}
+									</div>
+								)}
+							</div>
 						</ScrollArea>
 					</div>
 				</div>
 
-				{/* Errors */}
+				{/* Errors - FIXED: Added shrink-0 */}
 				{errors.length > 0 && (
-					<div className="px-6 py-3 bg-red-900/20 border-t border-red-700">
+					<div className="px-6 py-3 bg-red-900/20 border-t border-red-700 shrink-0">
 						{errors.map((error, i) => (
 							<div
 								key={i}
@@ -704,8 +706,8 @@ const getAvailableActions = () => {
 					</div>
 				)}
 
-				{/* Footer */}
-				<div className="flex gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800">
+				{/* Footer - FIXED: Added shrink-0 */}
+				<div className="flex gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800 shrink-0">
 					<div className="flex-1 text-sm text-gray-400 text-right">
 						<div>تعداد آیتم‌ها: {localItems.length}</div>
 						<div>
