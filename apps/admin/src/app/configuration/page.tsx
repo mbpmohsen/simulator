@@ -4,7 +4,7 @@ import { Button } from "@workspace/ui/components/button";
 import { CardTitle } from "@workspace/ui/components/card";
 import { Bug, Medal, Shield, Trophy, Wrench } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminLoginBackground from "@/assets/admin-login-bg.svg";
 import AwardLogo from "@/assets/award-logo.svg";
 import XP from "@/assets/XP.svg";
@@ -27,56 +27,24 @@ interface SecurityRecord {
 	icon?: React.ReactNode;
 }
 
-const SecurityRecordsCard = () => {
-	const infrastructureAttacks: SecurityRecord[] = [
-		{
-			id: "1",
-			name: "Infrastructure Attacks",
-			highlight: "SQLi",
-			score1: 2,
-			score2: 2,
-			points: "۱۲۵۰۰",
-		},
-		{
-			id: "2",
-			name: "SQL Injection",
-			highlight: "XSS",
-			score1: 1,
-			score2: 2,
-			points: "۱۰۰۰",
-		},
-		{
-			id: "3",
-			name: "Cross-Site Request Forgery",
-			highlight: "CSRF",
-			score1: 2,
-			score2: 3,
-			points: "۵۰۰۰",
-		},
-	];
+interface SecurityRecordsCardProps {
+	attackRecords: SecurityRecord[];
+	defenseRecords: SecurityRecord[];
+}
 
-	const networkAttacks: SecurityRecord[] = [
-		{
-			id: "4",
-			name: "Spear Phishing",
-			score1: 175,
-			score2: 500,
-			points: "۲۵۰۰۰",
-		},
-		{
-			id: "5",
-			name: "Baiting",
-			score1: 29,
-			score2: 75,
-			points: "۵۰۰۰",
-		},
-	];
-
+/**
+ * Right side – آخرین رکوردها
+ * Now driven by real data (resultData.actions.attack / defense)
+ */
+const SecurityRecordsCard = ({
+								 attackRecords,
+								 defenseRecords,
+							 }: SecurityRecordsCardProps) => {
 	const RecordItem = ({ record }: { record: SecurityRecord }) => (
 		<div className="flex items-center justify-between py-1 bg-linear-to-b from-[#1D1D1D]/80 to-black/80 px-5">
 			<div className="flex items-center gap-4 flex-1">
 				<div className="p-2 rounded bg-gray-700 flex items-center justify-center">
-					<Medal className="w-6 h-6 text-yellow-400" />
+					{record.icon ?? <Medal className="w-6 h-6 text-yellow-400" />}
 				</div>
 
 				<div className="flex-1">
@@ -91,9 +59,9 @@ const SecurityRecordsCard = () => {
 
 			<div className="flex items-center gap-8">
 				<div className="flex flex-col items-center min-w-[60px]">
-					<span className="text-blue-400 text-lg font-semibold">
-						{record.score1}
-					</span>
+          <span className="text-blue-400 text-lg font-semibold">
+            {record.score1}
+          </span>
 					<span className="text-gray-500 text-sm">{record.score2}</span>
 				</div>
 
@@ -106,8 +74,8 @@ const SecurityRecordsCard = () => {
 						className="w-8"
 					/>
 					<span className="text-gray-300 text-sm font-medium">
-						{record.points}
-					</span>
+            {record.points || "-"}
+          </span>
 				</div>
 			</div>
 		</div>
@@ -118,32 +86,48 @@ const SecurityRecordsCard = () => {
 			<div className=" bg-gray-950 px-6 py-4">
 				<div className="flex items-center justify-between">
 					<h3 className="text-white text-xl font-semibold">آخرین رکورد ها</h3>
-					<span className="text-gray-400 text-sm">۰۵ ساعت و ۲۲ دقیقه</span>
+					<span className="text-gray-400 text-xs">آخرین بروزرسانی</span>
 				</div>
 			</div>
 
 			<div className="py-4">
 				<div>
-					{infrastructureAttacks.map((record) => (
-						<RecordItem key={record.id} record={record} />
-					))}
+					{attackRecords.length > 0 ? (
+						attackRecords.map((record) => (
+							<RecordItem key={record.id} record={record} />
+						))
+					) : (
+						<div className="text-xs text-gray-500 text-center py-4">
+							هنوز رکوردی برای حمله ثبت نشده است.
+						</div>
+					)}
 				</div>
 
-				<div className="flex items-center gap-3 my-4 px-2">
-					<div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent flex-1" />
-					<div className="bg-gray-800 px-4 py-1 rounded border border-blue-500">
-						<span className="text-blue-400 text-xs font-semibold tracking-wider">
-							NETWORK-LEVEL ATTACKS
-						</span>
+				{defenseRecords.length > 0 && (
+					<>
+						<div className="flex items-center gap-3 my-4 px-2">
+							<div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent flex-1" />
+							<div className="bg-gray-800 px-4 py-1 rounded border border-blue-500">
+                <span className="text-blue-400 text-xs font-semibold tracking-wider">
+                  DEFENSE / NETWORK STATS
+                </span>
+							</div>
+							<div className="text-gray-500 text-xs">—</div>
+						</div>
+
+						<div>
+							{defenseRecords.map((record) => (
+								<RecordItem key={record.id} record={record} />
+							))}
+						</div>
+					</>
+				)}
+
+				{attackRecords.length === 0 && defenseRecords.length === 0 && (
+					<div className="text-[11px] text-gray-500 text-center mt-2">
+						پس از پیکربندی و شروع بازی، رکوردها اینجا نمایش داده می‌شوند.
 					</div>
-					<div className="text-gray-500 text-xs">۲۲ دقیقه</div>
-				</div>
-
-				<div>
-					{networkAttacks.map((record) => (
-						<RecordItem key={record.id} record={record} />
-					))}
-				</div>
+				)}
 			</div>
 		</div>
 	);
@@ -160,8 +144,20 @@ export default function DashboardPage() {
 		setCurrentDialog(DialogType.GAME_SETUP);
 	};
 
+	// When admin summary finishes successfully:
+	// 1) set state
+	// 2) persist into localStorage so dashboard can use it later
 	const handleSubmitSuccess = (data: ConfigureAllResponse) => {
 		setResultData(data);
+
+		try {
+			if (typeof window !== "undefined") {
+				localStorage.setItem("latest-game-result", JSON.stringify(data));
+			}
+		} catch (e) {
+			console.error("Failed to persist latest-game-result", e);
+		}
+
 		setResultOpen(true);
 	};
 
@@ -185,23 +181,140 @@ export default function DashboardPage() {
 				break;
 		}
 	};
-	const [attacks] = useState([
-		{
-			category: "Infrastructure Attacks (SQL)",
-			icon: <Bug className="w-6 h-6 text-yellow-400" />,
-			stats: { wins: 2, losses: 1 },
-		},
-		{
-			category: "SQL Injection (XSS)",
-			icon: <Trophy className="w-6 h-6 text-yellow-400" />,
-			stats: { wins: 3, losses: 2 },
-		},
-		{
-			category: "Cross-Site Request Forgery (CSRF)",
-			icon: <Shield className="w-6 h-6 text-yellow-400" />,
-			stats: { wins: 2, losses: 3 },
-		},
-	]);
+
+	/**
+	 * Hydrate resultData on load:
+	 * 1. Try latest-game-result (our own key)
+	 * 2. Try "game-config-storage" (zustand persist)
+	 */
+	useEffect(() => {
+		if (resultData) return;
+		if (typeof window === "undefined") return;
+
+		// 1) Our explicit persisted result
+		try {
+			const stored = localStorage.getItem("latest-game-result");
+			if (stored) {
+				const parsed = JSON.parse(stored) as ConfigureAllResponse;
+				setResultData(parsed);
+				return;
+			}
+		} catch (e) {
+			console.error("Failed to load latest-game-result", e);
+		}
+
+		// 2) Zustand persisted store
+		try {
+			const cfgRaw = localStorage.getItem("game-config-storage");
+			if (cfgRaw) {
+				const parsed = JSON.parse(cfgRaw);
+				const state = parsed?.state ?? parsed;
+				const maybeResult =
+					state?.configureAllResponse ??
+					state?.resultData ??
+					state?.lastResult ??
+					null;
+
+				if (maybeResult) {
+					setResultData(maybeResult as ConfigureAllResponse);
+				}
+			}
+		} catch (e) {
+			console.error("Failed to load game-config-storage", e);
+		}
+	}, [resultData]);
+
+	/**
+	 * LEFT COLUMN: آخرین نبردها
+	 * Use resultData.player_codes as "teams".
+	 */
+	const attacks = useMemo(() => {
+		const icons = [
+			<Bug key="bug" className="w-6 h-6 text-yellow-400" />,
+			<Trophy key="trophy" className="w-6 h-6 text-yellow-400" />,
+			<Shield key="shield" className="w-6 h-6 text-yellow-400" />,
+		];
+
+		if (!resultData) return [];
+
+		const playerCodes = (resultData as any)?.player_codes as
+			| Record<string, { name: string; code: string }[]>
+			| undefined;
+
+		if (playerCodes && typeof playerCodes === "object") {
+			const entries = Object.entries(playerCodes) as [
+				string,
+				{ name: string; code: string }[],
+			][];
+
+			if (entries.length > 0) {
+				return entries.map(([teamName, members], index) => ({
+					category: `تیم ${teamName}`,
+					icon: icons[index % icons.length],
+					stats: {
+						// use players count as a simple "stat" – at least it's real
+						wins: Array.isArray(members) ? members.length : 0,
+						losses: 0,
+					},
+				}));
+			}
+		}
+
+		return [];
+	}, [resultData]);
+
+	/**
+	 * RIGHT COLUMN: آخرین رکورد ها
+	 * Use real actions stats from resultData.actions.attack / defense
+	 */
+	const { attackRecords, defenseRecords } = useMemo(() => {
+		const resAttack: SecurityRecord[] = [];
+		const resDefense: SecurityRecord[] = [];
+
+		if (!resultData) {
+			return { attackRecords: resAttack, defenseRecords: resDefense };
+		}
+
+		const actions = (resultData as any)?.actions ?? {};
+		const attackActions = actions.attack ?? {};
+		const defenseActions = actions.defense ?? {};
+
+		Object.entries(attackActions as Record<string, any>).forEach(
+			([name, config], idx) => {
+				resAttack.push({
+					id: `attack-${idx}-${name}`,
+					name,
+					highlight: "حمله",
+					score1:
+						typeof config?.probability === "number" ? config.probability : 0,
+					score2: typeof config?.cost === "number" ? config.cost : 0,
+					points:
+						typeof config?.cost === "number"
+							? String(config.cost)
+							: "",
+				});
+			},
+		);
+
+		Object.entries(defenseActions as Record<string, any>).forEach(
+			([name, config], idx) => {
+				resDefense.push({
+					id: `defense-${idx}-${name}`,
+					name,
+					highlight: "دفاع",
+					score1:
+						typeof config?.probability === "number" ? config.probability : 0,
+					score2: typeof config?.cost === "number" ? config.cost : 0,
+					points:
+						typeof config?.cost === "number"
+							? String(config.cost)
+							: "",
+				});
+			},
+		);
+
+		return { attackRecords: resAttack, defenseRecords: resDefense };
+	}, [resultData]);
 
 	return (
 		<div className="fixed inset-0 -z-10">
@@ -218,7 +331,7 @@ export default function DashboardPage() {
 
 				{/* MAIN LAYOUT */}
 				<div className="relative z-10 flex flex-1 mt-15">
-					{/* LEFT PANEL */}
+					{/* LEFT PANEL – آخرین نبردها */}
 					<aside className="w-1/3 p-4 flex flex-col gap-4 ">
 						<div className="text-sm">
 							<div className="bg-cyan-700/30 py-3 px-6">
@@ -227,36 +340,47 @@ export default function DashboardPage() {
 								</CardTitle>
 							</div>
 							<div className="space-y-3 mt-5">
-								{attacks.map((attack, i) => (
-									<div
-										key={i}
-										className="relative h-14 flex items-center justify-between border-b bg-linear-to-b from-[#1D1D1D]/80 to-black/80 last:border-none px-2"
-									>
-										<div className="flex items-center gap-2 text-gray-300 text-sm font-semibold">
-											{attack.icon}
-											<span>{attack.category}</span>
+								{attacks.length > 0 ? (
+									attacks.map((attack, i) => (
+										<div
+											key={i}
+											className="relative h-14 flex items-center justify-between border-b bg-linear-to-b from-[#1D1D1D]/80 to-black/80 last:border-none px-2"
+										>
+											<div className="flex items-center gap-2 text-gray-300 text-sm font-semibold">
+												{attack.icon}
+												<span>{attack.category}</span>
+											</div>
+											<div className="text-xs text-gray-400 ml-20">
+												{attack.stats.wins} / {attack.stats.losses}
+											</div>
+											<div className="absolute left-2 top-0 bottom-0 bg-black/40 w-15 flex items-center justify-center px-3">
+												<Image
+													src={AwardLogo.src}
+													width={AwardLogo.width}
+													height={AwardLogo.height}
+													alt="Award logo"
+												/>
+											</div>
+											<div className="h-full w-2 bg-blue-400/80 absolute left-0 top-0 bottom-0" />
 										</div>
-										<div className="text-xs text-gray-400 ml-20">
-											{attack.stats.wins} / {attack.stats.losses}
-										</div>
-										<div className="absolute left-2 top-0 bottom-0 bg-black/40 w-15 flex items-center justify-center px-3">
-											<Image
-												src={AwardLogo.src}
-												width={AwardLogo.width}
-												height={AwardLogo.height}
-												alt="Award logo"
-											/>
-										</div>
-										<div className="h-full w-2 bg-blue-400/80 absolute left-0 top-0 bottom-0" />
+									))
+								) : (
+									<div className="text-xs text-gray-500 text-center mt-4">
+										هنوز نبردی ثبت نشده است. پس از اولین پیکربندی تیم‌ها این بخش
+										پر می‌شود.
 									</div>
-								))}
+								)}
 							</div>
 						</div>
 					</aside>
 
-					{/* RIGHT PANEL */}
-					<section className="flex-1 p-4 flex justify-end flex-col items-end">
-						<SecurityRecordsCard />
+					{/* RIGHT PANEL – آخرین رکوردها */}
+					<section className="flex-1 p-4 flex justify-end flex-col items-end gap-4">
+						<SecurityRecordsCard
+							attackRecords={attackRecords}
+							defenseRecords={defenseRecords}
+						/>
+
 						<Button
 							onClick={handleStartGame}
 							variant="secondary"
@@ -268,8 +392,8 @@ export default function DashboardPage() {
 										<div key={i.toString()}>
 											{Array.from({ length: 40 }).map((_, j) => (
 												<span key={j.toString()}>
-													{Math.random() > 0.5 ? "1" : "0"}
-												</span>
+                          {Math.random() > 0.5 ? "1" : "0"}
+                        </span>
 											))}
 										</div>
 									))}
@@ -283,6 +407,7 @@ export default function DashboardPage() {
 					</section>
 				</div>
 
+				{/* TOP BAR */}
 				<div className="absolute top-0 left-0 right-0 h-12 bg-black/70 border-b border-cyan-700/40 flex items-center justify-between px-6 z-20">
 					<div className="text-gray-400 font-bold">بازی جنگ</div>
 					<div className="flex items-center gap-3">
@@ -292,7 +417,8 @@ export default function DashboardPage() {
 					</div>
 				</div>
 			</div>
-			{/*<SecurityAttackDialog />*/}
+
+			{/* Dialogs */}
 			<GameSetupDialog
 				isOpen={currentDialog === DialogType.GAME_SETUP}
 				onClose={handleClose}
