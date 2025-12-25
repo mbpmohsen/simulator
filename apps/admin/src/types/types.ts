@@ -54,42 +54,49 @@ export type EffectType = "increase" | "multiply";
 export type TargetActionType = "attack" | "defense";
 
 export interface ActionConfig {
-  probability: number;
-  counter_actions: string;
-  cost: number;
+    probability: number;
+    counter_actions: string;
+    cost: number;
 }
 
 export interface ConfigureAllResponse {
-  detail: string;
+    detail: string;
 
-  // team_name -> [{ name, code }]
-  player_codes: Record<string, Array<{ name: string; code: string }>>;
+    // team_name -> [{ name, code }]
+    player_codes: Record<string, Array<{ name: string; code: string }>>;
 
-  actions: {
-    attack: Record<string, ActionConfig>;
-    defense: Record<string, ActionConfig>;
-  };
+    actions: {
+        attack: Record<string, ActionConfig>;
+        defense: Record<string, ActionConfig>;
+    };
 
-  // code(string id) -> ["attack" | "defense", "ACTION_NAME"]
-  action_codes: Record<string, [ActionSide, string]>;
+    // code(string id) -> ["attack" | "defense", "ACTION_NAME"]
+    action_codes: Record<string, [ActionSide, string]>;
 
-  // code(string id) -> ["black_market", "ITEM_NAME"]
-  black_market_item_codes: Record<string, ["black_market", string]>;
+    // code(string id) -> ["black_market", "ITEM_NAME"]
+    black_market_item_codes: Record<string, ["black_market", string]>;
 
-  black_market_items: Array<{
-    name: string;
-    item_type: BlackMarketItemType;
-    effect_type: EffectType;
-    target_action: string;
-    target_action_type: TargetActionType;
-    value: number;
-    duration: number;
-    cost: number;
-  }>;
+    black_market_items: Array<{
+        name: string;
+        item_type: BlackMarketItemType;
+        effect_type: EffectType;
+        target_action: string;
+        target_action_type: TargetActionType;
+        value: number;
+        duration: number;
+        cost: number;
+    }>;
 
-  // backend-defined; keeping it open-ended
-  events: unknown[];
+    // backend-defined; keeping it open-ended
+    events: unknown[];
 
-  // side_name -> credits
-  credits_allocation: Record<string, number>;
+    // side_name -> credits
+    credits_allocation: Record<string, number>;
+
+    // New fields from response
+    spawned_client_containers: unknown[]; // Could be more specific if structure is known
+    player_port_range: {
+        min: number;
+        max: number;
+    };
 }
