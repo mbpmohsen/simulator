@@ -45,6 +45,7 @@ export interface GameConfiguration {
     team_tech_factors: Record<string, TeamFactors>;
     side_credits: Record<string, number>;
     black_market_items: BlackMarketItem[];
+    max_players: number;
 }
 
 export type ActionSide = "attack" | "defense";

@@ -20,6 +20,7 @@ interface GameConfigState {
     // Game Settings
     setNumTurns: (turns: number) => void;
     setPointThreshold: (threshold: number) => void;
+    setMaxPlayers: (maxPlayers: number) => void;
     setSideAssignments: (assignments: Record<string, string>) => void;
 
     // Player Management
@@ -75,6 +76,7 @@ const initialConfig: GameConfiguration = {
     team_tech_factors: {},
     side_credits: {},
     black_market_items: [],
+    max_players: 10
 };
 
 export const useGameConfigStore = create<GameConfigState>()(
@@ -154,6 +156,10 @@ export const useGameConfigStore = create<GameConfigState>()(
                 setSideAssignments: (assignments) =>
                     set((state) => {
                         state.config.side_assignments = assignments;
+                    }),
+                setMaxPlayers: (maxPlayers) =>
+                    set((state) => {
+                        state.config.max_players = maxPlayers;
                     }),
 
                 // Player Management

@@ -40,6 +40,7 @@ const GameSetupDialog: FC<IProps> = ({ isOpen, onClose, handleNextStep }) => {
     const updateTeamSide = useGameConfigStore(state => state.updateTeamSide);
     const setNumTurns = useGameConfigStore(state => state.setNumTurns);
     const setPointThreshold = useGameConfigStore(state => state.setPointThreshold);
+    const setMaxPlayers = useGameConfigStore(state => state.setMaxPlayers);
     const setSideCredit = useGameConfigStore(state => state.setSideCredit);
     const validateConfig = useGameConfigStore(state => state.validateConfig);
 
@@ -50,6 +51,7 @@ const GameSetupDialog: FC<IProps> = ({ isOpen, onClose, handleNextStep }) => {
     const numTurns = useGameConfigStore(state => state.config.num_turns);
     const pointThreshold = useGameConfigStore(state => state.config.point_threshold);
     const sideCredits = useGameConfigStore(state => state.config.side_credits);
+    const maxPlayers = useGameConfigStore(state => state.config.max_players);
 
     // Local state for side colors (not in main config, just for UI)
     const [sideColors, setSideColors] = useState<Record<string, string>>({
@@ -265,6 +267,16 @@ const GameSetupDialog: FC<IProps> = ({ isOpen, onClose, handleNextStep }) => {
                                     className="bg-gray-700 border-gray-600 text-white"
                                 />
                             </div>
+                            <div className="bg-gray-800 rounded-lg p-4">
+                                <Label className="text-gray-300 text-sm mb-2 block">حداکثر نفرات تیم</Label>
+                                <Input
+                                    type="number"
+                                    min="2"
+                                    value={maxPlayers}
+                                    onChange={(e) => setMaxPlayers(parseInt(e.target.value) || 2)}
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -373,7 +385,7 @@ const GameSetupDialog: FC<IProps> = ({ isOpen, onClose, handleNextStep }) => {
                 {errors.length > 0 && (
                     <div className="px-6 py-3 bg-red-900/20 border-t border-red-700">
                         {errors.map((error, i) => (
-                            <div key={i} className="flex items-center gap-2 text-red-400 text-sm">
+                            <div key={i.toString()} className="flex items-center gap-2 text-red-400 text-sm">
                                 <AlertCircle className="w-4 h-4" />
                                 {error}
                             </div>
