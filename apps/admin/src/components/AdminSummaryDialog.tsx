@@ -85,7 +85,8 @@ export default function AdminSummaryDialog({
 
   function normalizeKey(name: string) {
     if (!name) return "";
-    return String(name).trim().toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z0-9_]/g, "");
+    return String(name).trim();
+    // return String(name).trim().toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z0-9_]/g, "");
   }
 
   // Clean + prepare payload for server

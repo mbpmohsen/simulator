@@ -1,23 +1,28 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AttackStatusPanel from "@/components/AttackStatusPanel";
 import GameFooter from "@/components/GameFooter";
 import GameNavbar from "@/components/GameNavbar";
-import TeamStatusPanel from "@/components/TeamStatusPanel";
-import { playClickSound } from "@/lib/playClickSound";
-import { GameTabs } from "@/types/game";
-import VulnerabilitiesPage from "@/components/VulnerabilitiesPage";
 import HistoryOfGamePage from "@/components/HistoryOfGamePage";
-import PlayersList from "@/components/PlayersList";
-import WaitingPopup from "@/components/WaitingPopup";
 import AnimatedBattleBackground from "@/components/MainBackground";
 import PlayerAttackCard from "@/components/PlayerAttackCard";
+import PlayersList from "@/components/PlayersList";
+import TeamStatusPanel from "@/components/TeamStatusPanel";
+import VulnerabilitiesPage from "@/components/VulnerabilitiesPage";
+import WaitingPopup from "@/components/WaitingPopup";
+import { playClickSound } from "@/lib/playClickSound";
+import { proxyClientGameState } from "@/server/api.ts";
+import { useGameStore } from "@/store/gameState.store.ts";
+import { GameTabs } from "@/types/game";
+import type { GameStateResponse } from "@/types/gameState.types.ts";
 
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
 	const [visible, setVisible] = useState(false);
+
+	const { gameState, playerCode, setGameState } = useGameStore();
 
 	const handleChangeTab = (tab: GameTabs) => {
 		setActiveTab(tab);
@@ -28,6 +33,30 @@ export default function Page() {
 		playClickSound();
 		setVisible(!visible);
 	};
+
+	useEffect(() => {
+		if (!playerCode) return;
+
+		// Initial fetch
+		const fetchGameState = async () => {
+			try {
+				const data = (await proxyClientGameState(
+					playerCode,
+				)) as GameStateResponse;
+				setGameState(data);
+				console.log("Game state updated:", data);
+			} catch (err) {
+				console.error("Error fetching game state:", err);
+			}
+		};
+
+		fetchGameState();
+
+		// Poll every 3 seconds
+		const interval = setInterval(fetchGameState, 3000);
+
+		return () => clearInterval(interval);
+	}, [playerCode, setGameState]);
 
 	const renderTabContent = () => {
 		switch (activeTab) {
@@ -56,8 +85,7 @@ export default function Page() {
 					</>
 				);
 			case GameTabs.ATTACK:
-				return <PlayerAttackCard   />
-					;
+				return <PlayerAttackCard />;
 			case GameTabs.PLAYERS:
 				return <PlayersList />;
 			case GameTabs.BLACK_MARKET:

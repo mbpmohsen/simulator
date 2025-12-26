@@ -183,10 +183,10 @@ const AttackActionConfigDialog: FC<IProps> = ({
 	};
 
 	const normalizeActionName = (name: string): string => {
-		return name
-			.toUpperCase()
-			.replace(/\s+/g, "_")
-			.replace(/[^A-Z0-9_]/g, "");
+		return name;
+			// .toUpperCase()
+			// .replace(/\s+/g, "_")
+			// .replace(/[^A-Z0-9_]/g, "");
 	};
 
 	const addAction = () => {
