@@ -4,6 +4,8 @@ import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 import "@workspace/ui/styles/globals.css";
 import { Providers } from "@/components/providers.tsx";
 import "./style.css";
+import { Toaster } from 'sonner';
+
 import AnimatedBattleBackground from "@/components/MainBackground";
 
 const fontSans = Geist({
@@ -35,6 +37,7 @@ export default function RootLayout({
 			<body
 				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
 			>
+            <Toaster />
 				{/*<AnimatedBattleBackground />*/}
 				<Providers>{children}</Providers>
 			</body>
