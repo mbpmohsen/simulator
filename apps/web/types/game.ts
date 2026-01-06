@@ -1,8 +1,8 @@
 export enum GameTabs {
 	GAME = "بازی",
 	ATTACK = "حمله",
-	PLAYERS = "بازیکن‌ها",
+	// PLAYERS = "بازیکن‌ها",
 	BLACK_MARKET = "بازار سیاه",
-	EVENTS = "رویدادها",
+	// EVENTS = "رویدادها",
 	HISTORY = "تاریخچه",
 }

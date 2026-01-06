@@ -112,16 +112,16 @@ export default function Page() {
 							<div className="flex-1">
 								<AttackStatusPanel />
 							</div>
-							<Button
-								onClick={handleStartTheGame}
-								className="w-full h-[150px] flex flex-col items-center justify-center"
-								variant="blue"
-							>
-								<p className="text-lg font-bold">شروع بازی</p>
-								<p className="bg-gray-500 bg-opacity-50 px-3 py-1 rounded-md mt-2">
-									تیم شماره ۱
-								</p>
-							</Button>
+							{/*<Button*/}
+							{/*	onClick={handleStartTheGame}*/}
+							{/*	className="w-full h-[150px] flex flex-col items-center justify-center"*/}
+							{/*	variant="blue"*/}
+							{/*>*/}
+							{/*	<p className="text-lg font-bold">شروع بازی</p>*/}
+							{/*	<p className="bg-gray-500 bg-opacity-50 px-3 py-1 rounded-md mt-2">*/}
+							{/*		تیم شماره ۱*/}
+							{/*	</p>*/}
+							{/*</Button>*/}
 						</div>
 						<div className="absolute top-16 right-4 bottom-4 w-100">
 							<TeamStatusPanel />
@@ -131,12 +131,12 @@ export default function Page() {
 				);
 			case GameTabs.ATTACK:
 				return <PlayerAttackCard />;
-			case GameTabs.PLAYERS:
-				return <PlayersList />;
+			// case GameTabs.PLAYERS:
+			// 	return <PlayersList />;
 			case GameTabs.BLACK_MARKET:
 				return <VulnerabilitiesPage />;
-			case GameTabs.EVENTS:
-				return <div>محتوای بخش رویدادها</div>;
+			// case GameTabs.EVENTS:
+			// 	return <div>محتوای بخش رویدادها</div>;
 			case GameTabs.HISTORY:
 				return <GameResultsDisplay />;
 			default:
