@@ -27,10 +27,12 @@ interface GameStateResponse {
 	teams: Record<string, string>;
 	sides: string[];
 	team_credits: number;
+    game_id: number;
 	active_effects: unknown[];
 	side_credits: Record<string, number>;
 	events: unknown[];
 	points: Record<string, number>;
+    team_codes: Record<string, string>[];
 }
 
 type ActionSide = "attack" | "defense";
@@ -46,22 +48,36 @@ interface ActionConfig {
 interface GameStore {
 	gameState: GameStateResponse | null;
 	playerCode: string | null;
+	teamCode: string | null;
 	setGameState: (state: GameStateResponse) => void;
+	setTeamCode: (state: string) => void;
 	setPlayerCode: (code: string) => void;
 	clearGameState: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
-	persist(
-		(set) => ({
-			gameState: null,
-			playerCode: null,
-			setGameState: (state) => set({ gameState: state }),
-			setPlayerCode: (code) => set({ playerCode: code }),
-			clearGameState: () => set({ gameState: null, playerCode: null }),
-		}),
-		{
-			name: "game-storage",
-		},
-	),
+    persist(
+        (set) => ({
+            gameState: null,
+            playerCode: null,
+            teamCode: null,
+            setGameState: (state) => set({ gameState: state }),
+            setTeamCode: (state) => set({ teamCode: state }),
+            setPlayerCode: (code) => set({ playerCode: code }),
+            clearGameState: () => set({ gameState: null, playerCode: null }),
+        }),
+        {
+            name: "game-storage",
+            storage: {
+                getItem: (name) => {
+                    const str = sessionStorage.getItem(name);
+                    return str ? JSON.parse(str) : null;
+                },
+                setItem: (name, value) => {
+                    sessionStorage.setItem(name, JSON.stringify(value));
+                },
+                removeItem: (name) => sessionStorage.removeItem(name),
+            },
+        },
+    ),
 );

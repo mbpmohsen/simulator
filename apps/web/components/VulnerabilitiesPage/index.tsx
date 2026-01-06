@@ -14,11 +14,13 @@ import { proxyClientVoteAction } from "@/server/api.ts";
 import { useGameStore } from "@/store/gameState.store";
 
 export default function PlayerBlackMarketCard() {
-	const { gameState, playerCode } = useGameStore();
+	const { gameState, playerCode, teamCode } = useGameStore();
 
 	const [selectedCode, setSelectedCode] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // @ts-ignore
+    const enemyTeam = Object.keys(gameState?.points).find((team) => team !== teamCode);
 	const isVotingPhase = gameState?.current_phase === "voting";
 
 	const handleSubmit = async () => {
@@ -35,7 +37,8 @@ export default function PlayerBlackMarketCard() {
 		try {
 			const body = {
 				code: selectedCode,
-				black_market_item_code: null,
+				black_market_item_code: selectedCode,
+                target: enemyTeam,
 			};
 
 			await proxyClientVoteAction(playerCode, body);

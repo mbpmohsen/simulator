@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import TimeOverDialog from "@/components/TimeOverDialog";
 import { useGameStore } from "@/store/gameState.store.ts";
 import { GameTabs } from "@/types/game";
+import WaitingForVoteDialog from "@/components/WaitingForVoteDialog";
 
 interface GameNavbarProps {
 	activeTab?: GameTabs;
@@ -21,11 +22,12 @@ const GameNavbar: FC<GameNavbarProps> = ({
 	activeTab = GameTabs.GAME,
 	onTabChange,
 }) => {
-	const { gameState } = useGameStore();
+	const { gameState, clearGameState } = useGameStore();
 	const [displayTime, setDisplayTime] = useState(
 		gameState?.remaining_time || 0,
 	);
 	const [isTimeOver, setIsTimeOver] = useState(false);
+	const [isVotingTime, setVotingTime] = useState(false);
 
 	useEffect(() => {
 		if (!gameState?.remaining_time) return;
@@ -40,7 +42,8 @@ const GameNavbar: FC<GameNavbarProps> = ({
 
 				// Show dialog when time reaches 0
 				if (newTime === 0 && prev > 0) {
-					setIsTimeOver(true);
+                    // clearGameState();
+					// setIsTimeOver(true);
 				}
 
 				return newTime;
@@ -49,6 +52,24 @@ const GameNavbar: FC<GameNavbarProps> = ({
 
 		return () => clearInterval(interval);
 	}, [gameState?.remaining_time]);
+
+    useEffect(() => {
+        if (!gameState?.current_turn) return;
+
+        if (gameState?.current_phase === "waiting for others to vote") {
+            setVotingTime(true);
+        }
+
+    }, [gameState?.current_phase]);
+
+    useEffect(() => {
+        if (!gameState?.current_turn) return;
+
+        if (gameState?.current_phase === "voting") {
+            setVotingTime(false);
+        }
+
+    }, [gameState?.current_phase]);
 
 	// Format time as MM:SS
 	const formatTime = (seconds: number) => {
@@ -123,6 +144,7 @@ const GameNavbar: FC<GameNavbarProps> = ({
 					<div className="flex items-center bg-zinc-900/70 rounded-lg overflow-hidden border border-zinc-700">
 						{tabs.map((tab, index) => (
 							<button
+                                type="button"
 								key={index}
 								onClick={() => onTabChange?.(tab)}
 								className={cn(
@@ -159,6 +181,7 @@ const GameNavbar: FC<GameNavbarProps> = ({
 
 			{/* Time Over Dialog */}
 			<TimeOverDialog isOpen={isTimeOver} />
+			<WaitingForVoteDialog isOpen={isVotingTime} />
 		</>
 	);
 };

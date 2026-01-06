@@ -21,7 +21,7 @@ import { useGameStore } from "@/store/gameState.store.ts";
 import type { GameStateResponse } from "@/types/gameState.types.ts";
 
 export default function LoginPage() {
-	const { setGameState, setPlayerCode, playerCode } = useGameStore();
+	const { setGameState, setPlayerCode, playerCode, setTeamCode } = useGameStore();
 	const [step, setStep] = useState<"intro" | "playing" | "login" | "waiting">(
 		"intro",
 	);
@@ -62,6 +62,7 @@ export default function LoginPage() {
 			const res = await proxyClientConnect(playerCode as string);
 
 			console.log("✅ Connected:", res);
+            setTeamCode(res.team_name);
 			setStep("waiting");
 		} catch (err: any) {
 			console.error("❌ Connection error:", err);
@@ -81,7 +82,9 @@ export default function LoginPage() {
 					playerCode as string,
 				)) as GameStateResponse;
 
+                // @ts-ignore
                 setGameState(data as GameStateResponse);
+
 				console.log("waiting for others to connect", data);
 				if (data.current_phase !== "waiting for others to connect") {
 					router.push("/");

@@ -61,7 +61,7 @@ interface PlayerConfig {
 
 interface ProxyClientActionRequest {
     code: string;
-    target?: string | null;
+    target?: string | number |null;
     black_market_item_code?: string | null;
 }
 
@@ -177,7 +177,12 @@ async function teardownClients(dry_run: boolean = false): Promise<any> {
     return response.json();
 }
 
-async function proxyClientConnect(player_code: string): Promise<any> {
+async function proxyClientConnect(player_code: string): Promise<{
+    status: string
+    player_code: string
+    team_name: string
+    welcome_message: string
+}> {
     const response = await fetch(`${BASE_URL}/proxy/client/${player_code}/connect`, {
         method: 'POST',
     });
@@ -231,6 +236,16 @@ async function proxyClientVoteAction(player_code: string, body: ProxyClientActio
     return response.json();
 }
 
+async function getGameState(): Promise<any> {
+    const response = await fetch(`${BASE_URL}/client/game_state`, {
+        method: 'GET',
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+}
+
 export {
     healthCheck,
     startGame,
@@ -246,4 +261,5 @@ export {
     proxyClientActions,
     proxyClientTargets,
     proxyClientVoteAction,
+    getGameState,
 };

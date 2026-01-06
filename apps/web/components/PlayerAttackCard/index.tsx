@@ -14,12 +14,15 @@ import { proxyClientVoteAction } from "@/server/api.ts";
 import { useGameStore } from "@/store/gameState.store";
 
 export default function PlayerAttackCard() {
-	const { gameState, playerCode } = useGameStore();
+	const { gameState, playerCode, teamCode } = useGameStore();
 
+    console.log("gameState", gameState)
 	const [selectedCode, setSelectedCode] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const isVotingPhase = gameState?.current_phase === "voting";
+    // @ts-ignore
+    const enemyTeam = Object.keys(gameState?.points).find((team) => team !== teamCode);
 
 	const handleSubmit = async () => {
 		if (!playerCode) {
@@ -35,7 +38,7 @@ export default function PlayerAttackCard() {
 		try {
 			const body = {
 				code: selectedCode,
-				// target: null,
+				target: enemyTeam,
 				// black_market_item_code: null,
 			};
 
@@ -55,7 +58,7 @@ export default function PlayerAttackCard() {
 		}
 	};
 
-	if (!gameState || !isVotingPhase) {
+	if (!gameState) {
 		return (
 			<div
 				dir="rtl"
@@ -63,6 +66,7 @@ export default function PlayerAttackCard() {
 			>
 				<div className="text-center text-gray-400">
 					<p className="text-xl mb-2">در حال حاضر زمان انتخاب عملیات نیست</p>
+                    {/* @ts-ignore */}
 					<p>فاز فعلی: {gameState?.current_phase || "نامشخص"}</p>
 				</div>
 			</div>
@@ -74,6 +78,8 @@ export default function PlayerAttackCard() {
 
 	const getNameByCode = (code: string) => gameState.action_codes[code]?.[1];
 
+    console.log("attacks", attacks);
+    console.log("defenses", defenses);
 	return (
 		<div
 			dir="rtl"

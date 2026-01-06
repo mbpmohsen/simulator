@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import AttackStatusPanel from "@/components/AttackStatusPanel";
 import GameFooter from "@/components/GameFooter";
 import GameNavbar from "@/components/GameNavbar";
-import HistoryOfGamePage from "@/components/HistoryOfGamePage";
+import GameResultsDisplay from "@/components/GameResultsDisplay";
 import AnimatedBattleBackground from "@/components/MainBackground";
 import PlayerAttackCard from "@/components/PlayerAttackCard";
 import PlayersList from "@/components/PlayersList";
@@ -13,16 +13,19 @@ import TeamStatusPanel from "@/components/TeamStatusPanel";
 import VulnerabilitiesPage from "@/components/VulnerabilitiesPage";
 import WaitingPopup from "@/components/WaitingPopup";
 import { playClickSound } from "@/lib/playClickSound";
-import { proxyClientGameState } from "@/server/api.ts";
+import {getGameState, proxyClientGameState} from "@/server/api.ts";
 import { useGameStore } from "@/store/gameState.store.ts";
 import { GameTabs } from "@/types/game";
 import type { GameStateResponse } from "@/types/gameState.types.ts";
+import {useRouter} from "next/navigation";
+import {useGameResultsStore} from "@/store/useGameResults.store.ts";
 
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
 	const [visible, setVisible] = useState(false);
-
-	const { gameState, playerCode, setGameState } = useGameStore();
+    const router = useRouter();
+	const { playerCode, setGameState, clearGameState } = useGameStore();
+	const { setGameResults } = useGameResultsStore();
 
 	const handleChangeTab = (tab: GameTabs) => {
 		setActiveTab(tab);
@@ -34,31 +37,73 @@ export default function Page() {
 		setVisible(!visible);
 	};
 
-	useEffect(() => {
-		if (!playerCode) return;
+    useEffect(() => {
+        if (!playerCode) return;
 
-		// Initial fetch
-		const fetchGameState = async () => {
-			try {
-				const data = (await proxyClientGameState(
-					playerCode,
-				)) as GameStateResponse;
-				setGameState(data);
-				console.log("Game state updated:", data);
-			} catch (err) {
-				console.error("Error fetching game state:", err);
-			}
-		};
+        // Initial fetch
+        const fetchGameState = async () => {
+            try {
+                const data = await proxyClientGameState(playerCode) as GameStateResponse;
+                // @ts-expect-error
+                setGameState(data);
+                if (data.current_phase === "finished") {
+                    try {
+                        // Fetch the final game results
+                        const gameResults = await getGameState();
+                        console.log("Game finished, fetching results:", gameResults);
 
-		fetchGameState();
+                        // Store results in Zustand
+                        setGameResults(gameResults);
 
-		// Poll every 3 seconds
-		const interval = setInterval(fetchGameState, 3000);
+                        // Switch to history tab to show results
+                        setActiveTab(GameTabs.HISTORY);
 
-		return () => clearInterval(interval);
-	}, [playerCode, setGameState]);
+                        // Clear the live game state since game is over
+                        clearGameState();
 
-	const renderTabContent = () => {
+                    } catch (resultsErr: any) {
+                        console.error("Error fetching game results:", resultsErr);
+                        // If we can't get results either, then redirect to login
+                        clearGameState();
+                        router.push('/login');
+                    }
+                }
+            } catch (err: any) {
+                console.error("Error fetching game state:", err);
+
+                // Check if game is finished (instead of redirecting to login)
+                try {
+                    // Fetch the final game results
+                    const gameResults = await getGameState();
+                    console.log("Game finished, fetching results:", gameResults);
+
+                    // Store results in Zustand
+                    setGameResults(gameResults);
+
+                    // Switch to history tab to show results
+                    setActiveTab(GameTabs.HISTORY);
+
+                    // Clear the live game state since game is over
+                    clearGameState();
+
+                } catch (resultsErr: any) {
+                    console.error("Error fetching game results:", resultsErr);
+                    // If we can't get results either, then redirect to login
+                    clearGameState();
+                    router.push('/login');
+                }
+            }
+        };
+
+        fetchGameState();
+
+        // Poll every 3 seconds
+        const interval = setInterval(fetchGameState, 3000);
+
+        return () => clearInterval(interval);
+    }, [playerCode, setGameState, setGameResults, setActiveTab, clearGameState, router]);
+
+    const renderTabContent = () => {
 		switch (activeTab) {
 			case GameTabs.GAME:
 				return (
@@ -93,7 +138,7 @@ export default function Page() {
 			case GameTabs.EVENTS:
 				return <div>محتوای بخش رویدادها</div>;
 			case GameTabs.HISTORY:
-				return <HistoryOfGamePage />;
+				return <GameResultsDisplay />;
 			default:
 				return <div>محتوای پیش‌فرض</div>;
 		}

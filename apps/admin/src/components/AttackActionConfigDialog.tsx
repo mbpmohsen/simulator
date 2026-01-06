@@ -599,7 +599,7 @@ const AttackActionConfigDialog: FC<IProps> = ({
 										</div>
 
 										{/* Attack Actions List */}
-										<div className="space-y-2">
+										<div className="space-y-2 overflow-y-auto max-h-[300px]">
 											{Object.entries(attackActions).map(([name, config]) => (
 												<div
 													key={name}
