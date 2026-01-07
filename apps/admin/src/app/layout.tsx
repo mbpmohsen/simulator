@@ -32,12 +32,14 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} ${fontVazir.variable} antialiased`}
-        >
-        <Providers>
-            {children}
-        </Providers>
-        </body>
+		<html lang="fa" suppressHydrationWarning dir="rtl">
+			<body
+				className={`${geistSans.variable} ${geistMono.variable} ${fontVazir.variable} antialiased`}
+			>
+				<Providers>
+					{children}
+				</Providers>
+			</body>
+		</html>
 	);
 }
