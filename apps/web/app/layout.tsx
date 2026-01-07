@@ -7,6 +7,7 @@ import "./style.css";
 import { Toaster } from 'sonner';
 
 import AnimatedBattleBackground from "@/components/MainBackground";
+import {vazir} from "@/fonts/fonts.ts";
 
 const fontSans = Geist({
 	subsets: ["latin"],
@@ -33,14 +34,14 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="fa" suppressHydrationWarning dir="rtl">
-			<body
-				className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} font-sans antialiased `}
-			>
-            <Toaster />
-				{/*<AnimatedBattleBackground />*/}
-				<Providers>{children}</Providers>
-			</body>
-		</html>
+        <html lang="fa" dir="rtl">
+            <body
+                className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className} font-sans antialiased`}
+            >
+                <Toaster />
+                {/*<AnimatedBattleBackground />*/}
+                <Providers>{children}</Providers>
+            </body>
+        </html>
 	);
 }

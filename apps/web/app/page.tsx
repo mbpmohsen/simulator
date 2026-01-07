@@ -45,6 +45,7 @@ export default function Page() {
             try {
                 const data = await proxyClientGameState(playerCode) as GameStateResponse;
                 // @ts-expect-error
+                console.log("data" , data)
                 setGameState(data);
                 if (data.current_phase === "finished") {
                     try {
@@ -101,7 +102,7 @@ export default function Page() {
         const interval = setInterval(fetchGameState, 3000);
 
         return () => clearInterval(interval);
-    }, [playerCode, setGameState, setGameResults, setActiveTab, clearGameState, router]);
+    }, [playerCode]);
 
     const renderTabContent = () => {
 		switch (activeTab) {

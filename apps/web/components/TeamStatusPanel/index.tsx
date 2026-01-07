@@ -18,7 +18,7 @@ import {
     User,
     Skull,
 } from "lucide-react";
-import {useGameStore} from "@/store/gameState.store.ts";
+import { useGameStore } from "@/store/gameState.store.ts";
 
 type Player = {
     id: number;
@@ -30,17 +30,17 @@ type Player = {
 };
 
 const teamIcons = [
-    <Mouse className="w-4 h-4" />,
-    <Crown className="w-4 h-4" />,
-    <Network className="w-4 h-4" />,
-    <User className="w-4 h-4" />,
-    <Cpu className="w-4 h-4" />,
+    <Mouse key="mouse" className="w-4 h-4" />,
+    <Crown key="crown" className="w-4 h-4" />,
+    <Network key="network" className="w-4 h-4" />,
+    <User key="user" className="w-4 h-4" />,
+    <Cpu key="cpu" className="w-4 h-4" />,
 ];
 
 const enemyIcons = [
-    <Gamepad2 className="w-4 h-4" />,
-    <Shield className="w-4 h-4" />,
-    <Skull className="w-4 h-4" />,
+    <Gamepad2 key="gamepad" className="w-4 h-4" />,
+    <Shield key="shield" className="w-4 h-4" />,
+    <Skull key="skull" className="w-4 h-4" />,
 ];
 
 const teamColors = [
@@ -84,47 +84,67 @@ export default function TeamStatusPanel() {
     }, []);
 
     useEffect(() => {
-        if (gameState) {
+        if (!gameState) return;
+
+        // Fixed: Safely check if required properties exist
+        if (!gameState.side_credits || !gameState.teams) {
+            console.warn("Missing side_credits or teams data in gameState");
+            return;
+        }
+
+        try {
+            // Fixed: Get team names safely with proper type checking
+            const teamSides = Object.keys(gameState.teams);
+
             const newTeam = Object.entries(gameState.side_credits)
-                .filter(([side]) => gameState.teams.hasOwnProperty(side))
-                .map(([side, credits], index) => ({
-                    id: index + 1,
-                    name: gameState.teams[side] || side,
-                    role: "Team Side",
-                    xp: credits,
-                    icon: teamIcons[index % teamIcons.length],
-                    color: teamColors[index % teamColors.length] as string,
-                }));
+                .filter(([side]) => teamSides.includes(side))
+                .map(([side, credits], index) => {
+                    // Fixed: Safely get team name with fallback
+                    const teamName = typeof gameState.teams[side] === 'string'
+                        ? gameState.teams[side]
+                        : side;
+
+                    return {
+                        id: index + 1,
+                        name: teamName,
+                        role: "Team Side",
+                        xp: typeof credits === 'number' ? credits : 0,
+                        icon: teamIcons[index % teamIcons.length],
+                        color: teamColors[index % teamColors.length],
+                    };
+                });
             setTeam(newTeam);
 
             const newEnemy = Object.entries(gameState.side_credits)
-                .filter(([side]) => !gameState.teams.hasOwnProperty(side))
+                .filter(([side]) => !teamSides.includes(side))
                 .map(([side, credits], index) => ({
-                    id: index + 6,
+                    id: index + 100, // Fixed: Use a different ID range to avoid conflicts
                     name: side,
                     role: "Enemy Side",
-                    xp: credits,
+                    xp: typeof credits === 'number' ? credits : 0,
                     icon: enemyIcons[index % enemyIcons.length],
-                    color: enemyColors[index % enemyColors.length] as string,
+                    color: enemyColors[index % enemyColors.length],
                 }));
             setEnemy(newEnemy);
+        } catch (error) {
+            console.error("Error processing gameState:", error);
         }
     }, [gameState]);
 
     const renderPlayers = (players: Player[], accent: string) => (
         <div className="space-y-1">
             <AnimatePresence>
-                {players.map((p, i) => (
+                {players.map((p) => (
                     <motion.div
-                        key={p.id}
+                        key={p.id} // Fixed: Use stable ID instead of crypto.randomUUID()
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        transition={{ delay: i * 0.05 }}
+                        transition={{ delay: 0.05 }}
                         className="flex items-center justify-between bg-neutral-900 border border-neutral-800 rounded-md px-2 py-1"
                     >
                         <div className="flex items-center gap-2">
-                            {p.icon}
+                            <span className={p.color}>{p.icon}</span>
                             <div className="flex flex-col leading-tight">
                                 <span className="text-sm text-gray-200">{p.name}</span>
                                 <span className={`text-[11px] ${p.color}`}>{p.role}</span>

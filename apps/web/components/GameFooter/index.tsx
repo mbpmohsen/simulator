@@ -8,11 +8,15 @@ import CompactPlayerCard from "../PlayerCard";
 import SettingsMenu from "@/components/SettingsMenu";
 import AnnouncementsMenu from "@/components/AnnouncementsMenu";
 import {useRouter} from "next/navigation";
+import {useGameStore} from "@/store/gameState.store.ts";
+import {useGameResultsStore} from "@/store/useGameResults.store.ts";
 
 const GameFooter = () => {
 	const [isPlayerVisible, setIsPlayerVisible] = useState(false);
 	const [isMusicPlaying, setIsMusicPlaying] = useState(true); // Always start as playing
     const router = useRouter();
+    const { clearGameState } = useGameStore();
+    const { clearGameResults } = useGameResultsStore();
 	// This useEffect ensures music starts playing when component mounts
 	useEffect(() => {
 		// Music should always be playing by default
@@ -119,7 +123,11 @@ const GameFooter = () => {
 					<span className="text-gray-400 text-xs">انتخاب</span>
 				</Button>
 				<Button
-                    onClick={() => router.push("/login")}
+                    onClick={() => {
+                        router.push("/login");
+                        clearGameState();
+                        clearGameResults();
+                    }}
 					variant="ghost"
 					size="icon"
 					className="text-gray-400 hover:text-white flex flex-col items-center gap-1"
