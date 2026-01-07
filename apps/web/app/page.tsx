@@ -21,7 +21,7 @@ import {useRouter} from "next/navigation";
 import {useGameResultsStore} from "@/store/useGameResults.store.ts";
 import dynamic from "next/dynamic";
 
-const GameResultsDisplay = dynamic(() => import("@/components/GameResultsDisplay" , { ssr: false }))
+const GameResultsDisplay = dynamic(() => import("@/components/GameResultsDisplay"))
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
 	const [visible, setVisible] = useState(false);
@@ -47,7 +47,6 @@ export default function Page() {
             try {
                 const data = await proxyClientGameState(playerCode) as GameStateResponse;
                 // @ts-expect-error
-                console.log("data" , data)
                 setGameState(data);
                 if (data.current_phase === "finished") {
                     try {

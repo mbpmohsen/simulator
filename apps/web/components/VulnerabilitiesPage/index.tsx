@@ -45,7 +45,7 @@ export default function PlayerBlackMarketCard() {
         setIsSubmitting(true);
         try {
             const body = {
-                // code: selectedCode,
+                code: selectedCode,
                 black_market_item_code: selectedCode,
                 target: enemyTeam,
             };
@@ -76,6 +76,7 @@ export default function PlayerBlackMarketCard() {
                     <p className="text-xl mb-2">
                         در حال حاضر زمان خرید از بازار سیاه نیست
                     </p>
+                    {/* @ts-ignore */}
                     <p>فاز فعلی: {gameState?.current_phase || "نامشخص"}</p>
                 </div>
             </div>

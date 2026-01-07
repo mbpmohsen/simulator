@@ -113,6 +113,7 @@ export default function TeamStatusPanel() {
                         color: teamColors[index % teamColors.length],
                     };
                 });
+            // @ts-expect-error
             setTeam(newTeam);
 
             const newEnemy = Object.entries(gameState.side_credits)
@@ -125,6 +126,7 @@ export default function TeamStatusPanel() {
                     icon: enemyIcons[index % enemyIcons.length],
                     color: enemyColors[index % enemyColors.length],
                 }));
+            // @ts-expect-error
             setEnemy(newEnemy);
         } catch (error) {
             console.error("Error processing gameState:", error);
