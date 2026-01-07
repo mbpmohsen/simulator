@@ -105,9 +105,7 @@ export default function GameResultsDisplay() {
 
     const team1 = one ? teams?.[one] : undefined;
     const team2 = two ? teams?.[two] : undefined;
-
-    const winningTeam = winner === team1.side ? team1 : team2;
-    const isTeam1Winner = winner === team1.side
+    const isTeam1Winner = winner === team1?.side
 
     // Helper function to safely check if players array exists and has items
     const hasPlayers = (team: TeamData) =>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import AttackStatusPanel from "@/components/AttackStatusPanel";
 import GameFooter from "@/components/GameFooter";
 import GameNavbar from "@/components/GameNavbar";
-import GameResultsDisplay from "@/components/GameResultsDisplay";
+// import GameResultsDisplay from "@/components/GameResultsDisplay";
 import AnimatedBattleBackground from "@/components/MainBackground";
 import PlayerAttackCard from "@/components/PlayerAttackCard";
 import PlayersList from "@/components/PlayersList";
@@ -19,7 +19,9 @@ import { GameTabs } from "@/types/game";
 import type { GameStateResponse } from "@/types/gameState.types.ts";
 import {useRouter} from "next/navigation";
 import {useGameResultsStore} from "@/store/useGameResults.store.ts";
+import dynamic from "next/dynamic";
 
+const GameResultsDisplay = dynamic(() => import("@/components/GameResultsDisplay" , { ssr: false }))
 export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
 	const [visible, setVisible] = useState(false);
