@@ -2,11 +2,11 @@
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"outDir": "./dist",
-		"rootDir": "./src",
+		"rootDir": "./",
 		"allowImportingTsExtensions": false,
-		"moduleResolution": "node",
+		"moduleResolution": "NodeNext",
 		"esModuleInterop": true
 	},
-	"include": ["src/**/*"],
+	"include": ["./**/*.ts"],
 	"exclude": ["node_modules", "dist"]
 }

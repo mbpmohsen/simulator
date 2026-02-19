@@ -1,4 +1,4 @@
-export type { AppRouter } from "./server.ts";
-export * from "./server.ts";
-export * from "@trpc/react-query";
-export { trpc } from "./client.ts";
+export * from "./game-client/router.js";
+export * from "./game-client/types.js";
+export * from "./game-server/router.js";
+export * from "./game-server/types.js";

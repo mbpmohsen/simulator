@@ -1,149 +1,299 @@
-import { router, publicProcedure } from "../trpc";
-import { z } from "zod";
-import {
-	DetailResponseSchema,
-	ConfigureEventsRequestSchema,
-	ConfigureAllRequestSchema,
-	CurrentEventsResponseSchema,
-} from "./types";
+import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
+import type {
+	AdminLoginRequest,
+	AuthResponse,
+	ConfigureAllRequest,
+	ConfigureDirectivesRequest,
+	ConfigureEventsRequest,
+	CurrentEventsResponse,
+	DetailResponse,
+	EventStreamQuery,
+	GenericResponse,
+	ListUsersQuery,
+	UsersResponse,
+	UserLoginRequest,
+	UserSignupRequest,
+} from "./types.js";
 
-export const gameServerRouter = router({
-	// Game Control
-	startGame: publicProcedure
-		.meta({
-			openapi: {
-				method: "GET",
-				path: "/admin/start_game",
-				tags: ["Game Control"],
-				summary: "Start Game Endpoint",
-				description:
-					"Start the game. Ensure all configurations are complete before starting.",
-			},
-		})
-		.input(z.void())
-		.output(DetailResponseSchema)
-		.query(async () => {
-			// Implement your game start logic here
-			return { detail: "Game started successfully" };
-		}),
+export interface GameServerApiConfig {
+	baseURL: string;
+	adminToken?: string;
+	headers?: Record<string, string>;
+	timeout?: number;
+	axiosConfig?: AxiosRequestConfig;
+}
 
-	// Events Management
-	configureEvents: publicProcedure
-		.meta({
-			openapi: {
-				method: "POST",
-				path: "/admin/configure_events",
-				tags: ["Events"],
-				summary: "Configure Events",
-				description:
-					"Configure events for a game. These are saved separately and persist until changed.",
-			},
-		})
-		.input(ConfigureEventsRequestSchema)
-		.output(z.object({}))
-		.mutation(async ({ input }) => {
-			// Implement events configuration logic here
-			console.log("Configuring events:", input.events);
-			return {};
-		}),
+export interface GameServerApi {
+	signup(payload: UserSignupRequest, config?: AxiosRequestConfig): Promise<AuthResponse>;
+	login(payload: UserLoginRequest, config?: AxiosRequestConfig): Promise<AuthResponse>;
+	adminLogin(
+		payload: AdminLoginRequest,
+		config?: AxiosRequestConfig,
+	): Promise<AuthResponse>;
+	configureAll(
+		payload: ConfigureAllRequest,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	addEvents(
+		payload: ConfigureEventsRequest,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	deleteEvent(
+		eventName: string,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	clearEvents(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	startGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
+	resetGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
+	getAdminGameState(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	listUsers(query?: ListUsersQuery, config?: AxiosRequestConfig): Promise<UsersResponse>;
+	health(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getEvents(
+		gameId: string,
+		query?: EventStreamQuery,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	getEventsStatus(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getReadiness(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getEventsAdminAll(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
+	clearGameEvents(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
+	configureDirectives(
+		payload: ConfigureDirectivesRequest,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	addDirectives(
+		payload: ConfigureDirectivesRequest,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	deleteDirective(
+		directiveName: string,
+		config?: AxiosRequestConfig,
+	): Promise<GenericResponse>;
+	clearDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	listDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getActiveDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getCurrentEvents(config?: AxiosRequestConfig): Promise<CurrentEventsResponse>;
+}
 
-	addEvents: publicProcedure
-		.meta({
-			openapi: {
-				method: "POST",
-				path: "/admin/add_events",
-				tags: ["Events"],
-				summary: "Add Events",
-				description: "Add new events to existing events configuration.",
-			},
-		})
-		.input(ConfigureEventsRequestSchema)
-		.output(z.object({}))
-		.mutation(async ({ input }) => {
-			// Implement add events logic here
-			console.log("Adding events:", input.events);
-			return {};
-		}),
+const createHttpClient = (config: GameServerApiConfig): AxiosInstance => {
+	const authHeader = config.adminToken
+		? { Authorization: `Bearer ${config.adminToken}` }
+		: undefined;
 
-	deleteEvent: publicProcedure
-		.meta({
-			openapi: {
-				method: "DELETE",
-				path: "/admin/delete_event/{event_name}",
-				tags: ["Events"],
-				summary: "Delete Event",
-				description: "Delete a specific event by name.",
-			},
-		})
-		.input(
-			z.object({
-				event_name: z.string(),
-			}),
-		)
-		.output(z.object({}))
-		.mutation(async ({ input }) => {
-			// Implement delete event logic here
-			console.log("Deleting event:", input.event_name);
-			return {};
-		}),
+	return axios.create({
+		baseURL: config.baseURL,
+		headers: {
+			...authHeader,
+			...config.headers,
+		},
+		timeout: config.timeout,
+		...config.axiosConfig,
+	});
+};
 
-	clearEvents: publicProcedure
-		.meta({
-			openapi: {
-				method: "DELETE",
-				path: "/admin/clear_events",
-				tags: ["Events"],
-				summary: "Clear Events",
-				description:
-					"Clear all events (not game-specific, affects all future games)",
-			},
-		})
-		.input(z.void())
-		.output(z.object({}))
-		.mutation(async () => {
-			// Implement clear events logic here
-			console.log("Clearing all events");
-			return {};
-		}),
+export const createGameServerApi = (config: GameServerApiConfig): GameServerApi => {
+	const http = createHttpClient(config);
 
-	getCurrentEvents: publicProcedure
-		.meta({
-			openapi: {
-				method: "GET",
-				path: "/admin/get_current_events",
-				tags: ["Events"],
-				summary: "Get Current Events",
-				description: "Get events for the current active game",
-			},
-		})
-		.input(z.void())
-		.output(CurrentEventsResponseSchema)
-		.query(async () => {
-			// Implement get current events logic here
-			return { events: [] }; // Return current events
-		}),
+	return {
+		async signup(payload, requestConfig) {
+			const { data } = await http.post<AuthResponse>(
+				"/auth/signup",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
 
-	// Complete Configuration
-	configureAll: publicProcedure
-		.meta({
-			openapi: {
-				method: "POST",
-				path: "/admin/configure_all",
-				summary: "Configure All",
-				description: "Configure all settings in a single request.",
-			},
-		})
-		.input(ConfigureAllRequestSchema)
-		.output(z.object({}))
-		.mutation(async ({ input }) => {
-			console.log("Configuring all:", {
-				side_names: input.side_names,
-				team_names: input.team_names,
-				num_turns: input.num_turns,
-				teams_count: Object.keys(input.teams_and_players).length,
-				point_threshold: input.point_threshold,
-				black_market_items_count: input.black_market_items.length,
+		async login(payload, requestConfig) {
+			const { data } = await http.post<AuthResponse>(
+				"/auth/login",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async adminLogin(payload, requestConfig) {
+			const { data } = await http.post<AuthResponse>(
+				"/auth/admin/login",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async configureAll(payload, requestConfig) {
+			const { data } = await http.post<GenericResponse>(
+				"/admin/configure_all",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async addEvents(payload, requestConfig) {
+			const { data } = await http.post<GenericResponse>(
+				"/admin/add_events",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async deleteEvent(eventName, requestConfig) {
+			const { data } = await http.delete<GenericResponse>(
+				`/admin/delete_event/${encodeURIComponent(eventName)}`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async clearEvents(requestConfig) {
+			const { data } = await http.delete<GenericResponse>(
+				"/admin/clear_events",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async startGame(gameId, requestConfig) {
+			const { data } = await http.post<DetailResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/start`,
+				undefined,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async resetGame(gameId, requestConfig) {
+			const { data } = await http.post<DetailResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/reset`,
+				undefined,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getAdminGameState(requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				"/admin/game_state",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async listUsers(query, requestConfig) {
+			const { data } = await http.get<UsersResponse>("/admin/users", {
+				...requestConfig,
+				params: query,
 			});
-			return {};
-		}),
-});
+			return data;
+		},
+
+		async health(requestConfig) {
+			const { data } = await http.get<GenericResponse>("/health", requestConfig);
+			return data;
+		},
+
+		async getEvents(gameId, query, requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/events`,
+				{
+					...requestConfig,
+					params: query,
+				},
+			);
+			return data;
+		},
+
+		async getEventsStatus(gameId, requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/events/status`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getReadiness(gameId, requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/readiness`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getEventsAdminAll(gameId, requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/events/admin/all`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async clearGameEvents(gameId, requestConfig) {
+			const { data } = await http.delete<GenericResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/events`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async configureDirectives(payload, requestConfig) {
+			const { data } = await http.post<GenericResponse>(
+				"/configure_directives",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async addDirectives(payload, requestConfig) {
+			const { data } = await http.post<GenericResponse>(
+				"/add_directives",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async deleteDirective(directiveName, requestConfig) {
+			const { data } = await http.delete<GenericResponse>(
+				`/delete_directive/${encodeURIComponent(directiveName)}`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async clearDirectives(requestConfig) {
+			const { data } = await http.delete<GenericResponse>(
+				"/clear_directives",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async listDirectives(requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				"/directives",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getActiveDirectives(requestConfig) {
+			const { data } = await http.get<GenericResponse>(
+				"/active_directives",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getCurrentEvents(requestConfig) {
+			const { data } = await http.get<CurrentEventsResponse>(
+				"/admin/get_current_events",
+				requestConfig,
+			);
+			return data;
+		},
+	};
+};
