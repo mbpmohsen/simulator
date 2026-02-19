@@ -5,6 +5,23 @@ const ROOT = path.resolve(process.cwd());
 const INPUT_PATH = path.join(ROOT, "data", "enterprise-attack-17.1-t.json");
 const OUTPUT_PATH = path.join(ROOT, "data", "attack-prepared-catalog.json");
 
+const TACTIC_FA_MAP = {
+	"reconnaissance": "شناسایی",
+	"resource-development": "توسعه منابع",
+	"initial-access": "دسترسی اولیه",
+	"execution": "اجرا",
+	"persistence": "ماندگاری",
+	"privilege-escalation": "ارتقای سطح دسترسی",
+	"defense-evasion": "فرار از دفاع",
+	"credential-access": "دسترسی به اعتبارنامه",
+	"discovery": "اکتشاف",
+	"lateral-movement": "حرکت جانبی",
+	"collection": "جمع‌آوری",
+	"command-and-control": "فرماندهی و کنترل",
+	"exfiltration": "استخراج داده",
+	"impact": "اثرگذاری",
+};
+
 const readJson = async (filePath) => {
 	const raw = await fs.readFile(filePath, "utf8");
 	return JSON.parse(raw);
@@ -28,6 +45,17 @@ const pickPrimaryReference = (refs = []) =>
 	null;
 
 const cleanText = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
+
+const normalizeTacticName = (value) =>
+	String(value ?? "")
+		.replace(/[-_]+/g, " ")
+		.trim()
+		.replace(/\b\w/g, (char) => char.toUpperCase());
+
+const getFaTacticName = (value) => {
+	const key = String(value ?? "").toLowerCase();
+	return TACTIC_FA_MAP[key] ?? normalizeTacticName(value);
+};
 
 const buildCatalog = (bundle) => {
 	const objects = Array.isArray(bundle?.objects) ? bundle.objects : [];
@@ -85,7 +113,16 @@ const buildCatalog = (bundle) => {
 					? `https://attack.mitre.org/techniques/${externalId.replace(".", "/")}/`
 					: "";
 
-		const actionCode = normalize(externalId || technique.name || technique.id);
+		const attackName = cleanText(technique.name || "Unknown Technique");
+		const attackNameFa = cleanText(technique.name_fa || attackName);
+		const attackDescription = cleanText(technique.description || "");
+		const attackDescriptionFa = cleanText(technique.description_fa || attackDescription);
+		const attackDetection = cleanText(technique.x_mitre_detection || "");
+		const attackDetectionFa = cleanText(
+			technique.x_mitre_detection_fa || attackDetection,
+		);
+
+		const actionCode = normalize(externalId || attackName || technique.id);
 		const mitigationRelations = mitigatesByTarget.get(technique.id) ?? [];
 		const mitigationObjects = mitigationRelations
 			.map((relation) => mitigationById.get(relation.source_ref))
@@ -106,41 +143,66 @@ const buildCatalog = (bundle) => {
 			.slice(0, 4)
 			.map((relation) => {
 				const source = objectById.get(relation.source_ref);
+				const sourceName = cleanText(source?.name || relation.source_ref || "Unknown");
+				const sourceNameFa = cleanText(source?.name_fa || sourceName);
+				const summary = cleanText(relation.description || "");
+				const summaryFa = cleanText(relation.description_fa || summary);
 				return {
-					source_name: cleanText(source?.name || relation.source_ref || "Unknown"),
-					summary: cleanText(relation.description || ""),
+					source_name: sourceName,
+					source_name_fa: sourceNameFa,
+					summary,
+					summary_fa: summaryFa,
 				};
 			})
-			.filter((entry) => entry.summary.length > 0);
+			.filter((entry) => entry.summary.length > 0 || entry.summary_fa.length > 0);
 
 		const mitigationEntries = mitigationObjects.map((mitigation) => ({
 			id: mitigation.id,
 			name: cleanText(mitigation.name),
+			name_fa: cleanText(mitigation.name_fa || mitigation.name),
 			description: cleanText(mitigation.description || ""),
+			description_fa: cleanText(
+				mitigation.description_fa || mitigation.description || "",
+			),
 		}));
 
-		const tactics = (Array.isArray(technique.kill_chain_phases)
+		const tacticsRaw = (Array.isArray(technique.kill_chain_phases)
 			? technique.kill_chain_phases
 			: []
 		)
 			.filter((phase) => phase?.kill_chain_name === "mitre-attack")
 			.map((phase) => String(phase.phase_name))
 			.filter(Boolean);
+		const tactics = tacticsRaw.map((item) => normalizeTacticName(item));
+		const tacticsFa = tacticsRaw.map((item) => getFaTacticName(item));
+
+		const defaultDefenseName = `${attackName} Defense`;
+		const defaultDefenseNameFa = `${attackNameFa} دفاع`;
+		const defaultDefenseDescription = `Defensive measure against ${attackName || "attack"}.`;
+		const defaultDefenseDescriptionFa = `اقدام دفاعی برای مقابله با ${attackNameFa || "حمله"}.`;
+		const mainMitigationExternal =
+			mainMitigation?.external_references?.[0]?.external_id ||
+			mainMitigation?.id ||
+			defenseCode;
 
 		const attackAction = {
 			code: actionCode,
-			name: cleanText(technique.name || "Technique Action"),
+			name: attackName,
+			name_fa: attackNameFa,
 			type: "attack",
-			description: cleanText(technique.description || ""),
+			description: attackDescription,
+			description_fa: attackDescriptionFa,
 			mitre_mapping: {
 				techniques: [
 					{
 						id: externalId || technique.id,
-						name: cleanText(technique.name || "Technique"),
+						name: attackName,
+						name_fa: attackNameFa,
 						url: attackUrl || undefined,
 					},
 				],
-				tactics: tactics.map((item) => item.replace(/_/g, " ")),
+				tactics,
+				tactics_fa: tacticsFa,
 			},
 			base_stats: {
 				cost: Math.min(220, Math.max(10, 10 + tactics.length * 10)),
@@ -166,23 +228,25 @@ const buildCatalog = (bundle) => {
 
 		const defenseAction = {
 			code: defenseCode,
-			name: cleanText(mainMitigation?.name || `${technique.name} Defense`),
+			name: cleanText(mainMitigation?.name || defaultDefenseName),
+			name_fa: cleanText(mainMitigation?.name_fa || defaultDefenseNameFa),
 			type: "defense",
-			description: cleanText(
-				mainMitigation?.description ||
-					`Defensive measure against ${technique.name || "attack"}.`,
+			description: cleanText(mainMitigation?.description || defaultDefenseDescription),
+			description_fa: cleanText(
+				mainMitigation?.description_fa || defaultDefenseDescriptionFa,
 			),
 			mitre_mapping: {
 				techniques: [
 					{
-						id:
-							mainMitigation?.external_references?.[0]?.external_id ||
-							mainMitigation?.id ||
-							defenseCode,
+						id: mainMitigationExternal,
 						name: cleanText(mainMitigation?.name || "Mitigation"),
+						name_fa: cleanText(
+							mainMitigation?.name_fa || mainMitigation?.name || "کاهش تهدید",
+						),
 					},
 				],
 				tactics: ["Defense"],
+				tactics_fa: ["دفاع"],
 			},
 			base_stats: {
 				cost: Math.max(8, Math.floor((10 + tactics.length * 8) * 0.8)),
@@ -212,15 +276,18 @@ const buildCatalog = (bundle) => {
 				{
 					defense_code: defenseCode,
 					effectiveness: 80,
-					description: `Mitigates ${cleanText(technique.name || "attack")} impact.`,
+					description: `Mitigates ${attackName || "attack"} impact.`,
+					description_fa: `اثر ${attackNameFa || "حمله"} را کاهش می‌دهد.`,
 				},
 			],
 		};
 
 		const blackMarket = {
 			code: `${actionCode}_BOOST`,
-			name: `${cleanText(technique.name || "Technique")} Booster`,
+			name: `${attackName || "Technique"} Booster`,
+			name_fa: `بوستر ${attackNameFa || "تکنیک"}`,
 			description: `Boost success probability for ${actionCode} for limited turns.`,
+			description_fa: `احتمال موفقیت ${attackNameFa || actionCode} را برای چند نوبت افزایش می‌دهد.`,
 			item_type: "consumable",
 			effect_type: "probability_increase",
 			target: {
@@ -231,6 +298,7 @@ const buildCatalog = (bundle) => {
 				modifier_type: "additive",
 				value: 20,
 				description: "+20 success probability",
+				description_fa: "+۲۰ احتمال موفقیت",
 			},
 			cost: 35,
 			duration_turns: 3,
@@ -250,12 +318,16 @@ const buildCatalog = (bundle) => {
 		return {
 			id: technique.id,
 			external_id: externalId || null,
-			name: cleanText(technique.name || "Unknown Technique"),
-			description: cleanText(technique.description || ""),
-			detection_strategy: cleanText(technique.x_mitre_detection || ""),
+			name: attackName,
+			name_fa: attackNameFa,
+			description: attackDescription,
+			description_fa: attackDescriptionFa,
+			detection_strategy: attackDetection,
+			detection_strategy_fa: attackDetectionFa,
 			procedure_examples: procedures,
 			mitigations: mitigationEntries,
 			tactics,
+			tactics_fa: tacticsFa,
 			templates: {
 				actions: [attackAction, defenseAction],
 				action_counters: [actionCounter],
@@ -266,7 +338,7 @@ const buildCatalog = (bundle) => {
 
 	return {
 		version: "1.0",
-		source: "MITRE ATT&CK Enterprise 17.1",
+		source: "MITRE ATT&CK Enterprise 17.1 (Translated)",
 		generated_at: new Date().toISOString(),
 		total_items: items.length,
 		items,

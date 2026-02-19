@@ -121,6 +121,7 @@ interface PreparedDetailItem {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.app";
+const PREPARED_CATALOG_LANG = "fa";
 const STEP_ORDER: StepKey[] = ["base", "actions", "counter-market", "review"];
 const STEP_TITLE: Record<StepKey, string> = {
 	base: "۱) پایه بازی",
@@ -351,7 +352,9 @@ export default function AdminConfigurationPage() {
 		const loadPreparedSummary = async () => {
 			setIsPreparedLoading(true);
 			try {
-				const response = await fetch("/api/prepared-catalog?summary=true&limit=700");
+				const response = await fetch(
+					`/api/prepared-catalog?summary=true&limit=700&lang=${PREPARED_CATALOG_LANG}`,
+				);
 				const payload = (await response.json()) as {
 					items?: PreparedSummaryItem[];
 				};
@@ -457,7 +460,9 @@ export default function AdminConfigurationPage() {
 		setIsPreparedDetailLoading(true);
 		setError(null);
 		try {
-			const response = await fetch(`/api/prepared-catalog?id=${encodeURIComponent(id)}`);
+			const response = await fetch(
+				`/api/prepared-catalog?id=${encodeURIComponent(id)}&lang=${PREPARED_CATALOG_LANG}`,
+			);
 			if (!response.ok) {
 				throw new Error("جزئیات تکنیک آماده پیدا نشد.");
 			}
@@ -1343,554 +1348,661 @@ export default function AdminConfigurationPage() {
 									) : null}
 
 									{currentStep === "actions" ? (
-										<div className="space-y-4">
-											<div className="rounded-xl border border-orange-700/40 bg-orange-950/15 p-4">
+										<div className="grid grid-cols-1 2xl:grid-cols-[0.92fr_1.08fr] gap-4">
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.2 }}
+												className="rounded-xl border border-orange-700/40 bg-orange-950/15 p-4 space-y-3"
+											>
 												<div className="flex items-center justify-between gap-3 flex-wrap">
 													<div>
-														<div className="font-semibold text-orange-200">حالت تنظیم اکشن</div>
+														<div className="font-semibold text-orange-200">راهنمای اکشن‌ها (مرحله ۲)</div>
 														<div className="text-xs text-slate-400 mt-1">
-															Prepared برای کاربران ساده بهتر است. Custom برای تنظیم کامل دستی.
+															برای کاربران عمومی، حالت آماده بهترین انتخاب است.
 														</div>
 													</div>
 													<div className="flex gap-2">
 														<Button
 															variant={templateMode === "prepared" ? "default" : "outline"}
-															className={templateMode === "prepared" ? "bg-orange-700 hover:bg-orange-600" : "border-slate-600"}
+															className={
+																templateMode === "prepared"
+																	? "bg-orange-700 hover:bg-orange-600"
+																	: "border-slate-600"
+															}
 															onClick={() => setTemplateMode("prepared")}
 														>
-															Prepared
+															آماده
 														</Button>
 														<Button
 															variant={templateMode === "custom" ? "default" : "outline"}
-															className={templateMode === "custom" ? "bg-orange-700 hover:bg-orange-600" : "border-slate-600"}
+															className={
+																templateMode === "custom"
+																	? "bg-orange-700 hover:bg-orange-600"
+																	: "border-slate-600"
+															}
 															onClick={() => setTemplateMode("custom")}
 														>
-															Custom
+															دستی
 														</Button>
 													</div>
 												</div>
-											</div>
 
-											{templateMode === "prepared" ? (
-												<div className="grid grid-cols-1 xl:grid-cols-[1fr_1.1fr] gap-4">
-													<div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-2">
-														<Label>Search ATT&CK Technique</Label>
-														<Input
-															placeholder="مثال: Hijack Execution Flow"
-															value={preparedSearch}
-															onChange={(event) => setPreparedSearch(event.target.value)}
-															className="bg-slate-950/80 border-slate-700"
-														/>
-														<ScrollArea className="h-72 rounded border border-slate-800 p-2">
-															{isPreparedLoading ? (
-																<div className="text-sm text-slate-400 p-2">در حال بارگذاری...</div>
-															) : (
-																<div className="space-y-2">
-																	{filteredPrepared.map((item) => (
-																		<button
-																			key={item.id}
-																			type="button"
-																			onClick={() => void selectPreparedItem(item.id)}
-																			className="w-full text-right rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 hover:border-cyan-500/50 transition-colors"
-																		>
-																			<div className="text-sm font-semibold">{item.name}</div>
-																			<div className="text-xs text-slate-400 mt-1">
-																				{item.external_id ?? "N/A"} • {item.tactics.join(", ") || "No tactic"}
+												{templateMode === "prepared" ? (
+													<div className="space-y-3">
+														<div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-2">
+															<Label>جستجوی تکنیک آماده</Label>
+															<Input
+																placeholder="مثال: Hijack Execution Flow"
+																value={preparedSearch}
+																onChange={(event) => setPreparedSearch(event.target.value)}
+																className="bg-slate-950/80 border-slate-700"
+															/>
+															<ScrollArea className="h-64 rounded border border-slate-800 p-2">
+																{isPreparedLoading ? (
+																	<div className="text-sm text-slate-400 p-2">در حال بارگذاری...</div>
+																) : (
+																	<div className="space-y-2">
+																		{filteredPrepared.map((item) => (
+																			<button
+																				key={item.id}
+																				type="button"
+																				onClick={() => void selectPreparedItem(item.id)}
+																				className="w-full text-right rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 hover:border-cyan-500/50 transition-colors"
+																			>
+																				<div className="text-sm font-semibold">{item.name}</div>
+																				<div className="text-xs text-slate-400 mt-1">
+																					{item.external_id ?? "N/A"} • {item.tactics.join("، ") || "بدون تاکتیک"}
+																				</div>
+																			</button>
+																		))}
+																	</div>
+																)}
+															</ScrollArea>
+														</div>
+
+														<div className="rounded-xl border border-cyan-700/40 bg-cyan-950/10 p-3">
+															{isPreparedDetailLoading ? (
+																<div className="text-sm text-slate-300">در حال بارگذاری جزئیات...</div>
+															) : preparedDetail ? (
+																<div className="space-y-3">
+																	<div className="flex items-start justify-between gap-3">
+																		<div>
+																			<div className="text-sm text-cyan-300 font-semibold">
+																				{preparedDetail.name}
 																			</div>
-																		</button>
-																	))}
+																			<div className="text-xs text-slate-400">
+																				{preparedDetail.external_id ?? "N/A"} •{" "}
+																				{preparedDetail.tactics.join("، ")}
+																			</div>
+																		</div>
+																		<Button
+																			onClick={applyPreparedTemplate}
+																			className="bg-cyan-700 hover:bg-cyan-600"
+																		>
+																			<Sparkles className="w-4 h-4 mr-2" />
+																			اعمال سریع
+																		</Button>
+																	</div>
+																	<ScrollArea className="h-[290px] rounded border border-slate-700 bg-slate-950/40 p-2">
+																		<div className="space-y-3 pr-2">
+																			<div className="text-xs text-slate-300 leading-6">
+																				{preparedDetail.description || "بدون توضیح"}
+																			</div>
+																			<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+																				<div className="text-xs text-slate-400 mb-1">راهبرد تشخیص</div>
+																				<div className="text-xs leading-6 text-slate-200">
+																					{preparedDetail.detection_strategy || "راهبردی ثبت نشده"}
+																				</div>
+																			</div>
+																			<div className="grid grid-cols-1 gap-2">
+																				<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+																					<div className="text-xs text-slate-400 mb-1">نمونه اجرا</div>
+																					<ul className="text-xs space-y-1">
+																						{preparedDetail.procedure_examples
+																							.slice(0, 3)
+																							.map((example, idx) => (
+																								<li
+																									key={`${example.source_name}-${idx}`}
+																									className="leading-5"
+																								>
+																									<span className="text-cyan-300">
+																										{example.source_name}:
+																									</span>{" "}
+																									<span>{example.summary}</span>
+																								</li>
+																							))}
+																					</ul>
+																				</div>
+																				<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+																					<div className="text-xs text-slate-400 mb-1">کاهنده‌ها</div>
+																					<ul className="text-xs space-y-1">
+																						{preparedDetail.mitigations.slice(0, 3).map((mitigation) => (
+																							<li key={mitigation.id} className="leading-5">
+																								<span className="text-emerald-300">
+																									{mitigation.name}
+																								</span>
+																							</li>
+																						))}
+																					</ul>
+																				</div>
+																			</div>
+																		</div>
+																	</ScrollArea>
+																</div>
+															) : (
+																<div className="text-sm text-slate-400">
+																	یک آیتم از لیست انتخاب کنید تا جزئیات و Template نمایش داده شود.
 																</div>
 															)}
-														</ScrollArea>
+														</div>
 													</div>
-
-													<div className="rounded-xl border border-cyan-700/40 bg-cyan-950/10 p-3">
-														{isPreparedDetailLoading ? (
-															<div className="text-sm text-slate-300">در حال بارگذاری جزئیات...</div>
-														) : preparedDetail ? (
-															<div className="space-y-3">
-																<div className="flex items-start justify-between gap-3">
-																	<div>
-																		<div className="text-sm text-cyan-300 font-semibold">
-																			{preparedDetail.name}
-																		</div>
-																		<div className="text-xs text-slate-400">
-																			{preparedDetail.external_id ?? "N/A"} • {preparedDetail.tactics.join(", ")}
-																		</div>
-																	</div>
-																	<Button onClick={applyPreparedTemplate} className="bg-cyan-700 hover:bg-cyan-600">
-																		<Sparkles className="w-4 h-4 mr-2" />
-																		اعمال Template
-																	</Button>
-																</div>
-																<div className="text-xs text-slate-300 leading-6">
-																	{preparedDetail.description || "No description"}
-																</div>
-																<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																	<div className="text-xs text-slate-400 mb-1">Detection Strategy</div>
-																	<div className="text-xs leading-6 text-slate-200">
-																		{preparedDetail.detection_strategy || "No detection guidance"}
-																	</div>
-																</div>
-																<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-																	<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																		<div className="text-xs text-slate-400 mb-1">Procedure Examples</div>
-																		<ul className="text-xs space-y-1">
-																			{preparedDetail.procedure_examples.slice(0, 3).map((example, idx) => (
-																				<li key={`${example.source_name}-${idx}`} className="leading-5">
-																					<span className="text-cyan-300">{example.source_name}:</span>{" "}
-																					<span>{example.summary}</span>
-																				</li>
-																			))}
-																		</ul>
-																	</div>
-																	<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																		<div className="text-xs text-slate-400 mb-1">Mitigations</div>
-																		<ul className="text-xs space-y-1">
-																			{preparedDetail.mitigations.slice(0, 3).map((mitigation) => (
-																				<li key={mitigation.id} className="leading-5">
-																					<span className="text-emerald-300">{mitigation.name}</span>
-																				</li>
-																			))}
-																		</ul>
-																	</div>
-																</div>
-															</div>
-														) : (
-															<div className="text-sm text-slate-400">
-																یک آیتم از لیست انتخاب کنید تا جزئیات و Template نمایش داده شود.
-															</div>
-														)}
+												) : (
+													<div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 text-sm text-slate-300 leading-7">
+														در حالت دستی، اکشن‌ها را مستقیم در پنل سمت راست تعریف کنید.
+														برای ساده‌سازی، ابتدا یک اکشن حمله و یک اکشن دفاعی بسازید.
 													</div>
-												</div>
-											) : null}
+												)}
+											</motion.div>
 
-											<div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-3">
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.24, delay: 0.04 }}
+												className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-3"
+											>
 												<div className="flex items-center justify-between flex-wrap gap-2">
 													<div className="font-semibold text-slate-200">Action Builder</div>
 													<div className="flex gap-2">
-														<Button size="sm" variant="outline" className="border-slate-600" onClick={() => addAction("attack")}>
+														<Button
+															size="sm"
+															variant="outline"
+															className="border-slate-600"
+															onClick={() => addAction("attack")}
+														>
 															+ Attack Action
 														</Button>
-														<Button size="sm" variant="outline" className="border-slate-600" onClick={() => addAction("defense")}>
+														<Button
+															size="sm"
+															variant="outline"
+															className="border-slate-600"
+															onClick={() => addAction("defense")}
+														>
 															+ Defense Action
 														</Button>
 													</div>
 												</div>
-												<div className="space-y-3">
-													{actions.map((action) => (
-														<div key={action.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
-															<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_auto] gap-2 items-end">
+												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
+													<div className="space-y-3">
+														{actions.map((action) => (
+															<div key={action.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_auto] gap-2 items-end">
+																	<Input
+																		value={action.code}
+																		onChange={(event) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
+																			}))
+																		}
+																		placeholder="CODE"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																	<Input
+																		value={action.name}
+																		onChange={(event) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				name: event.target.value,
+																			}))
+																		}
+																		placeholder="Action Name"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																	<select
+																		value={action.type}
+																		onChange={(event) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				type: event.target.value as ActionKind,
+																				pointsOnSuccess:
+																					event.target.value === "defense"
+																						? 0
+																						: Math.max(1, current.pointsOnSuccess),
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="attack">attack</option>
+																		<option value="defense">defense</option>
+																	</select>
+																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeAction(action.id)}>
+																		Remove
+																	</Button>
+																</div>
+																<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+																	<Input
+																		value={action.mitreTechniqueId}
+																		onChange={(event) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				mitreTechniqueId: event.target.value,
+																			}))
+																		}
+																		placeholder="MITRE Technique ID (e.g. T1574.004)"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																	<Input
+																		value={action.mitreTechniqueUrl}
+																		onChange={(event) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				mitreTechniqueUrl: event.target.value,
+																			}))
+																		}
+																		placeholder="MITRE URL"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																</div>
 																<Input
-																	value={action.code}
+																	value={action.tacticsCsv}
 																	onChange={(event) =>
 																		updateAction(action.id, (current) => ({
 																			...current,
-																			code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
+																			tacticsCsv: event.target.value,
 																		}))
 																	}
-																	placeholder="CODE"
+																	placeholder="Tactics CSV (Impact, Defense Evasion)"
 																	className="bg-slate-950/80 border-slate-700"
 																/>
-																<Input
-																	value={action.name}
+																<textarea
+																	value={action.description}
 																	onChange={(event) =>
 																		updateAction(action.id, (current) => ({
 																			...current,
-																			name: event.target.value,
+																			description: event.target.value,
 																		}))
 																	}
-																	placeholder="Action Name"
-																	className="bg-slate-950/80 border-slate-700"
+																	placeholder="Action description..."
+																	className="w-full min-h-16 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
 																/>
-																<select
-																	value={action.type}
-																	onChange={(event) =>
-																		updateAction(action.id, (current) => ({
-																			...current,
-																			type: event.target.value as ActionKind,
-																			pointsOnSuccess:
-																				event.target.value === "defense"
-																					? 0
-																					: Math.max(1, current.pointsOnSuccess),
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="attack">attack</option>
-																	<option value="defense">defense</option>
-																</select>
-																<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeAction(action.id)}>
-																	Remove
-																</Button>
+																<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+																	<RangeField label="Cost" min={1} max={500} value={action.cost} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cost: value }))} />
+																	<RangeField label="Success %" min={1} max={100} value={action.successProbability} onChange={(value) => updateAction(action.id, (current) => ({ ...current, successProbability: value }))} />
+																	<RangeField label="Points on Success" min={0} max={10} value={action.pointsOnSuccess} onChange={(value) => updateAction(action.id, (current) => ({ ...current, pointsOnSuccess: value }))} />
+																	<RangeField label="Cooldown" min={0} max={6} value={action.cooldownTurns} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cooldownTurns: value }))} />
+																</div>
 															</div>
-															<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-																<Input
-																	value={action.mitreTechniqueId}
-																	onChange={(event) =>
-																		updateAction(action.id, (current) => ({
-																			...current,
-																			mitreTechniqueId: event.target.value,
-																		}))
-																	}
-																	placeholder="MITRE Technique ID (e.g. T1574.004)"
-																	className="bg-slate-950/80 border-slate-700"
-																/>
-																<Input
-																	value={action.mitreTechniqueUrl}
-																	onChange={(event) =>
-																		updateAction(action.id, (current) => ({
-																			...current,
-																			mitreTechniqueUrl: event.target.value,
-																		}))
-																	}
-																	placeholder="MITRE URL"
-																	className="bg-slate-950/80 border-slate-700"
-																/>
-															</div>
-															<Input
-																value={action.tacticsCsv}
-																onChange={(event) =>
-																	updateAction(action.id, (current) => ({
-																		...current,
-																		tacticsCsv: event.target.value,
-																	}))
-																}
-																placeholder="Tactics CSV (Impact, Defense Evasion)"
-																className="bg-slate-950/80 border-slate-700"
-															/>
-															<textarea
-																value={action.description}
-																onChange={(event) =>
-																	updateAction(action.id, (current) => ({
-																		...current,
-																		description: event.target.value,
-																	}))
-																}
-																placeholder="Action description..."
-																className="w-full min-h-16 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
-															/>
-															<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-																<RangeField label="Cost" min={1} max={500} value={action.cost} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cost: value }))} />
-																<RangeField label="Success %" min={1} max={100} value={action.successProbability} onChange={(value) => updateAction(action.id, (current) => ({ ...current, successProbability: value }))} />
-																<RangeField label="Points on Success" min={0} max={10} value={action.pointsOnSuccess} onChange={(value) => updateAction(action.id, (current) => ({ ...current, pointsOnSuccess: value }))} />
-																<RangeField label="Cooldown" min={0} max={6} value={action.cooldownTurns} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cooldownTurns: value }))} />
-															</div>
-														</div>
-													))}
-												</div>
-											</div>
+														))}
+													</div>
+												</ScrollArea>
+											</motion.div>
 										</div>
 									) : null}
 
 									{currentStep === "counter-market" ? (
-										<div className="space-y-4">
-											<div className="rounded-xl border border-blue-700/30 bg-blue-950/10 p-3 space-y-3">
+										<div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.2 }}
+												className="rounded-xl border border-blue-700/30 bg-blue-950/10 p-3 space-y-3"
+											>
 												<div className="flex items-center justify-between">
 													<div className="font-semibold text-blue-200">Action Counters</div>
 													<Button size="sm" variant="outline" className="border-slate-600" onClick={addCounter}>
 														+ Counter
 													</Button>
 												</div>
-												<div className="space-y-3">
-													{actionCounters.map((counter) => (
-														<div key={counter.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
-															<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
-																<select
-																	value={counter.attackCode}
+												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
+													<div className="space-y-3">
+														{actionCounters.map((counter) => (
+															<div key={counter.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+																	<select
+																		value={counter.attackCode}
+																		onChange={(event) =>
+																			updateCounter(counter.id, (current) => ({
+																				...current,
+																				attackCode: event.target.value,
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="">Select attack action</option>
+																		{attackCodes.map((code) => (
+																			<option key={code} value={code}>
+																				{code}
+																			</option>
+																		))}
+																	</select>
+																	<select
+																		value={counter.defenseCode}
+																		onChange={(event) =>
+																			updateCounter(counter.id, (current) => ({
+																				...current,
+																				defenseCode: event.target.value,
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="">Select defense action</option>
+																		{defenseCodes.map((code) => (
+																			<option key={code} value={code}>
+																				{code}
+																			</option>
+																		))}
+																	</select>
+																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeCounter(counter.id)}>
+																		Remove
+																	</Button>
+																</div>
+																<RangeField
+																	label="Effectiveness %"
+																	min={1}
+																	max={100}
+																	value={counter.effectiveness}
+																	onChange={(value) =>
+																		updateCounter(counter.id, (current) => ({
+																			...current,
+																			effectiveness: value,
+																		}))
+																	}
+																/>
+																<Input
+																	value={counter.description}
 																	onChange={(event) =>
 																		updateCounter(counter.id, (current) => ({
 																			...current,
-																			attackCode: event.target.value,
+																			description: event.target.value,
 																		}))
 																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="">Select attack action</option>
-																	{attackCodes.map((code) => (
-																		<option key={code} value={code}>
-																			{code}
-																		</option>
-																	))}
-																</select>
-																<select
-																	value={counter.defenseCode}
-																	onChange={(event) =>
-																		updateCounter(counter.id, (current) => ({
-																			...current,
-																			defenseCode: event.target.value,
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="">Select defense action</option>
-																	{defenseCodes.map((code) => (
-																		<option key={code} value={code}>
-																			{code}
-																		</option>
-																	))}
-																</select>
-																<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeCounter(counter.id)}>
-																	Remove
-																</Button>
+																	placeholder="Counter description"
+																	className="bg-slate-950/80 border-slate-700"
+																/>
 															</div>
-															<RangeField
-																label="Effectiveness %"
-																min={1}
-																max={100}
-																value={counter.effectiveness}
-																onChange={(value) =>
-																	updateCounter(counter.id, (current) => ({
-																		...current,
-																		effectiveness: value,
-																	}))
-																}
-															/>
-															<Input
-																value={counter.description}
-																onChange={(event) =>
-																	updateCounter(counter.id, (current) => ({
-																		...current,
-																		description: event.target.value,
-																	}))
-																}
-																placeholder="Counter description"
-																className="bg-slate-950/80 border-slate-700"
-															/>
-														</div>
-													))}
-												</div>
-											</div>
+														))}
+													</div>
+												</ScrollArea>
+											</motion.div>
 
-											<div className="rounded-xl border border-amber-700/30 bg-amber-950/10 p-3 space-y-3">
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.24, delay: 0.04 }}
+												className="rounded-xl border border-amber-700/30 bg-amber-950/10 p-3 space-y-3"
+											>
 												<div className="flex items-center justify-between">
 													<div className="font-semibold text-amber-200">Black Market Items</div>
 													<Button size="sm" variant="outline" className="border-slate-600" onClick={addBlackMarketItem}>
 														+ Item
 													</Button>
 												</div>
-												<div className="space-y-3">
-													{blackMarketItems.map((item) => (
-														<div key={item.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
-															<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
-																<Input
-																	value={item.code}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
-																		}))
-																	}
-																	placeholder="Item Code"
-																	className="bg-slate-950/80 border-slate-700"
-																/>
-																<Input
-																	value={item.name}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			name: event.target.value,
-																		}))
-																	}
-																	placeholder="Item Name"
-																	className="bg-slate-950/80 border-slate-700"
-																/>
-																<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeBlackMarketItem(item.id)}>
-																	Remove
-																</Button>
-															</div>
-															<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-																<select
-																	value={item.itemType}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			itemType: event.target.value as
-																				| "consumable"
-																				| "unlock"
-																				| "instant",
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="consumable">consumable</option>
-																	<option value="unlock">unlock</option>
-																	<option value="instant">instant</option>
-																</select>
-																<select
-																	value={item.effectType}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			effectType: event.target.value as
-																				| "probability_increase"
-																				| "cost_reduction"
-																				| "action_unlock"
-																				| "credit_gain",
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="probability_increase">probability_increase</option>
-																	<option value="cost_reduction">cost_reduction</option>
-																	<option value="action_unlock">action_unlock</option>
-																	<option value="credit_gain">credit_gain</option>
-																</select>
-																<select
-																	value={item.modifierType}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			modifierType: event.target.value as
-																				| "additive"
-																				| "multiplicative"
-																				| "unlock"
-																				| "instant",
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="additive">additive</option>
-																	<option value="multiplicative">multiplicative</option>
-																	<option value="unlock">unlock</option>
-																	<option value="instant">instant</option>
-																</select>
-															</div>
-															<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-																<select
-																	value={item.targetActionCode}
-																	onChange={(event) => {
-																		const selected = actions.find((action) => action.code === event.target.value);
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			targetActionCode: event.target.value,
-																			targetActionType: selected?.type ?? "",
-																		}));
-																	}}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="">Target action</option>
-																	{actions.map((action) => (
-																		<option key={action.id} value={action.code}>
-																			{action.code} ({action.type})
-																		</option>
-																	))}
-																</select>
-																<select
-																	value={item.targetActionType}
-																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			targetActionType: event.target.value as ActionKind | "",
-																		}))
-																	}
-																	className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
-																>
-																	<option value="">Target type</option>
-																	<option value="attack">attack</option>
-																	<option value="defense">defense</option>
-																</select>
-															</div>
-															<textarea
-																value={item.description}
-																onChange={(event) =>
-																	updateBlackMarketItem(item.id, (current) => ({
-																		...current,
-																		description: event.target.value,
-																	}))
-																}
-																placeholder="Item description"
-																className="w-full min-h-14 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
-															/>
-															<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-																<RangeField label="Value" min={1} max={200} value={item.value} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, value }))} />
-																<RangeField label="Cost" min={1} max={400} value={item.cost} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, cost: value }))} />
-																<RangeField label="Duration" min={1} max={10} value={item.durationTurns ?? 1} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, durationTurns: value }))} />
-																<RangeField label="Available From Turn" min={1} max={20} value={item.availableFromTurn} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, availableFromTurn: value }))} />
-															</div>
-															<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-																<div className="space-y-1.5">
-																	<Label className="text-xs">Stackable</Label>
-																	<select
-																		value={item.stackable ? "true" : "false"}
+												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
+													<div className="space-y-3">
+														{blackMarketItems.map((item) => (
+															<div key={item.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+																	<Input
+																		value={item.code}
 																		onChange={(event) =>
 																			updateBlackMarketItem(item.id, (current) => ({
 																				...current,
-																				stackable: event.target.value === "true",
+																				code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
 																			}))
 																		}
-																		className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																		placeholder="Item Code"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																	<Input
+																		value={item.name}
+																		onChange={(event) =>
+																			updateBlackMarketItem(item.id, (current) => ({
+																				...current,
+																				name: event.target.value,
+																			}))
+																		}
+																		placeholder="Item Name"
+																		className="bg-slate-950/80 border-slate-700"
+																	/>
+																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeBlackMarketItem(item.id)}>
+																		Remove
+																	</Button>
+																</div>
+																<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+																	<select
+																		value={item.itemType}
+																		onChange={(event) =>
+																			updateBlackMarketItem(item.id, (current) => ({
+																				...current,
+																				itemType: event.target.value as
+																					| "consumable"
+																					| "unlock"
+																					| "instant",
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
-																		<option value="false">false</option>
-																		<option value="true">true</option>
+																		<option value="consumable">consumable</option>
+																		<option value="unlock">unlock</option>
+																		<option value="instant">instant</option>
+																	</select>
+																	<select
+																		value={item.effectType}
+																		onChange={(event) =>
+																			updateBlackMarketItem(item.id, (current) => ({
+																				...current,
+																				effectType: event.target.value as
+																					| "probability_increase"
+																					| "cost_reduction"
+																					| "action_unlock"
+																					| "credit_gain",
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="probability_increase">probability_increase</option>
+																		<option value="cost_reduction">cost_reduction</option>
+																		<option value="action_unlock">action_unlock</option>
+																		<option value="credit_gain">credit_gain</option>
+																	</select>
+																	<select
+																		value={item.modifierType}
+																		onChange={(event) =>
+																			updateBlackMarketItem(item.id, (current) => ({
+																				...current,
+																				modifierType: event.target.value as
+																					| "additive"
+																					| "multiplicative"
+																					| "unlock"
+																					| "instant",
+																			}))
+																		}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="additive">additive</option>
+																		<option value="multiplicative">multiplicative</option>
+																		<option value="unlock">unlock</option>
+																		<option value="instant">instant</option>
 																	</select>
 																</div>
-																<div className="space-y-1.5">
-																	<Label className="text-xs">Stock Limit (-1 = null)</Label>
-																	<Input
-																		type="number"
-																		value={item.stockLimit ?? -1}
+																<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+																	<select
+																		value={item.targetActionCode}
+																		onChange={(event) => {
+																			const selected = actions.find((action) => action.code === event.target.value);
+																			updateBlackMarketItem(item.id, (current) => ({
+																				...current,
+																				targetActionCode: event.target.value,
+																				targetActionType: selected?.type ?? "",
+																			}));
+																		}}
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="">Target action</option>
+																		{actions.map((action) => (
+																			<option key={action.id} value={action.code}>
+																				{action.code} ({action.type})
+																			</option>
+																		))}
+																	</select>
+																	<select
+																		value={item.targetActionType}
 																		onChange={(event) =>
 																			updateBlackMarketItem(item.id, (current) => ({
 																				...current,
-																				stockLimit:
-																					Number(event.target.value) < 0
-																						? null
-																						: Number(event.target.value),
+																				targetActionType: event.target.value as ActionKind | "",
 																			}))
 																		}
-																		className="bg-slate-950/80 border-slate-700"
-																	/>
+																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="">Target type</option>
+																		<option value="attack">attack</option>
+																		<option value="defense">defense</option>
+																	</select>
 																</div>
-																<div className="space-y-1.5">
-																	<Label className="text-xs">Per Team Limit (-1 = null)</Label>
-																	<Input
-																		type="number"
-																		value={item.perTeamLimit ?? -1}
-																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				perTeamLimit:
-																					Number(event.target.value) < 0
-																						? null
-																						: Number(event.target.value),
-																			}))
-																		}
-																		className="bg-slate-950/80 border-slate-700"
-																	/>
+																<textarea
+																	value={item.description}
+																	onChange={(event) =>
+																		updateBlackMarketItem(item.id, (current) => ({
+																			...current,
+																			description: event.target.value,
+																		}))
+																	}
+																	placeholder="Item description"
+																	className="w-full min-h-14 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
+																/>
+																<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+																	<RangeField label="Value" min={1} max={200} value={item.value} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, value }))} />
+																	<RangeField label="Cost" min={1} max={400} value={item.cost} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, cost: value }))} />
+																	<RangeField label="Duration" min={1} max={10} value={item.durationTurns ?? 1} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, durationTurns: value }))} />
+																	<RangeField label="Available From Turn" min={1} max={20} value={item.availableFromTurn} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, availableFromTurn: value }))} />
+																</div>
+																<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+																	<div className="space-y-1.5">
+																		<Label className="text-xs">Stackable</Label>
+																		<select
+																			value={item.stackable ? "true" : "false"}
+																			onChange={(event) =>
+																				updateBlackMarketItem(item.id, (current) => ({
+																					...current,
+																					stackable: event.target.value === "true",
+																				}))
+																			}
+																			className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																		>
+																			<option value="false">false</option>
+																			<option value="true">true</option>
+																		</select>
+																	</div>
+																	<div className="space-y-1.5">
+																		<Label className="text-xs">Stock Limit (-1 = null)</Label>
+																		<Input
+																			type="number"
+																			value={item.stockLimit ?? -1}
+																			onChange={(event) =>
+																				updateBlackMarketItem(item.id, (current) => ({
+																					...current,
+																					stockLimit:
+																						Number(event.target.value) < 0
+																							? null
+																							: Number(event.target.value),
+																				}))
+																			}
+																			className="bg-slate-950/80 border-slate-700"
+																		/>
+																	</div>
+																	<div className="space-y-1.5">
+																		<Label className="text-xs">Per Team Limit (-1 = null)</Label>
+																		<Input
+																			type="number"
+																			value={item.perTeamLimit ?? -1}
+																			onChange={(event) =>
+																				updateBlackMarketItem(item.id, (current) => ({
+																					...current,
+																					perTeamLimit:
+																						Number(event.target.value) < 0
+																							? null
+																							: Number(event.target.value),
+																				}))
+																			}
+																			className="bg-slate-950/80 border-slate-700"
+																		/>
+																	</div>
 																</div>
 															</div>
-														</div>
-													))}
-												</div>
-											</div>
+														))}
+													</div>
+												</ScrollArea>
+											</motion.div>
 										</div>
 									) : null}
 
 									{currentStep === "review" ? (
-										<div className="space-y-4">
-											<div className="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-4">
-												<div className="font-semibold text-emerald-200 mb-2">مرور نهایی</div>
+										<div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.2 }}
+												className="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-4 space-y-3"
+											>
+												<div className="font-semibold text-emerald-200">مرور نهایی</div>
 												<p className="text-sm text-slate-300">
-													اگر همه چیز درست است، configure_all را ارسال کنید. در سمت راست payload کامل را می‌بینید.
+													ساختار پیکربندی آماده ارسال است. قبل از ارسال، شاخص‌های سریع زیر را چک کنید.
 												</p>
+												<div className="grid grid-cols-2 gap-2">
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">Team</div>
+														<div className="text-lg font-semibold">{teams.length}</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">Players</div>
+														<div className="text-lg font-semibold">
+															{teams.reduce((sum, team) => sum + team.players.length, 0)}
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">Actions</div>
+														<div className="text-lg font-semibold">{actions.length}</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">Black Market</div>
+														<div className="text-lg font-semibold">{blackMarketItems.length}</div>
+													</div>
+												</div>
+												<div className="rounded border border-slate-700 bg-slate-950/60 p-3 text-xs leading-6">
+													<div>تعداد کانترها: {actionCounters.length}</div>
+													<div>حالت تنظیم اکشن: {templateMode === "prepared" ? "آماده" : "دستی"}</div>
+													<div>نسخه پیکربندی: {version}</div>
+												</div>
 												<Button
 													onClick={submitConfigureAll}
 													disabled={submitting}
-													className="mt-4 bg-emerald-700 hover:bg-emerald-600 text-white"
+													className="bg-emerald-700 hover:bg-emerald-600 text-white"
 												>
 													{submitting ? "در حال ارسال..." : "ارسال configure_all"}
 												</Button>
-											</div>
+											</motion.div>
 
-											{lastResponse ? (
-												<div className="rounded-xl border border-emerald-700/40 bg-black/40 p-3">
-													<div className="font-semibold text-emerald-300 mb-2">Server Response</div>
-													<pre className="text-xs whitespace-pre-wrap">
-														{JSON.stringify(lastResponse, null, 2)}
-													</pre>
-												</div>
-											) : null}
+											<motion.div
+												initial={{ opacity: 0, y: 12 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.24, delay: 0.04 }}
+												className="rounded-xl border border-emerald-700/30 bg-black/35 p-3"
+											>
+												<div className="font-semibold text-emerald-300 mb-2">Server Response</div>
+												<ScrollArea className="h-[320px] rounded border border-slate-800 bg-slate-950/60 p-3">
+													{lastResponse ? (
+														<pre className="text-xs whitespace-pre-wrap">
+															{JSON.stringify(lastResponse, null, 2)}
+														</pre>
+													) : (
+														<div className="text-sm text-slate-400">
+															پس از ارسال، پاسخ سرور اینجا نمایش داده می‌شود.
+														</div>
+													)}
+												</ScrollArea>
+											</motion.div>
 										</div>
 									) : null}
 								</motion.div>
