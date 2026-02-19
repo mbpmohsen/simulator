@@ -8,6 +8,7 @@ import CompactPlayerCard from "../PlayerCard";
 import SettingsMenu from "@/components/SettingsMenu";
 import AnnouncementsMenu from "@/components/AnnouncementsMenu";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from "@/store/auth.store.ts";
 import {useGameStore} from "@/store/gameState.store.ts";
 import {useGameResultsStore} from "@/store/useGameResults.store.ts";
 
@@ -17,6 +18,7 @@ const GameFooter = () => {
     const router = useRouter();
     const { clearGameState } = useGameStore();
     const { clearGameResults } = useGameResultsStore();
+    const { clearAuth } = useAuthStore();
 	// This useEffect ensures music starts playing when component mounts
 	useEffect(() => {
 		// Music should always be playing by default
@@ -127,6 +129,7 @@ const GameFooter = () => {
                         router.push("/login");
                         clearGameState();
                         clearGameResults();
+                        clearAuth();
                     }}
 					variant="ghost"
 					size="icon"

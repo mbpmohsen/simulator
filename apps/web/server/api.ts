@@ -1,3 +1,5 @@
+import { createGameServerApi } from "@workspace/trpc";
+
 // Interfaces based on OpenAPI schemas
 
 interface BlackMarketItemConfig {
@@ -72,6 +74,20 @@ interface ValidationError {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL;
+const gameServerApi = createGameServerApi({ baseURL: BASE_URL ?? "" });
+
+interface AuthPayload {
+	username: string;
+	password: string;
+}
+
+async function signupUser(payload: AuthPayload): Promise<any> {
+	return gameServerApi.signup(payload);
+}
+
+async function loginUser(payload: AuthPayload): Promise<any> {
+	return gameServerApi.login(payload);
+}
 
 // API Functions
 
@@ -248,6 +264,8 @@ async function getGameState(): Promise<any> {
 
 export {
     healthCheck,
+    signupUser,
+    loginUser,
     startGame,
     configureEvents,
     addEvents,

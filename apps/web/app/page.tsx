@@ -14,6 +14,7 @@ import VulnerabilitiesPage from "@/components/VulnerabilitiesPage";
 import WaitingPopup from "@/components/WaitingPopup";
 import { playClickSound } from "@/lib/playClickSound";
 import {getGameState, proxyClientGameState} from "@/server/api.ts";
+import { useAuthStore } from "@/store/auth.store.ts";
 import { useGameStore } from "@/store/gameState.store.ts";
 import { GameTabs } from "@/types/game";
 import type { GameStateResponse } from "@/types/gameState.types.ts";
@@ -26,6 +27,7 @@ export default function Page() {
 	const [activeTab, setActiveTab] = useState<GameTabs>(GameTabs.GAME);
 	const [visible, setVisible] = useState(false);
     const router = useRouter();
+	const { token } = useAuthStore();
 	const { playerCode, setGameState, clearGameState } = useGameStore();
 	const { setGameResults } = useGameResultsStore();
 
@@ -40,6 +42,11 @@ export default function Page() {
 	};
 
     useEffect(() => {
+		if (!token) {
+			router.replace("/login");
+			return;
+		}
+
         if (!playerCode) return;
 
         // Initial fetch
@@ -103,7 +110,7 @@ export default function Page() {
         const interval = setInterval(fetchGameState, 3000);
 
         return () => clearInterval(interval);
-    }, [playerCode]);
+    }, [token, playerCode]);
 
     const renderTabContent = () => {
 		switch (activeTab) {

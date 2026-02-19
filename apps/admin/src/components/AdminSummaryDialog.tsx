@@ -202,7 +202,7 @@ export default function AdminSummaryDialog({
 
       // final local sanity: ensure required top-level fields exist
       // (optionally add additional validation here)
-      const res = await fetch("https://simulator.clubfollowers.ir/admin/configure_all", {
+      const res = await fetch("https://game.darkube.app/admin/configure_all", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prepared),

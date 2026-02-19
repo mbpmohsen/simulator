@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./",
-		"allowImportingTsExtensions": false,
+		"allowImportingTsExtensions": true,
 		"moduleResolution": "NodeNext",
 		"esModuleInterop": true
 	},
