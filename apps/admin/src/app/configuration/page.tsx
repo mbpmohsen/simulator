@@ -1,7 +1,13 @@
 "use client";
 
+import { type ConfigureAllRequest, createGameServerApi } from "@workspace/trpc";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
@@ -18,7 +24,6 @@ import {
 	Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { createGameServerApi, type ConfigureAllRequest } from "@workspace/trpc";
 
 type RoleType = "attack_only" | "defense_only" | "hybrid";
 type ActionKind = "attack" | "defense";
@@ -120,7 +125,76 @@ interface PreparedDetailItem {
 	};
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.app";
+interface ConfigureAllResponsePayload extends Record<string, unknown> {
+	detail?: string;
+	gameId?: string | number;
+}
+
+interface AdminGameStateResponse extends Record<string, unknown> {
+	success?: boolean;
+	data?: {
+		game?: {
+			id?: number | string;
+			gameId?: number | string;
+			phase?: string;
+			currentTurn?: number;
+			totalTurns?: number;
+			pointThreshold?: number;
+			winnerSideId?: number | string | null;
+		};
+		[key: string]: unknown;
+	} | null;
+	error?: unknown;
+}
+
+const normalizeGameId = (value: unknown): string | null => {
+	if (typeof value === "string") {
+		const trimmed = value.trim();
+		return trimmed.length > 0 ? trimmed : null;
+	}
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return String(value);
+	}
+	return null;
+};
+
+const extractGameIdFromConfigure = (
+	response: ConfigureAllResponsePayload | null,
+): string | null => normalizeGameId(response?.gameId);
+
+const extractGameIdFromGameState = (
+	state: AdminGameStateResponse | null,
+): string | null => {
+	const game = state?.data?.game;
+	return normalizeGameId(game?.gameId) ?? normalizeGameId(game?.id);
+};
+
+const resolveApiErrorMessage = (error: unknown, fallback: string): string => {
+	if (!error || typeof error !== "object") return fallback;
+	const raw = error as {
+		message?: unknown;
+		response?: { data?: unknown };
+	};
+
+	if (raw.response?.data && typeof raw.response.data === "object") {
+		const data = raw.response.data as Record<string, unknown>;
+		if (typeof data.detail === "string" && data.detail.trim()) {
+			return data.detail;
+		}
+		if (typeof data.message === "string" && data.message.trim()) {
+			return data.message;
+		}
+	}
+
+	if (typeof raw.message === "string" && raw.message.trim()) {
+		return raw.message;
+	}
+
+	return fallback;
+};
+
+const BASE_URL =
+	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.app";
 const PREPARED_CATALOG_LANG = "fa";
 const STEP_ORDER: StepKey[] = ["base", "actions", "counter-market", "review"];
 const STEP_TITLE: Record<StepKey, string> = {
@@ -133,7 +207,12 @@ const STEP_TITLE: Record<StepKey, string> = {
 const makeId = (prefix: string): string =>
 	`${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const createTeam = (id: number, roleType: RoleType, color: string, icon: string): TeamDraft => ({
+const createTeam = (
+	id: number,
+	roleType: RoleType,
+	color: string,
+	icon: string,
+): TeamDraft => ({
 	id: `team-${id}`,
 	name: id === 1 ? "Red Team" : "Blue Team",
 	display_name: id === 1 ? "Red Team" : "Blue Team",
@@ -147,7 +226,9 @@ const createTeam = (id: number, roleType: RoleType, color: string, icon: string)
 	players: [{ userId: "", isLeader: true, voteWeight: 2 }],
 });
 
-const parseUsersFromResponse = (response: Record<string, unknown>): AdminUser[] => {
+const parseUsersFromResponse = (
+	response: Record<string, unknown>,
+): AdminUser[] => {
 	const candidateCollections = [
 		response.users,
 		response.items,
@@ -248,9 +329,8 @@ export default function AdminConfigurationPage() {
 	const [pointThreshold, setPointThreshold] = useState(7);
 	const [pointsToWin, setPointsToWin] = useState(7);
 	const [maxTurns, setMaxTurns] = useState(10);
-	const [alternativeWinConditionsCsv, setAlternativeWinConditionsCsv] = useState(
-		"opponent_bankruptcy,opponent_surrender",
-	);
+	const [alternativeWinConditionsCsv, setAlternativeWinConditionsCsv] =
+		useState("opponent_bankruptcy,opponent_surrender");
 	const [votingEnabled, setVotingEnabled] = useState(true);
 	const [requiredApproval, setRequiredApproval] = useState("majority");
 	const [leaderVetoEnabled, setLeaderVetoEnabled] = useState(true);
@@ -263,8 +343,11 @@ export default function AdminConfigurationPage() {
 
 	const [templateMode, setTemplateMode] = useState<TemplateMode>("prepared");
 	const [preparedSearch, setPreparedSearch] = useState("");
-	const [preparedSummaries, setPreparedSummaries] = useState<PreparedSummaryItem[]>([]);
-	const [preparedDetail, setPreparedDetail] = useState<PreparedDetailItem | null>(null);
+	const [preparedSummaries, setPreparedSummaries] = useState<
+		PreparedSummaryItem[]
+	>([]);
+	const [preparedDetail, setPreparedDetail] =
+		useState<PreparedDetailItem | null>(null);
 	const [isPreparedLoading, setIsPreparedLoading] = useState(false);
 	const [isPreparedDetailLoading, setIsPreparedDetailLoading] = useState(false);
 
@@ -318,21 +401,37 @@ export default function AdminConfigurationPage() {
 
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [lastResponse, setLastResponse] = useState<Record<string, unknown> | null>(null);
+	const [lastResponse, setLastResponse] =
+		useState<ConfigureAllResponsePayload | null>(null);
+	const [configuredGameId, setConfiguredGameId] = useState<string | null>(null);
+	const [adminGameState, setAdminGameState] =
+		useState<AdminGameStateResponse | null>(null);
+	const [controlMessage, setControlMessage] = useState<string | null>(null);
+	const [isGameStateLoading, setIsGameStateLoading] = useState(false);
+	const [isStartLoading, setIsStartLoading] = useState(false);
+	const [isResetLoading, setIsResetLoading] = useState(false);
 
 	const selectedUserIds = useMemo(() => {
 		return new Set(
-			teams.flatMap((team) => team.players.map((player) => player.userId).filter(Boolean)),
+			teams.flatMap((team) =>
+				team.players.map((player) => player.userId).filter(Boolean),
+			),
 		);
 	}, [teams]);
 
 	const attackCodes = useMemo(
-		() => actions.filter((action) => action.type === "attack").map((action) => action.code),
+		() =>
+			actions
+				.filter((action) => action.type === "attack")
+				.map((action) => action.code),
 		[actions],
 	);
 
 	const defenseCodes = useMemo(
-		() => actions.filter((action) => action.type === "defense").map((action) => action.code),
+		() =>
+			actions
+				.filter((action) => action.type === "defense")
+				.map((action) => action.code),
 		[actions],
 	);
 
@@ -340,9 +439,20 @@ export default function AdminConfigurationPage() {
 		if (!preparedSearch.trim()) return preparedSummaries;
 		const needle = preparedSearch.trim().toLowerCase();
 		return preparedSummaries.filter((item) =>
-			[item.name, item.external_id ?? "", item.tactics.join(" ")].join(" ").toLowerCase().includes(needle),
+			[item.name, item.external_id ?? "", item.tactics.join(" ")]
+				.join(" ")
+				.toLowerCase()
+				.includes(needle),
 		);
 	}, [preparedSummaries, preparedSearch]);
+
+	const activeGameId = useMemo(() => {
+		return (
+			configuredGameId ??
+			extractGameIdFromConfigure(lastResponse) ??
+			extractGameIdFromGameState(adminGameState)
+		);
+	}, [configuredGameId, lastResponse, adminGameState]);
 
 	useEffect(() => {
 		if (currentStep !== "actions") return;
@@ -368,6 +478,90 @@ export default function AdminConfigurationPage() {
 
 		void loadPreparedSummary();
 	}, [currentStep, templateMode, preparedSummaries.length, isPreparedLoading]);
+
+	const refreshAdminGameState = async (token = adminToken) => {
+		if (!token) {
+			setControlMessage("ابتدا باید ورود ادمین انجام شود.");
+			return;
+		}
+
+		setIsGameStateLoading(true);
+		try {
+			const api = createGameServerApi({ baseURL: BASE_URL, adminToken: token });
+			const response =
+				(await api.getAdminGameState()) as AdminGameStateResponse;
+			setAdminGameState(response);
+
+			const nextGameId = extractGameIdFromGameState(response);
+			if (nextGameId) {
+				setConfiguredGameId(nextGameId);
+			}
+		} catch (err) {
+			setControlMessage(
+				resolveApiErrorMessage(err, "خطا در دریافت game_state"),
+			);
+		} finally {
+			setIsGameStateLoading(false);
+		}
+	};
+
+	const startCurrentGame = async () => {
+		if (!adminToken) {
+			setControlMessage("ابتدا باید ورود ادمین انجام شود.");
+			return;
+		}
+
+		if (!activeGameId) {
+			setControlMessage(
+				"gameId پیدا نشد. ابتدا configure_all یا game_state را اجرا کنید.",
+			);
+			return;
+		}
+
+		setIsStartLoading(true);
+		setControlMessage(null);
+		try {
+			const api = createGameServerApi({ baseURL: BASE_URL, adminToken });
+			const response = await api.startGame(activeGameId);
+			setControlMessage(
+				response.detail || `Game ${activeGameId} started successfully.`,
+			);
+			await refreshAdminGameState(adminToken);
+		} catch (err) {
+			setControlMessage(resolveApiErrorMessage(err, "خطا در start game"));
+		} finally {
+			setIsStartLoading(false);
+		}
+	};
+
+	const resetCurrentGame = async () => {
+		if (!adminToken) {
+			setControlMessage("ابتدا باید ورود ادمین انجام شود.");
+			return;
+		}
+
+		if (!activeGameId) {
+			setControlMessage(
+				"gameId پیدا نشد. ابتدا configure_all یا game_state را اجرا کنید.",
+			);
+			return;
+		}
+
+		setIsResetLoading(true);
+		setControlMessage(null);
+		try {
+			const api = createGameServerApi({ baseURL: BASE_URL, adminToken });
+			const response = await api.resetGame(activeGameId);
+			setControlMessage(
+				response.detail || `Game ${activeGameId} reset successfully.`,
+			);
+			await refreshAdminGameState(adminToken);
+		} catch (err) {
+			setControlMessage(resolveApiErrorMessage(err, "خطا در reset game"));
+		} finally {
+			setIsResetLoading(false);
+		}
+	};
 
 	const loginAdmin = async () => {
 		setError(null);
@@ -396,6 +590,7 @@ export default function AdminConfigurationPage() {
 			}
 			setAdminToken(token);
 			await loadUsers(token);
+			await refreshAdminGameState(token);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "خطا در ورود ادمین");
 		} finally {
@@ -412,7 +607,10 @@ export default function AdminConfigurationPage() {
 		setIsUsersLoading(true);
 		try {
 			const api = createGameServerApi({ baseURL: BASE_URL, adminToken: token });
-			const result = (await api.listUsers({ skip: 0, limit: 500 })) as Record<string, unknown>;
+			const result = (await api.listUsers({ skip: 0, limit: 500 })) as Record<
+				string,
+				unknown
+			>;
 			const parsedUsers = parseUsersFromResponse(result);
 			setUsers(parsedUsers);
 			if (parsedUsers.length === 0) {
@@ -425,20 +623,30 @@ export default function AdminConfigurationPage() {
 		}
 	};
 
-	const updateTeam = (teamId: string, updater: (team: TeamDraft) => TeamDraft) => {
-		setTeams((prev) => prev.map((team) => (team.id === teamId ? updater(team) : team)));
+	const updateTeam = (
+		teamId: string,
+		updater: (team: TeamDraft) => TeamDraft,
+	) => {
+		setTeams((prev) =>
+			prev.map((team) => (team.id === teamId ? updater(team) : team)),
+		);
 	};
 
 	const addPlayerSlot = (teamId: string) => {
 		updateTeam(teamId, (team) => ({
 			...team,
-			players: [...team.players, { userId: "", isLeader: false, voteWeight: 1 }],
+			players: [
+				...team.players,
+				{ userId: "", isLeader: false, voteWeight: 1 },
+			],
 		}));
 	};
 
 	const removePlayerSlot = (teamId: string, indexToRemove: number) => {
 		updateTeam(teamId, (team) => {
-			const players = team.players.filter((_, index) => index !== indexToRemove);
+			const players = team.players.filter(
+				(_, index) => index !== indexToRemove,
+			);
 			if (players.length > 0 && !players.some((player) => player.isLeader)) {
 				players[0] = { ...players[0], isLeader: true };
 			}
@@ -469,7 +677,9 @@ export default function AdminConfigurationPage() {
 			const detail = (await response.json()) as PreparedDetailItem;
 			setPreparedDetail(detail);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "خطا در دریافت جزئیات آیتم آماده");
+			setError(
+				err instanceof Error ? err.message : "خطا در دریافت جزئیات آیتم آماده",
+			);
 		} finally {
 			setIsPreparedDetailLoading(false);
 		}
@@ -481,7 +691,9 @@ export default function AdminConfigurationPage() {
 		const templateActions = Array.isArray(preparedDetail.templates.actions)
 			? preparedDetail.templates.actions
 			: [];
-		const templateCounters = Array.isArray(preparedDetail.templates.action_counters)
+		const templateCounters = Array.isArray(
+			preparedDetail.templates.action_counters,
+		)
 			? preparedDetail.templates.action_counters
 			: [];
 		const templateMarket = Array.isArray(preparedDetail.templates.black_market)
@@ -492,12 +704,12 @@ export default function AdminConfigurationPage() {
 			.map((raw, index) => {
 				const action = raw as Record<string, unknown>;
 				const technique = Array.isArray(
-					(action.mitre_mapping as Record<string, unknown> | undefined)?.techniques,
+					(action.mitre_mapping as Record<string, unknown> | undefined)
+						?.techniques,
 				)
 					? (
-							(action.mitre_mapping as Record<string, unknown>).techniques as Array<
-								Record<string, unknown>
-							>
+							(action.mitre_mapping as Record<string, unknown>)
+								.techniques as Array<Record<string, unknown>>
 						)[0]
 					: null;
 
@@ -510,22 +722,29 @@ export default function AdminConfigurationPage() {
 					mitreTechniqueId: String(technique?.id ?? ""),
 					mitreTechniqueUrl: String(technique?.url ?? ""),
 					tacticsCsv: Array.isArray(
-						(action.mitre_mapping as Record<string, unknown> | undefined)?.tactics,
+						(action.mitre_mapping as Record<string, unknown> | undefined)
+							?.tactics,
 					)
 						? (
-								(action.mitre_mapping as Record<string, unknown>).tactics as string[]
+								(action.mitre_mapping as Record<string, unknown>)
+									.tactics as string[]
 							).join(", ")
 						: "",
-					cost: Number((action.base_stats as Record<string, unknown> | undefined)?.cost ?? 10),
+					cost: Number(
+						(action.base_stats as Record<string, unknown> | undefined)?.cost ??
+							10,
+					),
 					successProbability: Number(
-						(action.base_stats as Record<string, unknown> | undefined)?.success_probability ??
-							75,
+						(action.base_stats as Record<string, unknown> | undefined)
+							?.success_probability ?? 75,
 					),
 					pointsOnSuccess: Number(
-						(action.base_stats as Record<string, unknown> | undefined)?.points_on_success ?? 1,
+						(action.base_stats as Record<string, unknown> | undefined)
+							?.points_on_success ?? 1,
 					),
 					cooldownTurns: Number(
-						(action.base_stats as Record<string, unknown> | undefined)?.cooldown_turns ?? 0,
+						(action.base_stats as Record<string, unknown> | undefined)
+							?.cooldown_turns ?? 0,
 					),
 				};
 				return mapped;
@@ -552,14 +771,20 @@ export default function AdminConfigurationPage() {
 		const nextMarket: BlackMarketDraft[] = templateMarket
 			.map((raw) => {
 				const item = raw as Record<string, unknown>;
-				const target = (item.target as Record<string, unknown> | undefined) ?? {};
-				const effect = (item.effect as Record<string, unknown> | undefined) ?? {};
+				const target =
+					(item.target as Record<string, unknown> | undefined) ?? {};
+				const effect =
+					(item.effect as Record<string, unknown> | undefined) ?? {};
 				const availability =
 					(item.availability as Record<string, unknown> | undefined) ?? {};
 
 				const targetActionTypeRaw = String(target.action_type ?? "");
 				const targetActionType: ActionKind | "" =
-					targetActionTypeRaw === "defense" ? "defense" : targetActionTypeRaw === "attack" ? "attack" : "";
+					targetActionTypeRaw === "defense"
+						? "defense"
+						: targetActionTypeRaw === "attack"
+							? "attack"
+							: "";
 
 				const mapped: BlackMarketDraft = {
 					id: makeId("market-prepared"),
@@ -598,7 +823,8 @@ export default function AdminConfigurationPage() {
 							: Number(item.duration_turns),
 					stackable: Boolean(item.stackable),
 					stockLimit:
-						availability.stock_limit === null || availability.stock_limit === undefined
+						availability.stock_limit === null ||
+						availability.stock_limit === undefined
 							? null
 							: Number(availability.stock_limit),
 					perTeamLimit:
@@ -637,8 +863,13 @@ export default function AdminConfigurationPage() {
 		]);
 	};
 
-	const updateAction = (actionId: string, updater: (action: ActionDraft) => ActionDraft) => {
-		setActions((prev) => prev.map((action) => (action.id === actionId ? updater(action) : action)));
+	const updateAction = (
+		actionId: string,
+		updater: (action: ActionDraft) => ActionDraft,
+	) => {
+		setActions((prev) =>
+			prev.map((action) => (action.id === actionId ? updater(action) : action)),
+		);
 	};
 
 	const removeAction = (actionId: string) => {
@@ -663,12 +894,16 @@ export default function AdminConfigurationPage() {
 		updater: (counter: ActionCounterDraft) => ActionCounterDraft,
 	) => {
 		setActionCounters((prev) =>
-			prev.map((counter) => (counter.id === counterId ? updater(counter) : counter)),
+			prev.map((counter) =>
+				counter.id === counterId ? updater(counter) : counter,
+			),
 		);
 	};
 
 	const removeCounter = (counterId: string) => {
-		setActionCounters((prev) => prev.filter((counter) => counter.id !== counterId));
+		setActionCounters((prev) =>
+			prev.filter((counter) => counter.id !== counterId),
+		);
 	};
 
 	const addBlackMarketItem = () => {
@@ -700,7 +935,9 @@ export default function AdminConfigurationPage() {
 		itemId: string,
 		updater: (item: BlackMarketDraft) => BlackMarketDraft,
 	) => {
-		setBlackMarketItems((prev) => prev.map((item) => (item.id === itemId ? updater(item) : item)));
+		setBlackMarketItems((prev) =>
+			prev.map((item) => (item.id === itemId ? updater(item) : item)),
+		);
 	};
 
 	const removeBlackMarketItem = (itemId: string) => {
@@ -718,23 +955,29 @@ export default function AdminConfigurationPage() {
 					return `تیم ${team.name} باید یک لیدر داشته باشد.`;
 				}
 				for (const player of team.players) {
-					if (!player.userId) return `برای تیم ${team.name} بازیکن انتخاب نشده است.`;
+					if (!player.userId)
+						return `برای تیم ${team.name} بازیکن انتخاب نشده است.`;
 				}
 			}
 		}
 
 		if (step === "actions") {
 			if (actions.length === 0) return "حداقل یک اکشن تعریف کنید.";
-			if (actions.some((action) => !action.code.trim() || !action.name.trim())) {
+			if (
+				actions.some((action) => !action.code.trim() || !action.name.trim())
+			) {
 				return "اکشن‌ها باید code و name داشته باشند.";
 			}
 			const uniqueCodes = new Set(actions.map((action) => action.code.trim()));
-			if (uniqueCodes.size !== actions.length) return "code اکشن‌ها باید یکتا باشد.";
+			if (uniqueCodes.size !== actions.length)
+				return "code اکشن‌ها باید یکتا باشد.";
 		}
 
 		if (step === "counter-market") {
-			if (actionCounters.length === 0) return "حداقل یک action counter تعریف کنید.";
-			if (blackMarketItems.length === 0) return "حداقل یک آیتم بازار سیاه تعریف کنید.";
+			if (actionCounters.length === 0)
+				return "حداقل یک action counter تعریف کنید.";
+			if (blackMarketItems.length === 0)
+				return "حداقل یک آیتم بازار سیاه تعریف کنید.";
 		}
 
 		return null;
@@ -783,10 +1026,12 @@ export default function AdminConfigurationPage() {
 						.filter(Boolean),
 					description: team.roleDescription,
 				},
-				specializations: parseJsonText<Record<string, { probability_modifier: number; cost_modifier: number }>>(
-					team.specializationsJson,
-					`specializations تیم ${team.name}`,
-				),
+				specializations: parseJsonText<
+					Record<
+						string,
+						{ probability_modifier: number; cost_modifier: number }
+					>
+				>(team.specializationsJson, `specializations تیم ${team.name}`),
 				players,
 			};
 		});
@@ -888,16 +1133,23 @@ export default function AdminConfigurationPage() {
 				description: item.description || undefined,
 			},
 			cost: Number(item.cost),
-			duration_turns: item.durationTurns === null ? null : Number(item.durationTurns),
+			duration_turns:
+				item.durationTurns === null ? null : Number(item.durationTurns),
 			stackable: item.stackable,
 			availability: {
 				unlocked_by_default: true,
 				stock_limit: item.stockLimit === null ? null : Number(item.stockLimit),
-				per_team_limit: item.perTeamLimit === null ? null : Number(item.perTeamLimit),
+				per_team_limit:
+					item.perTeamLimit === null ? null : Number(item.perTeamLimit),
 				available_from_turn: Number(item.availableFromTurn),
 			},
 			visual: {
-				icon: item.itemType === "unlock" ? "🔓" : item.itemType === "instant" ? "💸" : "⚡",
+				icon:
+					item.itemType === "unlock"
+						? "🔓"
+						: item.itemType === "instant"
+							? "💸"
+							: "⚡",
 				color: item.itemType === "unlock" ? "#F97316" : "#FACC15",
 			},
 		}));
@@ -933,45 +1185,43 @@ export default function AdminConfigurationPage() {
 		};
 	};
 
-	const payloadPreview = useMemo(() => {
+	const payloadPreview = (() => {
 		try {
 			return JSON.stringify(createPayload(), null, 2);
 		} catch (err) {
-			return `// payload preview error\n${err instanceof Error ? err.message : "unknown error"}`;
+			return `// payload preview error
+${err instanceof Error ? err.message : "unknown error"}`;
 		}
-	}, [
-		version,
-		numTurns,
-		turnDurationSeconds,
-		selectionPhaseDuration,
-		votingPhaseDuration,
-		pointThreshold,
-		pointsToWin,
-		maxTurns,
-		alternativeWinConditionsCsv,
-		votingEnabled,
-		requiredApproval,
-		leaderVetoEnabled,
-		voteTimeLimitSeconds,
-		teams,
-		users,
-		adminToken,
-		actions,
-		actionCounters,
-		blackMarketItems,
-	]);
+	})();
 
 	const submitConfigureAll = async () => {
 		setError(null);
+		setControlMessage(null);
 		setLastResponse(null);
 		setSubmitting(true);
 		try {
 			const payload = createPayload();
 			const api = createGameServerApi({ baseURL: BASE_URL, adminToken });
-			const response = (await api.configureAll(payload)) as Record<string, unknown>;
+			const response = (await api.configureAll(
+				payload,
+			)) as ConfigureAllResponsePayload;
 			setLastResponse(response);
+
+			const nextGameId = extractGameIdFromConfigure(response);
+			if (nextGameId) {
+				setConfiguredGameId(nextGameId);
+			}
+
+			if (typeof response.detail === "string" && response.detail.trim()) {
+				setControlMessage(response.detail);
+			}
+
+			await refreshAdminGameState(adminToken);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "خطا در ارسال configure_all");
+			setError(resolveApiErrorMessage(err, "خطا در ارسال configure_all"));
+			if (adminToken) {
+				await refreshAdminGameState(adminToken);
+			}
 		} finally {
 			setSubmitting(false);
 		}
@@ -991,6 +1241,12 @@ export default function AdminConfigurationPage() {
 		setError(null);
 		setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
 	};
+
+	const gameStateSummary = adminGameState?.data?.game;
+	const gameTurnText =
+		typeof gameStateSummary?.currentTurn === "number"
+			? `${gameStateSummary.currentTurn} / ${typeof gameStateSummary.totalTurns === "number" ? gameStateSummary.totalTurns : "-"}`
+			: "—";
 
 	return (
 		<div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,rgba(27,100,72,0.32),transparent_28%),radial-gradient(circle_at_80%_5%,rgba(120,34,34,0.24),transparent_32%),linear-gradient(160deg,#050708_0%,#0d1115_100%)] text-slate-100 px-3 py-5 md:px-8">
@@ -1029,10 +1285,16 @@ export default function AdminConfigurationPage() {
 								}`}
 							>
 								<div className="flex items-center justify-between">
-									<span className="text-xs text-slate-400">Step {index + 1}</span>
-									{isDone ? <CheckCircle2 className="w-4 h-4 text-emerald-300" /> : null}
+									<span className="text-xs text-slate-400">
+										Step {index + 1}
+									</span>
+									{isDone ? (
+										<CheckCircle2 className="w-4 h-4 text-emerald-300" />
+									) : null}
 								</div>
-								<div className="font-semibold text-sm mt-1">{STEP_TITLE[step]}</div>
+								<div className="font-semibold text-sm mt-1">
+									{STEP_TITLE[step]}
+								</div>
 							</motion.button>
 						);
 					})}
@@ -1070,12 +1332,18 @@ export default function AdminConfigurationPage() {
 														<Input
 															type="password"
 															value={adminPassword}
-															onChange={(event) => setAdminPassword(event.target.value)}
+															onChange={(event) =>
+																setAdminPassword(event.target.value)
+															}
 															placeholder="admin123"
 															className="bg-slate-950/80 border-slate-700"
 														/>
 													</div>
-													<Button onClick={loginAdmin} disabled={isAuthLoading} className="self-end bg-cyan-700 hover:bg-cyan-600">
+													<Button
+														onClick={loginAdmin}
+														disabled={isAuthLoading}
+														className="self-end bg-cyan-700 hover:bg-cyan-600"
+													>
 														{isAuthLoading ? "..." : "ورود ادمین"}
 													</Button>
 													<Button
@@ -1096,9 +1364,14 @@ export default function AdminConfigurationPage() {
 													<ScrollArea className="h-24">
 														<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
 															{users.map((user) => (
-																<div key={user.id} className="rounded border border-slate-800 bg-slate-900 px-2 py-1 text-xs flex items-center justify-between">
+																<div
+																	key={user.id}
+																	className="rounded border border-slate-800 bg-slate-900 px-2 py-1 text-xs flex items-center justify-between"
+																>
 																	<span>{user.username}</span>
-																	<span className="text-slate-400 font-mono">{user.id}</span>
+																	<span className="text-slate-400 font-mono">
+																		{user.id}
+																	</span>
 																</div>
 															))}
 														</div>
@@ -1107,29 +1380,93 @@ export default function AdminConfigurationPage() {
 											</div>
 
 											<div className="rounded-xl border border-emerald-700/30 bg-emerald-950/10 p-4">
-												<div className="font-semibold text-emerald-200 mb-3">تنظیمات پایه بازی</div>
+												<div className="font-semibold text-emerald-200 mb-3">
+													تنظیمات پایه بازی
+												</div>
 												<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 													<div className="space-y-2">
 														<Label>Version</Label>
-														<Input value={version} onChange={(event) => setVersion(event.target.value)} className="bg-slate-950/80 border-slate-700" />
+														<Input
+															value={version}
+															onChange={(event) =>
+																setVersion(event.target.value)
+															}
+															className="bg-slate-950/80 border-slate-700"
+														/>
 													</div>
 													<div className="space-y-2">
 														<Label>Required Approval</Label>
-														<Input value={requiredApproval} onChange={(event) => setRequiredApproval(event.target.value)} className="bg-slate-950/80 border-slate-700" />
+														<Input
+															value={requiredApproval}
+															onChange={(event) =>
+																setRequiredApproval(event.target.value)
+															}
+															className="bg-slate-950/80 border-slate-700"
+														/>
 													</div>
-													<RangeField label="Num Turns" min={1} max={30} value={numTurns} onChange={setNumTurns} />
-													<RangeField label="Turn Duration (sec)" min={20} max={300} value={turnDurationSeconds} onChange={setTurnDurationSeconds} />
-													<RangeField label="Selection Phase (sec)" min={10} max={180} value={selectionPhaseDuration} onChange={setSelectionPhaseDuration} />
-													<RangeField label="Voting Phase (sec)" min={10} max={180} value={votingPhaseDuration} onChange={setVotingPhaseDuration} />
-													<RangeField label="Point Threshold" min={1} max={20} value={pointThreshold} onChange={setPointThreshold} />
-													<RangeField label="Points To Win" min={1} max={20} value={pointsToWin} onChange={setPointsToWin} />
-													<RangeField label="Max Turns for Victory" min={1} max={40} value={maxTurns} onChange={setMaxTurns} />
-													<RangeField label="Vote Time Limit (sec)" min={5} max={120} value={voteTimeLimitSeconds} onChange={setVoteTimeLimitSeconds} />
+													<RangeField
+														label="Num Turns"
+														min={1}
+														max={30}
+														value={numTurns}
+														onChange={setNumTurns}
+													/>
+													<RangeField
+														label="Turn Duration (sec)"
+														min={20}
+														max={300}
+														value={turnDurationSeconds}
+														onChange={setTurnDurationSeconds}
+													/>
+													<RangeField
+														label="Selection Phase (sec)"
+														min={10}
+														max={180}
+														value={selectionPhaseDuration}
+														onChange={setSelectionPhaseDuration}
+													/>
+													<RangeField
+														label="Voting Phase (sec)"
+														min={10}
+														max={180}
+														value={votingPhaseDuration}
+														onChange={setVotingPhaseDuration}
+													/>
+													<RangeField
+														label="Point Threshold"
+														min={1}
+														max={20}
+														value={pointThreshold}
+														onChange={setPointThreshold}
+													/>
+													<RangeField
+														label="Points To Win"
+														min={1}
+														max={20}
+														value={pointsToWin}
+														onChange={setPointsToWin}
+													/>
+													<RangeField
+														label="Max Turns for Victory"
+														min={1}
+														max={40}
+														value={maxTurns}
+														onChange={setMaxTurns}
+													/>
+													<RangeField
+														label="Vote Time Limit (sec)"
+														min={5}
+														max={120}
+														value={voteTimeLimitSeconds}
+														onChange={setVoteTimeLimitSeconds}
+													/>
 													<div className="space-y-2">
 														<Label>Voting Enabled</Label>
 														<select
 															value={votingEnabled ? "true" : "false"}
-															onChange={(event) => setVotingEnabled(event.target.value === "true")}
+															onChange={(event) =>
+																setVotingEnabled(event.target.value === "true")
+															}
 															className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-3 text-sm"
 														>
 															<option value="true">true</option>
@@ -1140,7 +1477,11 @@ export default function AdminConfigurationPage() {
 														<Label>Leader Veto Enabled</Label>
 														<select
 															value={leaderVetoEnabled ? "true" : "false"}
-															onChange={(event) => setLeaderVetoEnabled(event.target.value === "true")}
+															onChange={(event) =>
+																setLeaderVetoEnabled(
+																	event.target.value === "true",
+																)
+															}
 															className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-3 text-sm"
 														>
 															<option value="true">true</option>
@@ -1151,7 +1492,11 @@ export default function AdminConfigurationPage() {
 														<Label>Alternative Win Conditions (CSV)</Label>
 														<Input
 															value={alternativeWinConditionsCsv}
-															onChange={(event) => setAlternativeWinConditionsCsv(event.target.value)}
+															onChange={(event) =>
+																setAlternativeWinConditionsCsv(
+																	event.target.value,
+																)
+															}
 															className="bg-slate-950/80 border-slate-700"
 														/>
 													</div>
@@ -1164,12 +1509,18 @@ export default function AdminConfigurationPage() {
 													تیم‌ها و انتخاب بازیکنان
 												</div>
 												{teams.map((team) => (
-													<div key={team.id} className="rounded-lg border border-slate-700 bg-slate-950/70 p-3 space-y-2">
+													<div
+														key={team.id}
+														className="rounded-lg border border-slate-700 bg-slate-950/70 p-3 space-y-2"
+													>
 														<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 															<Input
 																value={team.name}
 																onChange={(event) =>
-																	updateTeam(team.id, (current) => ({ ...current, name: event.target.value }))
+																	updateTeam(team.id, (current) => ({
+																		...current,
+																		name: event.target.value,
+																	}))
 																}
 																placeholder="Team Name"
 																className="bg-slate-950/80 border-slate-700"
@@ -1188,7 +1539,10 @@ export default function AdminConfigurationPage() {
 															<Input
 																value={team.color}
 																onChange={(event) =>
-																	updateTeam(team.id, (current) => ({ ...current, color: event.target.value }))
+																	updateTeam(team.id, (current) => ({
+																		...current,
+																		color: event.target.value,
+																	}))
 																}
 																placeholder="#FF0000"
 																className="bg-slate-950/80 border-slate-700"
@@ -1196,7 +1550,10 @@ export default function AdminConfigurationPage() {
 															<Input
 																value={team.icon}
 																onChange={(event) =>
-																	updateTeam(team.id, (current) => ({ ...current, icon: event.target.value }))
+																	updateTeam(team.id, (current) => ({
+																		...current,
+																		icon: event.target.value,
+																	}))
 																}
 																placeholder="⚔️"
 																className="bg-slate-950/80 border-slate-700"
@@ -1227,13 +1584,19 @@ export default function AdminConfigurationPage() {
 																	}
 																	className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-3 text-sm"
 																>
-																	<option value="attack_only">attack_only</option>
-																	<option value="defense_only">defense_only</option>
+																	<option value="attack_only">
+																		attack_only
+																	</option>
+																	<option value="defense_only">
+																		defense_only
+																	</option>
 																	<option value="hybrid">hybrid</option>
 																</select>
 															</div>
 															<div className="space-y-1.5">
-																<Label className="text-xs">Allowed Action Types (CSV)</Label>
+																<Label className="text-xs">
+																	Allowed Action Types (CSV)
+																</Label>
 																<Input
 																	value={team.allowedActionTypesCsv}
 																	onChange={(event) =>
@@ -1247,7 +1610,9 @@ export default function AdminConfigurationPage() {
 															</div>
 														</div>
 														<div className="space-y-1.5">
-															<Label className="text-xs">Role Description</Label>
+															<Label className="text-xs">
+																Role Description
+															</Label>
 															<Input
 																value={team.roleDescription}
 																onChange={(event) =>
@@ -1260,7 +1625,9 @@ export default function AdminConfigurationPage() {
 															/>
 														</div>
 														<div className="space-y-1.5">
-															<Label className="text-xs">Specializations JSON</Label>
+															<Label className="text-xs">
+																Specializations JSON
+															</Label>
 															<textarea
 																value={team.specializationsJson}
 																onChange={(event) =>
@@ -1275,21 +1642,33 @@ export default function AdminConfigurationPage() {
 														<div className="rounded border border-slate-800 bg-slate-900/80 p-2 space-y-2">
 															<div className="flex items-center justify-between">
 																<Label className="text-xs">Players</Label>
-																<Button size="sm" variant="outline" className="h-7 border-slate-600 text-xs" onClick={() => addPlayerSlot(team.id)}>
+																<Button
+																	size="sm"
+																	variant="outline"
+																	className="h-7 border-slate-600 text-xs"
+																	onClick={() => addPlayerSlot(team.id)}
+																>
 																	+ Player
 																</Button>
 															</div>
 															{team.players.map((player, index) => (
-																<div key={`${team.id}-${index}`} className="grid grid-cols-1 md:grid-cols-[1.2fr_auto_auto_auto] gap-2 items-end rounded border border-slate-800 bg-slate-950/60 p-2">
+																<div
+																	key={`${team.id}-${index}`}
+																	className="grid grid-cols-1 md:grid-cols-[1.2fr_auto_auto_auto] gap-2 items-end rounded border border-slate-800 bg-slate-950/60 p-2"
+																>
 																	<select
 																		value={player.userId}
 																		onChange={(event) =>
 																			updateTeam(team.id, (current) => ({
 																				...current,
-																				players: current.players.map((entry, idx) =>
-																					idx === index
-																						? { ...entry, userId: event.target.value }
-																						: entry,
+																				players: current.players.map(
+																					(entry, idx) =>
+																						idx === index
+																							? {
+																									...entry,
+																									userId: event.target.value,
+																								}
+																							: entry,
 																				),
 																			}))
 																		}
@@ -1301,7 +1680,11 @@ export default function AdminConfigurationPage() {
 																				selectedUserIds.has(String(user.id)) &&
 																				String(user.id) !== player.userId;
 																			return (
-																				<option key={user.id} value={String(user.id)} disabled={isUsedElsewhere}>
+																				<option
+																					key={user.id}
+																					value={String(user.id)}
+																					disabled={isUsedElsewhere}
+																				>
 																					{user.username} ({user.id})
 																				</option>
 																			);
@@ -1313,10 +1696,17 @@ export default function AdminConfigurationPage() {
 																		onChange={(event) =>
 																			updateTeam(team.id, (current) => ({
 																				...current,
-																				players: current.players.map((entry, idx) =>
-																					idx === index
-																						? { ...entry, voteWeight: Number(event.target.value) || 1 }
-																						: entry,
+																				players: current.players.map(
+																					(entry, idx) =>
+																						idx === index
+																							? {
+																									...entry,
+																									voteWeight:
+																										Number(
+																											event.target.value,
+																										) || 1,
+																								}
+																							: entry,
 																				),
 																			}))
 																		}
@@ -1324,8 +1714,14 @@ export default function AdminConfigurationPage() {
 																	/>
 																	<Button
 																		size="sm"
-																		variant={player.isLeader ? "default" : "outline"}
-																		className={player.isLeader ? "h-10 bg-amber-700 hover:bg-amber-600 text-xs" : "h-10 border-slate-600 text-xs"}
+																		variant={
+																			player.isLeader ? "default" : "outline"
+																		}
+																		className={
+																			player.isLeader
+																				? "h-10 bg-amber-700 hover:bg-amber-600 text-xs"
+																				: "h-10 border-slate-600 text-xs"
+																		}
 																		onClick={() => setLeader(team.id, index)}
 																	>
 																		Leader
@@ -1334,7 +1730,9 @@ export default function AdminConfigurationPage() {
 																		size="sm"
 																		variant="outline"
 																		className="h-10 border-rose-700 text-rose-300 text-xs"
-																		onClick={() => removePlayerSlot(team.id, index)}
+																		onClick={() =>
+																			removePlayerSlot(team.id, index)
+																		}
 																	>
 																		Remove
 																	</Button>
@@ -1357,14 +1755,20 @@ export default function AdminConfigurationPage() {
 											>
 												<div className="flex items-center justify-between gap-3 flex-wrap">
 													<div>
-														<div className="font-semibold text-orange-200">راهنمای اکشن‌ها (مرحله ۲)</div>
+														<div className="font-semibold text-orange-200">
+															راهنمای اکشن‌ها (مرحله ۲)
+														</div>
 														<div className="text-xs text-slate-400 mt-1">
 															برای کاربران عمومی، حالت آماده بهترین انتخاب است.
 														</div>
 													</div>
 													<div className="flex gap-2">
 														<Button
-															variant={templateMode === "prepared" ? "default" : "outline"}
+															variant={
+																templateMode === "prepared"
+																	? "default"
+																	: "outline"
+															}
 															className={
 																templateMode === "prepared"
 																	? "bg-orange-700 hover:bg-orange-600"
@@ -1375,7 +1779,11 @@ export default function AdminConfigurationPage() {
 															آماده
 														</Button>
 														<Button
-															variant={templateMode === "custom" ? "default" : "outline"}
+															variant={
+																templateMode === "custom"
+																	? "default"
+																	: "outline"
+															}
 															className={
 																templateMode === "custom"
 																	? "bg-orange-700 hover:bg-orange-600"
@@ -1395,24 +1803,34 @@ export default function AdminConfigurationPage() {
 															<Input
 																placeholder="مثال: Hijack Execution Flow"
 																value={preparedSearch}
-																onChange={(event) => setPreparedSearch(event.target.value)}
+																onChange={(event) =>
+																	setPreparedSearch(event.target.value)
+																}
 																className="bg-slate-950/80 border-slate-700"
 															/>
 															<ScrollArea className="h-64 rounded border border-slate-800 p-2">
 																{isPreparedLoading ? (
-																	<div className="text-sm text-slate-400 p-2">در حال بارگذاری...</div>
+																	<div className="text-sm text-slate-400 p-2">
+																		در حال بارگذاری...
+																	</div>
 																) : (
 																	<div className="space-y-2">
 																		{filteredPrepared.map((item) => (
 																			<button
 																				key={item.id}
 																				type="button"
-																				onClick={() => void selectPreparedItem(item.id)}
+																				onClick={() =>
+																					void selectPreparedItem(item.id)
+																				}
 																				className="w-full text-right rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 hover:border-cyan-500/50 transition-colors"
 																			>
-																				<div className="text-sm font-semibold">{item.name}</div>
+																				<div className="text-sm font-semibold">
+																					{item.name}
+																				</div>
 																				<div className="text-xs text-slate-400 mt-1">
-																					{item.external_id ?? "N/A"} • {item.tactics.join("، ") || "بدون تاکتیک"}
+																					{item.external_id ?? "N/A"} •{" "}
+																					{item.tactics.join("، ") ||
+																						"بدون تاکتیک"}
 																				</div>
 																			</button>
 																		))}
@@ -1423,7 +1841,9 @@ export default function AdminConfigurationPage() {
 
 														<div className="rounded-xl border border-cyan-700/40 bg-cyan-950/10 p-3">
 															{isPreparedDetailLoading ? (
-																<div className="text-sm text-slate-300">در حال بارگذاری جزئیات...</div>
+																<div className="text-sm text-slate-300">
+																	در حال بارگذاری جزئیات...
+																</div>
 															) : preparedDetail ? (
 																<div className="space-y-3">
 																	<div className="flex items-start justify-between gap-3">
@@ -1447,17 +1867,23 @@ export default function AdminConfigurationPage() {
 																	<ScrollArea className="h-[290px] rounded border border-slate-700 bg-slate-950/40 p-2">
 																		<div className="space-y-3 pr-2">
 																			<div className="text-xs text-slate-300 leading-6">
-																				{preparedDetail.description || "بدون توضیح"}
+																				{preparedDetail.description ||
+																					"بدون توضیح"}
 																			</div>
 																			<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																				<div className="text-xs text-slate-400 mb-1">راهبرد تشخیص</div>
+																				<div className="text-xs text-slate-400 mb-1">
+																					راهبرد تشخیص
+																				</div>
 																				<div className="text-xs leading-6 text-slate-200">
-																					{preparedDetail.detection_strategy || "راهبردی ثبت نشده"}
+																					{preparedDetail.detection_strategy ||
+																						"راهبردی ثبت نشده"}
 																				</div>
 																			</div>
 																			<div className="grid grid-cols-1 gap-2">
 																				<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																					<div className="text-xs text-slate-400 mb-1">نمونه اجرا</div>
+																					<div className="text-xs text-slate-400 mb-1">
+																						نمونه اجرا
+																					</div>
 																					<ul className="text-xs space-y-1">
 																						{preparedDetail.procedure_examples
 																							.slice(0, 3)
@@ -1475,15 +1901,22 @@ export default function AdminConfigurationPage() {
 																					</ul>
 																				</div>
 																				<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-																					<div className="text-xs text-slate-400 mb-1">کاهنده‌ها</div>
+																					<div className="text-xs text-slate-400 mb-1">
+																						کاهنده‌ها
+																					</div>
 																					<ul className="text-xs space-y-1">
-																						{preparedDetail.mitigations.slice(0, 3).map((mitigation) => (
-																							<li key={mitigation.id} className="leading-5">
-																								<span className="text-emerald-300">
-																									{mitigation.name}
-																								</span>
-																							</li>
-																						))}
+																						{preparedDetail.mitigations
+																							.slice(0, 3)
+																							.map((mitigation) => (
+																								<li
+																									key={mitigation.id}
+																									className="leading-5"
+																								>
+																									<span className="text-emerald-300">
+																										{mitigation.name}
+																									</span>
+																								</li>
+																							))}
 																					</ul>
 																				</div>
 																			</div>
@@ -1492,15 +1925,17 @@ export default function AdminConfigurationPage() {
 																</div>
 															) : (
 																<div className="text-sm text-slate-400">
-																	یک آیتم از لیست انتخاب کنید تا جزئیات و Template نمایش داده شود.
+																	یک آیتم از لیست انتخاب کنید تا جزئیات و
+																	Template نمایش داده شود.
 																</div>
 															)}
 														</div>
 													</div>
 												) : (
 													<div className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 text-sm text-slate-300 leading-7">
-														در حالت دستی، اکشن‌ها را مستقیم در پنل سمت راست تعریف کنید.
-														برای ساده‌سازی، ابتدا یک اکشن حمله و یک اکشن دفاعی بسازید.
+														در حالت دستی، اکشن‌ها را مستقیم در پنل سمت راست تعریف
+														کنید. برای ساده‌سازی، ابتدا یک اکشن حمله و یک اکشن
+														دفاعی بسازید.
 													</div>
 												)}
 											</motion.div>
@@ -1512,7 +1947,9 @@ export default function AdminConfigurationPage() {
 												className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-3"
 											>
 												<div className="flex items-center justify-between flex-wrap gap-2">
-													<div className="font-semibold text-slate-200">Action Builder</div>
+													<div className="font-semibold text-slate-200">
+														Action Builder
+													</div>
 													<div className="flex gap-2">
 														<Button
 															size="sm"
@@ -1535,14 +1972,19 @@ export default function AdminConfigurationPage() {
 												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
 													<div className="space-y-3">
 														{actions.map((action) => (
-															<div key={action.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+															<div
+																key={action.id}
+																className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2"
+															>
 																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_auto] gap-2 items-end">
 																	<Input
 																		value={action.code}
 																		onChange={(event) =>
 																			updateAction(action.id, (current) => ({
 																				...current,
-																				code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
+																				code: event.target.value
+																					.toUpperCase()
+																					.replace(/\s+/g, "_"),
 																			}))
 																		}
 																		placeholder="CODE"
@@ -1568,7 +2010,10 @@ export default function AdminConfigurationPage() {
 																				pointsOnSuccess:
 																					event.target.value === "defense"
 																						? 0
-																						: Math.max(1, current.pointsOnSuccess),
+																						: Math.max(
+																								1,
+																								current.pointsOnSuccess,
+																							),
 																			}))
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
@@ -1576,7 +2021,12 @@ export default function AdminConfigurationPage() {
 																		<option value="attack">attack</option>
 																		<option value="defense">defense</option>
 																	</select>
-																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeAction(action.id)}>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		className="border-rose-700 text-rose-300"
+																		onClick={() => removeAction(action.id)}
+																	>
 																		Remove
 																	</Button>
 																</div>
@@ -1627,10 +2077,54 @@ export default function AdminConfigurationPage() {
 																	className="w-full min-h-16 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
 																/>
 																<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-																	<RangeField label="Cost" min={1} max={500} value={action.cost} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cost: value }))} />
-																	<RangeField label="Success %" min={1} max={100} value={action.successProbability} onChange={(value) => updateAction(action.id, (current) => ({ ...current, successProbability: value }))} />
-																	<RangeField label="Points on Success" min={0} max={10} value={action.pointsOnSuccess} onChange={(value) => updateAction(action.id, (current) => ({ ...current, pointsOnSuccess: value }))} />
-																	<RangeField label="Cooldown" min={0} max={6} value={action.cooldownTurns} onChange={(value) => updateAction(action.id, (current) => ({ ...current, cooldownTurns: value }))} />
+																	<RangeField
+																		label="Cost"
+																		min={1}
+																		max={500}
+																		value={action.cost}
+																		onChange={(value) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				cost: value,
+																			}))
+																		}
+																	/>
+																	<RangeField
+																		label="Success %"
+																		min={1}
+																		max={100}
+																		value={action.successProbability}
+																		onChange={(value) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				successProbability: value,
+																			}))
+																		}
+																	/>
+																	<RangeField
+																		label="Points on Success"
+																		min={0}
+																		max={10}
+																		value={action.pointsOnSuccess}
+																		onChange={(value) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				pointsOnSuccess: value,
+																			}))
+																		}
+																	/>
+																	<RangeField
+																		label="Cooldown"
+																		min={0}
+																		max={6}
+																		value={action.cooldownTurns}
+																		onChange={(value) =>
+																			updateAction(action.id, (current) => ({
+																				...current,
+																				cooldownTurns: value,
+																			}))
+																		}
+																	/>
 																</div>
 															</div>
 														))}
@@ -1649,15 +2143,25 @@ export default function AdminConfigurationPage() {
 												className="rounded-xl border border-blue-700/30 bg-blue-950/10 p-3 space-y-3"
 											>
 												<div className="flex items-center justify-between">
-													<div className="font-semibold text-blue-200">Action Counters</div>
-													<Button size="sm" variant="outline" className="border-slate-600" onClick={addCounter}>
+													<div className="font-semibold text-blue-200">
+														Action Counters
+													</div>
+													<Button
+														size="sm"
+														variant="outline"
+														className="border-slate-600"
+														onClick={addCounter}
+													>
 														+ Counter
 													</Button>
 												</div>
 												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
 													<div className="space-y-3">
 														{actionCounters.map((counter) => (
-															<div key={counter.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+															<div
+																key={counter.id}
+																className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2"
+															>
 																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
 																	<select
 																		value={counter.attackCode}
@@ -1669,7 +2173,9 @@ export default function AdminConfigurationPage() {
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
-																		<option value="">Select attack action</option>
+																		<option value="">
+																			Select attack action
+																		</option>
 																		{attackCodes.map((code) => (
 																			<option key={code} value={code}>
 																				{code}
@@ -1686,14 +2192,21 @@ export default function AdminConfigurationPage() {
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
-																		<option value="">Select defense action</option>
+																		<option value="">
+																			Select defense action
+																		</option>
 																		{defenseCodes.map((code) => (
 																			<option key={code} value={code}>
 																				{code}
 																			</option>
 																		))}
 																	</select>
-																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeCounter(counter.id)}>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		className="border-rose-700 text-rose-300"
+																		onClick={() => removeCounter(counter.id)}
+																	>
 																		Remove
 																	</Button>
 																</div>
@@ -1733,23 +2246,38 @@ export default function AdminConfigurationPage() {
 												className="rounded-xl border border-amber-700/30 bg-amber-950/10 p-3 space-y-3"
 											>
 												<div className="flex items-center justify-between">
-													<div className="font-semibold text-amber-200">Black Market Items</div>
-													<Button size="sm" variant="outline" className="border-slate-600" onClick={addBlackMarketItem}>
+													<div className="font-semibold text-amber-200">
+														Black Market Items
+													</div>
+													<Button
+														size="sm"
+														variant="outline"
+														className="border-slate-600"
+														onClick={addBlackMarketItem}
+													>
 														+ Item
 													</Button>
 												</div>
 												<ScrollArea className="h-[640px] rounded-lg border border-slate-800 bg-black/35 p-3">
 													<div className="space-y-3">
 														{blackMarketItems.map((item) => (
-															<div key={item.id} className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2">
+															<div
+																key={item.id}
+																className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 space-y-2"
+															>
 																<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-end">
 																	<Input
 																		value={item.code}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				code: event.target.value.toUpperCase().replace(/\s+/g, "_"),
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					code: event.target.value
+																						.toUpperCase()
+																						.replace(/\s+/g, "_"),
+																				}),
+																			)
 																		}
 																		placeholder="Item Code"
 																		className="bg-slate-950/80 border-slate-700"
@@ -1757,15 +2285,25 @@ export default function AdminConfigurationPage() {
 																	<Input
 																		value={item.name}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				name: event.target.value,
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					name: event.target.value,
+																				}),
+																			)
 																		}
 																		placeholder="Item Name"
 																		className="bg-slate-950/80 border-slate-700"
 																	/>
-																	<Button size="sm" variant="outline" className="border-rose-700 text-rose-300" onClick={() => removeBlackMarketItem(item.id)}>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		className="border-rose-700 text-rose-300"
+																		onClick={() =>
+																			removeBlackMarketItem(item.id)
+																		}
+																	>
 																		Remove
 																	</Button>
 																</div>
@@ -1773,55 +2311,76 @@ export default function AdminConfigurationPage() {
 																	<select
 																		value={item.itemType}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				itemType: event.target.value as
-																					| "consumable"
-																					| "unlock"
-																					| "instant",
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					itemType: event.target.value as
+																						| "consumable"
+																						| "unlock"
+																						| "instant",
+																				}),
+																			)
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
-																		<option value="consumable">consumable</option>
+																		<option value="consumable">
+																			consumable
+																		</option>
 																		<option value="unlock">unlock</option>
 																		<option value="instant">instant</option>
 																	</select>
 																	<select
 																		value={item.effectType}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				effectType: event.target.value as
-																					| "probability_increase"
-																					| "cost_reduction"
-																					| "action_unlock"
-																					| "credit_gain",
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					effectType: event.target.value as
+																						| "probability_increase"
+																						| "cost_reduction"
+																						| "action_unlock"
+																						| "credit_gain",
+																				}),
+																			)
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
-																		<option value="probability_increase">probability_increase</option>
-																		<option value="cost_reduction">cost_reduction</option>
-																		<option value="action_unlock">action_unlock</option>
-																		<option value="credit_gain">credit_gain</option>
+																		<option value="probability_increase">
+																			probability_increase
+																		</option>
+																		<option value="cost_reduction">
+																			cost_reduction
+																		</option>
+																		<option value="action_unlock">
+																			action_unlock
+																		</option>
+																		<option value="credit_gain">
+																			credit_gain
+																		</option>
 																	</select>
 																	<select
 																		value={item.modifierType}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				modifierType: event.target.value as
-																					| "additive"
-																					| "multiplicative"
-																					| "unlock"
-																					| "instant",
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					modifierType: event.target.value as
+																						| "additive"
+																						| "multiplicative"
+																						| "unlock"
+																						| "instant",
+																				}),
+																			)
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
 																		<option value="additive">additive</option>
-																		<option value="multiplicative">multiplicative</option>
+																		<option value="multiplicative">
+																			multiplicative
+																		</option>
 																		<option value="unlock">unlock</option>
 																		<option value="instant">instant</option>
 																	</select>
@@ -1830,18 +2389,28 @@ export default function AdminConfigurationPage() {
 																	<select
 																		value={item.targetActionCode}
 																		onChange={(event) => {
-																			const selected = actions.find((action) => action.code === event.target.value);
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				targetActionCode: event.target.value,
-																				targetActionType: selected?.type ?? "",
-																			}));
+																			const selected = actions.find(
+																				(action) =>
+																					action.code === event.target.value,
+																			);
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					targetActionCode: event.target.value,
+																					targetActionType:
+																						selected?.type ?? "",
+																				}),
+																			);
 																		}}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
 																		<option value="">Target action</option>
 																		{actions.map((action) => (
-																			<option key={action.id} value={action.code}>
+																			<option
+																				key={action.id}
+																				value={action.code}
+																			>
 																				{action.code} ({action.type})
 																			</option>
 																		))}
@@ -1849,10 +2418,14 @@ export default function AdminConfigurationPage() {
 																	<select
 																		value={item.targetActionType}
 																		onChange={(event) =>
-																			updateBlackMarketItem(item.id, (current) => ({
-																				...current,
-																				targetActionType: event.target.value as ActionKind | "",
-																			}))
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					targetActionType: event.target
+																						.value as ActionKind | "",
+																				}),
+																			)
 																		}
 																		className="h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
@@ -1864,19 +2437,75 @@ export default function AdminConfigurationPage() {
 																<textarea
 																	value={item.description}
 																	onChange={(event) =>
-																		updateBlackMarketItem(item.id, (current) => ({
-																			...current,
-																			description: event.target.value,
-																		}))
+																		updateBlackMarketItem(
+																			item.id,
+																			(current) => ({
+																				...current,
+																				description: event.target.value,
+																			}),
+																		)
 																	}
 																	placeholder="Item description"
 																	className="w-full min-h-14 rounded-md border border-slate-700 bg-slate-950/80 p-2 text-sm"
 																/>
 																<div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-																	<RangeField label="Value" min={1} max={200} value={item.value} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, value }))} />
-																	<RangeField label="Cost" min={1} max={400} value={item.cost} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, cost: value }))} />
-																	<RangeField label="Duration" min={1} max={10} value={item.durationTurns ?? 1} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, durationTurns: value }))} />
-																	<RangeField label="Available From Turn" min={1} max={20} value={item.availableFromTurn} onChange={(value) => updateBlackMarketItem(item.id, (current) => ({ ...current, availableFromTurn: value }))} />
+																	<RangeField
+																		label="Value"
+																		min={1}
+																		max={200}
+																		value={item.value}
+																		onChange={(value) =>
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({ ...current, value }),
+																			)
+																		}
+																	/>
+																	<RangeField
+																		label="Cost"
+																		min={1}
+																		max={400}
+																		value={item.cost}
+																		onChange={(value) =>
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					cost: value,
+																				}),
+																			)
+																		}
+																	/>
+																	<RangeField
+																		label="Duration"
+																		min={1}
+																		max={10}
+																		value={item.durationTurns ?? 1}
+																		onChange={(value) =>
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					durationTurns: value,
+																				}),
+																			)
+																		}
+																	/>
+																	<RangeField
+																		label="Available From Turn"
+																		min={1}
+																		max={20}
+																		value={item.availableFromTurn}
+																		onChange={(value) =>
+																			updateBlackMarketItem(
+																				item.id,
+																				(current) => ({
+																					...current,
+																					availableFromTurn: value,
+																				}),
+																			)
+																		}
+																	/>
 																</div>
 																<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 																	<div className="space-y-1.5">
@@ -1884,10 +2513,14 @@ export default function AdminConfigurationPage() {
 																		<select
 																			value={item.stackable ? "true" : "false"}
 																			onChange={(event) =>
-																				updateBlackMarketItem(item.id, (current) => ({
-																					...current,
-																					stackable: event.target.value === "true",
-																				}))
+																				updateBlackMarketItem(
+																					item.id,
+																					(current) => ({
+																						...current,
+																						stackable:
+																							event.target.value === "true",
+																					}),
+																				)
 																			}
 																			className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																		>
@@ -1896,35 +2529,45 @@ export default function AdminConfigurationPage() {
 																		</select>
 																	</div>
 																	<div className="space-y-1.5">
-																		<Label className="text-xs">Stock Limit (-1 = null)</Label>
+																		<Label className="text-xs">
+																			Stock Limit (-1 = null)
+																		</Label>
 																		<Input
 																			type="number"
 																			value={item.stockLimit ?? -1}
 																			onChange={(event) =>
-																				updateBlackMarketItem(item.id, (current) => ({
-																					...current,
-																					stockLimit:
-																						Number(event.target.value) < 0
-																							? null
-																							: Number(event.target.value),
-																				}))
+																				updateBlackMarketItem(
+																					item.id,
+																					(current) => ({
+																						...current,
+																						stockLimit:
+																							Number(event.target.value) < 0
+																								? null
+																								: Number(event.target.value),
+																					}),
+																				)
 																			}
 																			className="bg-slate-950/80 border-slate-700"
 																		/>
 																	</div>
 																	<div className="space-y-1.5">
-																		<Label className="text-xs">Per Team Limit (-1 = null)</Label>
+																		<Label className="text-xs">
+																			Per Team Limit (-1 = null)
+																		</Label>
 																		<Input
 																			type="number"
 																			value={item.perTeamLimit ?? -1}
 																			onChange={(event) =>
-																				updateBlackMarketItem(item.id, (current) => ({
-																					...current,
-																					perTeamLimit:
-																						Number(event.target.value) < 0
-																							? null
-																							: Number(event.target.value),
-																				}))
+																				updateBlackMarketItem(
+																					item.id,
+																					(current) => ({
+																						...current,
+																						perTeamLimit:
+																							Number(event.target.value) < 0
+																								? null
+																								: Number(event.target.value),
+																					}),
+																				)
 																			}
 																			className="bg-slate-950/80 border-slate-700"
 																		/>
@@ -1946,33 +2589,56 @@ export default function AdminConfigurationPage() {
 												transition={{ duration: 0.2 }}
 												className="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-4 space-y-3"
 											>
-												<div className="font-semibold text-emerald-200">مرور نهایی</div>
+												<div className="font-semibold text-emerald-200">
+													مرور نهایی
+												</div>
 												<p className="text-sm text-slate-300">
-													ساختار پیکربندی آماده ارسال است. قبل از ارسال، شاخص‌های سریع زیر را چک کنید.
+													ساختار پیکربندی آماده ارسال است. قبل از ارسال، شاخص‌های
+													سریع زیر را چک کنید.
 												</p>
 												<div className="grid grid-cols-2 gap-2">
 													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">Team</div>
-														<div className="text-lg font-semibold">{teams.length}</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">Players</div>
+														<div className="text-[11px] text-slate-400">
+															Team
+														</div>
 														<div className="text-lg font-semibold">
-															{teams.reduce((sum, team) => sum + team.players.length, 0)}
+															{teams.length}
 														</div>
 													</div>
 													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">Actions</div>
-														<div className="text-lg font-semibold">{actions.length}</div>
+														<div className="text-[11px] text-slate-400">
+															Players
+														</div>
+														<div className="text-lg font-semibold">
+															{teams.reduce(
+																(sum, team) => sum + team.players.length,
+																0,
+															)}
+														</div>
 													</div>
 													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">Black Market</div>
-														<div className="text-lg font-semibold">{blackMarketItems.length}</div>
+														<div className="text-[11px] text-slate-400">
+															Actions
+														</div>
+														<div className="text-lg font-semibold">
+															{actions.length}
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">
+															Black Market
+														</div>
+														<div className="text-lg font-semibold">
+															{blackMarketItems.length}
+														</div>
 													</div>
 												</div>
 												<div className="rounded border border-slate-700 bg-slate-950/60 p-3 text-xs leading-6">
 													<div>تعداد کانترها: {actionCounters.length}</div>
-													<div>حالت تنظیم اکشن: {templateMode === "prepared" ? "آماده" : "دستی"}</div>
+													<div>
+														حالت تنظیم اکشن:{" "}
+														{templateMode === "prepared" ? "آماده" : "دستی"}
+													</div>
 													<div>نسخه پیکربندی: {version}</div>
 												</div>
 												<Button
@@ -1980,7 +2646,9 @@ export default function AdminConfigurationPage() {
 													disabled={submitting}
 													className="bg-emerald-700 hover:bg-emerald-600 text-white"
 												>
-													{submitting ? "در حال ارسال..." : "ارسال configure_all"}
+													{submitting
+														? "در حال ارسال..."
+														: "ارسال configure_all"}
 												</Button>
 											</motion.div>
 
@@ -1990,18 +2658,133 @@ export default function AdminConfigurationPage() {
 												transition={{ duration: 0.24, delay: 0.04 }}
 												className="rounded-xl border border-emerald-700/30 bg-black/35 p-3"
 											>
-												<div className="font-semibold text-emerald-300 mb-2">Server Response</div>
-												<ScrollArea className="h-[320px] rounded border border-slate-800 bg-slate-950/60 p-3">
-													{lastResponse ? (
-														<pre className="text-xs whitespace-pre-wrap">
-															{JSON.stringify(lastResponse, null, 2)}
-														</pre>
-													) : (
-														<div className="text-sm text-slate-400">
-															پس از ارسال، پاسخ سرور اینجا نمایش داده می‌شود.
+												<div className="font-semibold text-emerald-300 mb-2">
+													Server & Game Control
+												</div>
+												<div className="grid grid-cols-2 gap-2 mb-3">
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">
+															Game ID
 														</div>
-													)}
-												</ScrollArea>
+														<div className="text-sm font-mono">
+															{activeGameId ?? "—"}
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">
+															Phase
+														</div>
+														<div className="text-sm">
+															{gameStateSummary?.phase ?? "—"}
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">
+															Turn
+														</div>
+														<div className="text-sm font-mono">
+															{gameTurnText}
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+														<div className="text-[11px] text-slate-400">
+															Point Threshold
+														</div>
+														<div className="text-sm font-mono">
+															{typeof gameStateSummary?.pointThreshold ===
+															"number"
+																? gameStateSummary.pointThreshold
+																: "—"}
+														</div>
+													</div>
+												</div>
+
+												<div className="flex flex-wrap gap-2 mb-3">
+													<Button
+														onClick={() => void refreshAdminGameState()}
+														disabled={!adminToken || isGameStateLoading}
+														variant="outline"
+														className="border-slate-600"
+													>
+														<RefreshCw
+															className={`w-4 h-4 ml-2 ${isGameStateLoading ? "animate-spin" : ""}`}
+														/>
+														{isGameStateLoading
+															? "در حال دریافت..."
+															: "دریافت game_state"}
+													</Button>
+													<Button
+														onClick={startCurrentGame}
+														disabled={
+															!adminToken ||
+															!activeGameId ||
+															isStartLoading ||
+															submitting
+														}
+														className="bg-cyan-700 hover:bg-cyan-600 text-white"
+													>
+														<Swords className="w-4 h-4 ml-2" />
+														{isStartLoading ? "در حال شروع..." : "Start Game"}
+													</Button>
+													<Button
+														onClick={resetCurrentGame}
+														disabled={
+															!adminToken ||
+															!activeGameId ||
+															isResetLoading ||
+															submitting
+														}
+														variant="outline"
+														className="border-amber-600 text-amber-200 hover:bg-amber-950/30"
+													>
+														<RefreshCw
+															className={`w-4 h-4 ml-2 ${isResetLoading ? "animate-spin" : ""}`}
+														/>
+														{isResetLoading ? "در حال ریست..." : "Reset Game"}
+													</Button>
+												</div>
+
+												{controlMessage ? (
+													<div className="rounded border border-cyan-700/40 bg-cyan-950/30 p-2 text-xs text-cyan-100 mb-3">
+														{controlMessage}
+													</div>
+												) : null}
+
+												<div className="space-y-2 mb-3">
+													<div className="text-xs text-slate-300">
+														configure_all response
+													</div>
+													<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
+														{lastResponse ? (
+															<pre className="text-xs whitespace-pre-wrap">
+																{JSON.stringify(lastResponse, null, 2)}
+															</pre>
+														) : (
+															<div className="text-sm text-slate-400">
+																پس از ارسال، پاسخ configure_all اینجا نمایش داده
+																می‌شود.
+															</div>
+														)}
+													</ScrollArea>
+												</div>
+
+												<div className="space-y-2">
+													<div className="text-xs text-slate-300">
+														admin/game_state response
+													</div>
+													<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
+														{adminGameState ? (
+															<pre className="text-xs whitespace-pre-wrap">
+																{JSON.stringify(adminGameState, null, 2)}
+															</pre>
+														) : (
+															<div className="text-sm text-slate-400">
+																پس از ورود یا ارسال، وضعیت بازی اینجا نمایش داده
+																می‌شود.
+															</div>
+														)}
+													</ScrollArea>
+												</div>
 											</motion.div>
 										</div>
 									) : null}
@@ -2034,7 +2817,9 @@ export default function AdminConfigurationPage() {
 						<ArrowRight className="w-4 h-4 mr-2" />
 						مرحله قبل
 					</Button>
-					<div className="text-sm text-slate-300">{STEP_TITLE[currentStep]}</div>
+					<div className="text-sm text-slate-300">
+						{STEP_TITLE[currentStep]}
+					</div>
 					<Button
 						className="bg-cyan-700 hover:bg-cyan-600"
 						onClick={goNext}
