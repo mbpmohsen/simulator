@@ -17,6 +17,7 @@ import {
 	RefreshCw,
 	Send,
 	ShieldAlert,
+	Trophy,
 	Volume2,
 	VolumeX,
 	Swords,
@@ -475,7 +476,11 @@ const buildVisualEvent = (
 		tone = "warning";
 		title = "افکت فعال شد";
 		description = `${pickString([effect?.name]) ?? "افکت"} اعمال شد (مدت: ${toNumberOrNull(effect?.remainingTurns) ?? toNumberOrNull(effect?.duration) ?? "?"} نوبت).`;
-	} else if (type.includes("GAME_FINISHED") || type.includes("GAME_OVER")) {
+	} else if (
+		type.includes("GAME_FINISHED") ||
+		type.includes("GAME_OVER") ||
+		type.includes("GAME_ENDED")
+	) {
 		tone = "success";
 		title = "بازی پایان یافت";
 		description = "نتیجه نهایی مشخص شد.";
@@ -524,6 +529,7 @@ export default function PlayerGamePageV2() {
 	const [sseError, setSseError] = useState<string | null>(null);
 	const [sseEvents, setSseEvents] = useState<SseLogEvent[]>([]);
 	const [visualEvents, setVisualEvents] = useState<VisualEvent[]>([]);
+	const [gameEndedSignalReceived, setGameEndedSignalReceived] = useState(false);
 
 	const [selectedActionId, setSelectedActionId] = useState<number | null>(null);
 	const [selectedTargetTeamId, setSelectedTargetTeamId] = useState<number | null>(null);
@@ -543,6 +549,7 @@ export default function PlayerGamePageV2() {
 	const streamSinceRef = useRef(0);
 	const chatTransportModeRef = useRef<ChatTransportMode>("unknown");
 	const connectAttemptRef = useRef<string | null>(null);
+	const gameEndedRefreshRef = useRef(false);
 
 	const clientApi = useMemo(() => {
 		if (!token || !BASE_URL) return null;
@@ -557,6 +564,11 @@ export default function PlayerGamePageV2() {
 	const activeGameId = useMemo(() => {
 		return normalizeGameId(gameState?.game?.gameId) ?? normalizeGameId(gameState?.game?.id);
 	}, [gameState]);
+
+	useEffect(() => {
+		gameEndedRefreshRef.current = false;
+		setGameEndedSignalReceived(false);
+	}, [activeGameId]);
 
 	const currentPlayerId = useMemo(() => {
 		if (typeof actionsPayload?.playerId === "number") return actionsPayload.playerId;
@@ -594,6 +606,7 @@ export default function PlayerGamePageV2() {
 	const isSelectionPhase = normalizedPhase.includes("selection");
 	const isVotingPhase = normalizedPhase.includes("voting");
 	const isFinishedPhase = normalizedPhase.includes("finish");
+	const shouldStopLiveUpdates = isFinishedPhase || gameEndedSignalReceived;
 
 	const chatStorageKey = useMemo(() => {
 		if (!activeGameId || currentTeamId === null) return null;
@@ -654,8 +667,14 @@ export default function PlayerGamePageV2() {
 				if (parsedGame.error || !parsedGame.data?.game) {
 					throw new Error(parsedGame.error ?? "پاسخ game_state نامعتبر است.");
 				}
-				setGameState(parsedGame.data);
-				setLastUpdatedAt(Date.now());
+					setGameState(parsedGame.data);
+					setLastUpdatedAt(Date.now());
+
+					const phaseFromApi = String(parsedGame.data.game.phase ?? "").toLowerCase();
+					if (phaseFromApi.includes("finish")) {
+						setGameEndedSignalReceived(true);
+						setSseError("بازی پایان یافت. اتصال رویداد زنده متوقف شد.");
+					}
 
 				if (actionsRes.status === "fulfilled") {
 					const parsedActions = parseApiEnvelope<ClientActionsPayload>(
@@ -731,7 +750,11 @@ export default function PlayerGamePageV2() {
 				void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.55);
 				return;
 			}
-			if (type.includes("GAME_FINISHED") || type.includes("GAME_OVER")) {
+			if (
+				type.includes("GAME_FINISHED") ||
+				type.includes("GAME_OVER") ||
+				type.includes("GAME_ENDED")
+			) {
 				void playUiSound("/sounds/640149main_Computers20are20in20Control.mp3", 0.32);
 				return;
 			}
@@ -742,6 +765,10 @@ export default function PlayerGamePageV2() {
 
 	const submitVoteAction = useCallback(async () => {
 		if (!token || !BASE_URL) return;
+		if (shouldStopLiveUpdates) {
+			setVoteError("بازی به پایان رسیده است و رأی جدید پذیرفته نمی‌شود.");
+			return;
+		}
 		if (currentTeamId === null) {
 			setVoteError("شما هنوز به تیمی اختصاص داده نشده‌اید.");
 			return;
@@ -839,6 +866,7 @@ export default function PlayerGamePageV2() {
 		token,
 		currentTeamId,
 		isSelectionPhase,
+		shouldStopLiveUpdates,
 		selectedTargetTeamId,
 		selectedActionId,
 		selectedBlackMarketItemId,
@@ -911,6 +939,10 @@ export default function PlayerGamePageV2() {
 		const text = chatDraft.trim();
 		if (!text) return;
 		if (!token) return;
+		if (shouldStopLiveUpdates) {
+			setChatError("بازی پایان یافته است و چت تیمی بسته شد.");
+			return;
+		}
 		if (currentTeamId === null) {
 			setChatError("تا زمانی که به تیمی متصل نشده‌اید، چت فعال نمی‌شود.");
 			return;
@@ -951,6 +983,7 @@ export default function PlayerGamePageV2() {
 		currentTeamId,
 		logoutAndRedirect,
 		sendTeamChatToServer,
+		shouldStopLiveUpdates,
 		token,
 		user,
 	]);
@@ -974,15 +1007,15 @@ export default function PlayerGamePageV2() {
 	}, [hydrated, token, router, refreshAll]);
 
 	useEffect(() => {
-		if (!token || !clientApi) return;
+		if (!token || !clientApi || shouldStopLiveUpdates) return;
 		const timer = setInterval(() => {
 			void refreshAll({ background: true });
 		}, POLL_INTERVAL_MS);
 		return () => clearInterval(timer);
-	}, [token, clientApi, refreshAll]);
+	}, [token, clientApi, refreshAll, shouldStopLiveUpdates]);
 
 	useEffect(() => {
-		if (!token || !BASE_URL || currentPlayerId === null) return;
+		if (!token || !BASE_URL || currentPlayerId === null || shouldStopLiveUpdates) return;
 
 		const key = `${activeGameId ?? "nogame"}:${currentPlayerId}`;
 		if (connectAttemptRef.current === key) return;
@@ -1007,7 +1040,7 @@ export default function PlayerGamePageV2() {
 				// Optional readiness signal endpoint; ignore network errors.
 			}
 		})();
-	}, [token, currentPlayerId, activeGameId, logoutAndRedirect]);
+	}, [token, currentPlayerId, activeGameId, logoutAndRedirect, shouldStopLiveUpdates]);
 
 	useEffect(() => {
 		const actions = actionsPayload?.actions ?? [];
@@ -1078,13 +1111,14 @@ export default function PlayerGamePageV2() {
 	}, [chatMessages, chatStorageKey]);
 
 	useEffect(() => {
-		if (!token || !activeGameId || !BASE_URL) return;
+		if (!token || !activeGameId || !BASE_URL || shouldStopLiveUpdates) return;
 
 		let cancelled = false;
 		let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 		let abortController: AbortController | null = null;
 
 		const handleSseEvent = (eventType: string, rawData: string, eventId: string | null) => {
+			const normalizedEventType = (eventType || "message").toUpperCase();
 			const payload = parseSsePayload(rawData);
 			const receivedAt = Date.now();
 			const fromPayload = extractSinceFromPayload(payload, streamSinceRef.current);
@@ -1099,18 +1133,30 @@ export default function PlayerGamePageV2() {
 				const next: SseLogEvent = {
 					id: `${receivedAt}-${Math.random().toString(36).slice(2, 8)}`,
 					receivedAt,
-					eventType: eventType || "message",
+					eventType: normalizedEventType || "message",
 					payload,
 				};
 				return [next, ...prev].slice(0, MAX_EVENTS);
 			});
 
 			setVisualEvents((prev) => {
-				const visual = buildVisualEvent(eventType || "message", payload, receivedAt);
+				const visual = buildVisualEvent(normalizedEventType || "message", payload, receivedAt);
 				return [visual, ...prev].slice(0, MAX_EVENTS);
 			});
 
-			playEventSound(eventType || "message");
+			playEventSound(normalizedEventType || "message");
+
+			if (normalizedEventType.includes("GAME_ENDED")) {
+				setGameEndedSignalReceived(true);
+				setVoteStatus("بازی پایان یافت. نتیجه نهایی اعلام شد.");
+				setVoteError(null);
+				setSseError("بازی پایان یافت. اتصال رویداد زنده متوقف شد.");
+				if (!gameEndedRefreshRef.current) {
+					gameEndedRefreshRef.current = true;
+					void refreshAll({ background: true });
+				}
+				return;
+			}
 
 			const chatEvent = parseChatEvent(eventType, payload);
 			if (chatEvent && currentTeamId !== null && chatEvent.teamId === currentTeamId) {
@@ -1257,10 +1303,22 @@ export default function PlayerGamePageV2() {
 		activeGameId,
 		currentTeamId,
 		appendChatMessage,
+		shouldStopLiveUpdates,
 		playEventSound,
+		refreshAll,
 		scheduleRefreshFromSse,
 		logoutAndRedirect,
 	]);
+
+	useEffect(() => {
+		if (!shouldStopLiveUpdates) return;
+		setSseConnected(false);
+		setSseError("بازی پایان یافت. رویدادهای زنده متوقف شدند.");
+		if (refreshDebounceRef.current) {
+			clearTimeout(refreshDebounceRef.current);
+			refreshDebounceRef.current = null;
+		}
+	}, [shouldStopLiveUpdates]);
 
 	if (!hydrated || !token) {
 		return (
@@ -1273,14 +1331,27 @@ export default function PlayerGamePageV2() {
 	const game = gameState?.game;
 	const phase = phaseName;
 	const isWaiting = normalizedPhase === "waiting" || normalizedPhase.includes("waiting");
+	const winnerSideId = toNumberOrNull(game?.winnerSideId);
+	const winnerSide =
+		winnerSideId !== null
+			? (gameState?.sides ?? []).find((side) => side.id === winnerSideId) ?? null
+			: null;
+	const currentSideId =
+		extractContextNumber(gameState?.clientContext, ["currentSideId", "sideId"]) ??
+		currentTeam?.sideId ??
+		null;
+	const didCurrentSideWin =
+		winnerSideId !== null && currentSideId !== null && winnerSideId === currentSideId;
+	const resultTeams = [...(gameState?.teams ?? [])].sort((a, b) => b.points - a.points);
+	const isGameLocked = shouldStopLiveUpdates;
 	const connectedPlayers = gameState?.players?.filter((player) => player.connected).length ?? 0;
 	const totalKnownPlayers = gameState?.players?.length ?? 0;
 	const actions = actionsPayload?.actions ?? [];
 	const targets = targetsPayload?.targets ?? [];
 	const blackMarketItems = gameState?.blackMarketItems ?? [];
-	const canSubmitSelection = !isWaiting && !isFinishedPhase && selectedTargetTeamId !== null;
+	const canSubmitSelection = !isGameLocked && !isWaiting && selectedTargetTeamId !== null;
 	const canSubmitVoting =
-		!isWaiting && !isFinishedPhase && selectedActionId !== null && !isSelectionPhase;
+		!isGameLocked && !isWaiting && selectedActionId !== null && !isSelectionPhase;
 	const canSubmitVote = isSelectionPhase ? canSubmitSelection : canSubmitVoting;
 
 	return (
@@ -1353,13 +1424,25 @@ export default function PlayerGamePageV2() {
 							<div className="text-xs text-slate-400">اعتبار تیم شما</div>
 							<div className="mt-1 font-semibold text-emerald-300">{currentTeam?.credits ?? "—"}</div>
 						</div>
-						<div className="rounded-lg border border-slate-700/80 bg-slate-900/80 p-3">
-							<div className="text-xs text-slate-400">وضعیت ارتباط زنده</div>
-							<div className="mt-1 flex items-center gap-2 text-sm">
-								<Radio className={`w-4 h-4 ${sseConnected ? "text-emerald-300" : "text-amber-300"}`} />
-								{sseConnected ? "متصل" : "در حال تلاش برای اتصال"}
+							<div className="rounded-lg border border-slate-700/80 bg-slate-900/80 p-3">
+								<div className="text-xs text-slate-400">وضعیت ارتباط زنده</div>
+								<div className="mt-1 flex items-center gap-2 text-sm">
+									<Radio
+										className={`w-4 h-4 ${
+											shouldStopLiveUpdates
+												? "text-slate-400"
+												: sseConnected
+													? "text-emerald-300"
+													: "text-amber-300"
+										}`}
+									/>
+									{shouldStopLiveUpdates
+										? "متوقف (پایان بازی)"
+										: sseConnected
+											? "متصل"
+											: "در حال تلاش برای اتصال"}
+								</div>
 							</div>
-						</div>
 					</div>
 				</header>
 
@@ -1369,18 +1452,65 @@ export default function PlayerGamePageV2() {
 					</div>
 				) : null}
 
-				{isWaiting ? (
-					<div className="mt-4 rounded-xl border border-amber-500/45 bg-amber-950/35 p-4 flex items-start gap-3">
-						<ShieldAlert className="w-5 h-5 text-amber-300 mt-0.5" />
-						<div className="space-y-1 text-sm text-amber-100">
+					{isWaiting ? (
+						<div className="mt-4 rounded-xl border border-amber-500/45 bg-amber-950/35 p-4 flex items-start gap-3">
+							<ShieldAlert className="w-5 h-5 text-amber-300 mt-0.5" />
+							<div className="space-y-1 text-sm text-amber-100">
 							<div className="font-semibold">بازی هنوز در حالت انتظار است</div>
 							<div>برای شروع، همه بازیکنان باید حداقل یک بار وارد کلاینت شوند.</div>
 							<div className="text-amber-200/90">بازیکنان متصل: {connectedPlayers} / {totalKnownPlayers}</div>
+							</div>
 						</div>
-					</div>
-				) : null}
+					) : null}
 
-				<div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.95fr]">
+					{isFinishedPhase ? (
+						<div className={`mt-4 rounded-xl border p-4 md:p-5 ${didCurrentSideWin ? "border-emerald-500/55 bg-emerald-950/25" : "border-slate-600/80 bg-slate-900/75"}`}>
+							<div className="flex items-center gap-2 text-lg font-semibold text-white">
+								<Trophy className={`w-5 h-5 ${didCurrentSideWin ? "text-emerald-300" : "text-amber-300"}`} />
+								نتیجه نهایی بازی
+							</div>
+							<div className="mt-2 text-sm">
+								{winnerSide ? (
+									<span className={didCurrentSideWin ? "text-emerald-200" : "text-slate-200"}>
+										برنده: <strong>{winnerSide.name}</strong>
+										{didCurrentSideWin ? " - تیم شما پیروز شد." : " - تیم شما این بازی را واگذار کرد."}
+									</span>
+								) : (
+									<span className="text-slate-200">بازی بدون برنده نهایی به پایان رسید.</span>
+								)}
+							</div>
+							<div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+								{resultTeams.map((team) => {
+									const side = gameState?.sides.find((item) => item.id === team.sideId);
+									const isWinnerTeam = winnerSideId !== null && team.sideId === winnerSideId;
+									return (
+										<div key={`result-${team.id}`} className={`rounded-lg border px-3 py-2 text-sm ${isWinnerTeam ? "border-emerald-500/50 bg-emerald-950/20" : "border-slate-700/80 bg-slate-900/70"}`}>
+											<div className="flex items-center justify-between">
+												<span className="font-medium text-slate-100">{team.name}</span>
+												{isWinnerTeam ? (
+													<Badge variant="outline" className="border-emerald-500/60 text-emerald-300">برنده</Badge>
+												) : (
+													<Badge variant="outline" className="border-slate-600 text-slate-300">
+														{side?.name ?? `Side ${team.sideId}`}
+													</Badge>
+												)}
+											</div>
+											<div className="mt-1 text-xs text-slate-300">
+												Points: {team.points} | Credits: {team.credits}
+											</div>
+										</div>
+									);
+								})}
+							</div>
+							<div className="mt-3 text-xs text-slate-400">
+								{gameEndedSignalReceived
+									? "رویداد GAME_ENDED دریافت شد و ارتباط زنده متوقف گردید."
+									: "بازی در وضعیت finished قرار دارد و ارتباط زنده متوقف شده است."}
+							</div>
+						</div>
+					) : null}
+
+					<div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.95fr]">
 					<section className="space-y-4">
 							<Card className="border-cyan-500/25 bg-slate-950/70 backdrop-blur-md">
 								<CardHeader>
@@ -1436,17 +1566,19 @@ export default function PlayerGamePageV2() {
 											)}
 											{isSelectionPhase ? "ثبت انتخاب هدف" : "ثبت رأی اکشن"}
 										</Button>
-										<Button
-											variant="outline"
-											onClick={() => {
-												setSelectedActionId(null);
-												setSelectedTargetTeamId(null);
-												setSelectedBlackMarketItemId(null);
-												setVoteError(null);
-												setVoteStatus(null);
-											}}
-											className="border-slate-600 text-slate-200"
-										>
+											<Button
+												variant="outline"
+												onClick={() => {
+													if (isGameLocked) return;
+													setSelectedActionId(null);
+													setSelectedTargetTeamId(null);
+													setSelectedBlackMarketItemId(null);
+													setVoteError(null);
+													setVoteStatus(null);
+												}}
+												disabled={isGameLocked}
+												className="border-slate-600 text-slate-200"
+											>
 											پاک‌سازی انتخاب‌ها
 										</Button>
 										<span className="text-xs text-slate-400">
@@ -1472,15 +1604,17 @@ export default function PlayerGamePageV2() {
 											{actions.map((action) => {
 												const isSelected = selectedActionId === action.id;
 												return (
-													<button
-														type="button"
-														key={action.id}
-														onClick={() => {
-															setSelectedActionId(action.id);
-															void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
-														}}
-														className={`text-right rounded-xl border p-4 transition-all hover:scale-[1.01] ${isSelected ? "border-rose-400 bg-rose-950/25 shadow-[0_0_18px_rgba(244,63,94,.22)]" : "border-slate-700/90 bg-gradient-to-br from-slate-900 to-slate-950"}`}
-													>
+														<button
+															type="button"
+															key={action.id}
+															disabled={isGameLocked}
+															onClick={() => {
+																if (isGameLocked) return;
+																setSelectedActionId(action.id);
+																void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
+															}}
+															className={`text-right rounded-xl border p-4 transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : "hover:scale-[1.01]"} ${isSelected ? "border-rose-400 bg-rose-950/25 shadow-[0_0_18px_rgba(244,63,94,.22)]" : "border-slate-700/90 bg-gradient-to-br from-slate-900 to-slate-950"}`}
+														>
 														<div className="flex items-center justify-between gap-2">
 															<div className="font-semibold text-slate-100">{action.displayName ?? action.name}</div>
 															<Badge variant="outline" className="border-slate-600 text-slate-200">
@@ -1525,15 +1659,17 @@ export default function PlayerGamePageV2() {
 											{targets.map((targetItem) => {
 												const isSelected = selectedTargetTeamId === targetItem.id;
 												return (
-													<button
-														type="button"
-														key={targetItem.id}
-														onClick={() => {
-															setSelectedTargetTeamId(targetItem.id);
-															void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
-														}}
-														className={`text-right rounded-xl border p-4 transition-all ${isSelected ? "border-emerald-400 bg-emerald-950/20 shadow-[0_0_18px_rgba(16,185,129,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
-													>
+														<button
+															type="button"
+															key={targetItem.id}
+															disabled={isGameLocked}
+															onClick={() => {
+																if (isGameLocked) return;
+																setSelectedTargetTeamId(targetItem.id);
+																void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
+															}}
+															className={`text-right rounded-xl border p-4 transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-emerald-400 bg-emerald-950/20 shadow-[0_0_18px_rgba(16,185,129,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
+														>
 														<div className="font-semibold text-slate-100">{targetItem.name}</div>
 														<div className="text-xs text-slate-400 mt-1">
 															{targetItem.sideName ?? `Side ${targetItem.sideId}`}
@@ -1566,15 +1702,17 @@ export default function PlayerGamePageV2() {
 										blackMarketItems.map((item) => {
 											const isSelected = selectedBlackMarketItemId === item.id;
 											return (
-												<button
-													type="button"
-													key={item.id}
-													onClick={() => {
-														setSelectedBlackMarketItemId((prev) => (prev === item.id ? null : item.id));
-														void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.38);
-													}}
-													className={`w-full text-right rounded-lg border p-3 text-sm transition-all ${isSelected ? "border-violet-400 bg-violet-950/25 shadow-[0_0_16px_rgba(139,92,246,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
-												>
+													<button
+														type="button"
+														key={item.id}
+														disabled={isGameLocked}
+														onClick={() => {
+															if (isGameLocked) return;
+															setSelectedBlackMarketItemId((prev) => (prev === item.id ? null : item.id));
+															void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.38);
+														}}
+														className={`w-full text-right rounded-lg border p-3 text-sm transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-violet-400 bg-violet-950/25 shadow-[0_0_16px_rgba(139,92,246,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
+													>
 													<div className="font-semibold text-slate-100">{item.name}</div>
 													<div className="text-xs text-slate-300 mt-1">
 														Cost: {item.cost} | Type: {item.itemType ?? item.item_type ?? "—"}
@@ -1639,16 +1777,18 @@ export default function PlayerGamePageV2() {
 								<CardContent className="space-y-2">
 									<div className="flex items-center justify-between text-xs text-slate-400">
 										<span>since={streamSinceRef.current}</span>
-										<Badge
-											variant="outline"
-											className={
-												sseConnected
-													? "border-emerald-500/60 text-emerald-300"
-													: "border-slate-600 text-slate-300"
-											}
-										>
-											{sseConnected ? "متصل" : "غیرمتصل"}
-										</Badge>
+											<Badge
+												variant="outline"
+												className={
+													shouldStopLiveUpdates
+														? "border-slate-600 text-slate-300"
+														: sseConnected
+														? "border-emerald-500/60 text-emerald-300"
+														: "border-slate-600 text-slate-300"
+												}
+											>
+												{shouldStopLiveUpdates ? "متوقف" : sseConnected ? "متصل" : "غیرمتصل"}
+											</Badge>
 									</div>
 									<div className="text-[11px] text-slate-500">
 										صدا: {soundEnabled ? "فعال" : "غیرفعال"} | رویدادها به صورت تصویری نمایش داده می‌شوند.
@@ -1708,10 +1848,15 @@ export default function PlayerGamePageV2() {
 									<Activity className="w-4 h-4" />
 									چت خصوصی تیم
 								</CardTitle>
-								<div className="text-xs text-slate-400">
-									فقط اعضای تیم «{currentTeam?.name ?? "نامشخص"}» پیام‌ها را می‌بینند.
-								</div>
-							</CardHeader>
+									<div className="text-xs text-slate-400">
+										فقط اعضای تیم «{currentTeam?.name ?? "نامشخص"}» پیام‌ها را می‌بینند.
+									</div>
+									{isGameLocked ? (
+										<div className="text-xs text-amber-300">
+											بازی پایان یافته است؛ ارسال پیام جدید غیرفعال شد.
+										</div>
+									) : null}
+								</CardHeader>
 							<CardContent className="space-y-2">
 								{chatError ? (
 									<div className="text-xs text-amber-300 flex items-center gap-1">
@@ -1751,24 +1896,29 @@ export default function PlayerGamePageV2() {
 								</ScrollArea>
 
 								<div className="flex gap-2">
-									<Input
-										value={chatDraft}
-										onChange={(event) => setChatDraft(event.target.value)}
-										onKeyDown={(event) => {
-											if (event.key === "Enter" && !event.shiftKey) {
-												event.preventDefault();
-												void handleSendChat();
-											}
-										}}
-										placeholder="پیام تاکتیکی برای تیم خود بنویسید..."
-										className="bg-slate-900/90 border-slate-700 text-slate-100"
-										dir="rtl"
-									/>
-									<Button
-										onClick={() => void handleSendChat()}
-										disabled={isSendingChat || !chatDraft.trim() || currentTeamId === null}
-										className="bg-cyan-700 hover:bg-cyan-600 text-white"
-									>
+										<Input
+											value={chatDraft}
+											onChange={(event) => setChatDraft(event.target.value)}
+											disabled={isGameLocked}
+											onKeyDown={(event) => {
+												if (isGameLocked) {
+													event.preventDefault();
+													return;
+												}
+												if (event.key === "Enter" && !event.shiftKey) {
+													event.preventDefault();
+													void handleSendChat();
+												}
+											}}
+											placeholder="پیام تاکتیکی برای تیم خود بنویسید..."
+											className="bg-slate-900/90 border-slate-700 text-slate-100"
+											dir="rtl"
+										/>
+										<Button
+											onClick={() => void handleSendChat()}
+											disabled={isGameLocked || isSendingChat || !chatDraft.trim() || currentTeamId === null}
+											className="bg-cyan-700 hover:bg-cyan-600 text-white"
+										>
 										<Send className={`w-4 h-4 ${isSendingChat ? "animate-pulse" : ""}`} />
 									</Button>
 								</div>
