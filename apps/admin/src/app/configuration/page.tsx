@@ -194,7 +194,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 const BASE_URL =
-	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.app";
+	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
 const PREPARED_CATALOG_LANG = "fa";
 const STEP_ORDER: StepKey[] = ["base", "actions", "counter-market", "review"];
 const STEP_TITLE: Record<StepKey, string> = {
