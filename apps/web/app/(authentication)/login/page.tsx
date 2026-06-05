@@ -127,7 +127,7 @@ export default function LoginPage() {
 							سامانه شبیه‌ساز عملیات
 						</motion.div>
 						<h1 className="mb-3 text-3xl font-extrabold leading-tight text-[#eafaf1] sm:text-4xl">
-							کنسول فرماندهی نبرد سایبری
+							کنسول بازی جنگ
 						</h1>
 						<p className="max-w-xl text-sm leading-7 text-[#b5cdbf] sm:text-base">
 							برای ورود به اتاق عملیات، ابتدا حساب خود را ایجاد کنید یا با حساب
