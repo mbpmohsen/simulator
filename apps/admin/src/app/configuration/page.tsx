@@ -2,12 +2,7 @@
 
 import { type ConfigureAllRequest, createGameServerApi } from "@workspace/trpc";
 import { Button } from "@workspace/ui/components/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@workspace/ui/components/card";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
@@ -17,6 +12,8 @@ import {
 	ArrowLeft,
 	ArrowRight,
 	CheckCircle2,
+	Eye,
+	FileText,
 	RefreshCw,
 	ShieldCheck,
 	Sparkles,
@@ -314,15 +311,16 @@ const RangeField = ({
 export default function AdminConfigurationPage() {
 	const [currentStepIndex, setCurrentStepIndex] = useState(0);
 	const currentStep = STEP_ORDER[currentStepIndex];
+	const [showPayloadPreview, setShowPayloadPreview] = useState(false);
 
-	const [adminPassword, setAdminPassword] = useState("");
+	const [adminPassword, setAdminPassword] = useState("admin123");
 	const [adminToken, setAdminToken] = useState("");
 	const [isAuthLoading, setIsAuthLoading] = useState(false);
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	const [isUsersLoading, setIsUsersLoading] = useState(false);
 
 	const [version, setVersion] = useState("1.0");
-	const [numTurns, setNumTurns] = useState(10);
+	const [numTurns, setNumTurns] = useState(2);
 	const [turnDurationSeconds, setTurnDurationSeconds] = useState(120);
 	const [selectionPhaseDuration, setSelectionPhaseDuration] = useState(90);
 	const [votingPhaseDuration, setVotingPhaseDuration] = useState(30);
@@ -1307,7 +1305,7 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 					</div>
 				) : null}
 
-				<div className="grid grid-cols-1 xl:grid-cols-[1.15fr_1fr] gap-5 items-start">
+				<div>
 					<Card className="border-slate-700 bg-slate-900/75 min-h-[760px]">
 						<CardContent className="p-4 md:p-6">
 							<AnimatePresence mode="wait">
@@ -1330,7 +1328,7 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 													<div className="space-y-2">
 														<Label>Admin Password</Label>
 														<Input
-															type="password"
+															type="text"
 															value={adminPassword}
 															onChange={(event) =>
 																setAdminPassword(event.target.value)
@@ -2582,227 +2580,277 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 									) : null}
 
 									{currentStep === "review" ? (
-										<div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-											<motion.div
-												initial={{ opacity: 0, y: 12 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{ duration: 0.2 }}
-												className="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-4 space-y-3"
-											>
-												<div className="font-semibold text-emerald-200">
-													مرور نهایی
-												</div>
-												<p className="text-sm text-slate-300">
-													ساختار پیکربندی آماده ارسال است. قبل از ارسال، شاخص‌های
-													سریع زیر را چک کنید.
-												</p>
-												<div className="grid grid-cols-2 gap-2">
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Team
-														</div>
-														<div className="text-lg font-semibold">
-															{teams.length}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Players
-														</div>
-														<div className="text-lg font-semibold">
-															{teams.reduce(
-																(sum, team) => sum + team.players.length,
-																0,
-															)}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Actions
-														</div>
-														<div className="text-lg font-semibold">
-															{actions.length}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Black Market
-														</div>
-														<div className="text-lg font-semibold">
-															{blackMarketItems.length}
-														</div>
-													</div>
-												</div>
-												<div className="rounded border border-slate-700 bg-slate-950/60 p-3 text-xs leading-6">
-													<div>تعداد کانترها: {actionCounters.length}</div>
-													<div>
-														حالت تنظیم اکشن:{" "}
-														{templateMode === "prepared" ? "آماده" : "دستی"}
-													</div>
-													<div>نسخه پیکربندی: {version}</div>
-												</div>
-												<Button
-													onClick={submitConfigureAll}
-													disabled={submitting}
-													className="bg-emerald-700 hover:bg-emerald-600 text-white"
+										<div className="space-y-4">
+											<div className="grid grid-cols-1 2xl:grid-cols-[0.9fr_1.1fr] gap-4">
+												<motion.div
+													initial={{ opacity: 0, y: 12 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{ duration: 0.2 }}
+													className="rounded-xl border border-emerald-700/40 bg-emerald-950/15 p-4 space-y-3"
 												>
-													{submitting
-														? "در حال ارسال..."
-														: "ارسال configure_all"}
-												</Button>
-											</motion.div>
+													<div className="font-semibold text-emerald-200">
+														مرور نهایی
+													</div>
+													<p className="text-sm text-slate-300">
+														ساختار پیکربندی آماده ارسال است. قبل از ارسال،
+														شاخص‌های سریع زیر را چک کنید.
+													</p>
+													<div className="grid grid-cols-2 gap-2">
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Team
+															</div>
+															<div className="text-lg font-semibold">
+																{teams.length}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Players
+															</div>
+															<div className="text-lg font-semibold">
+																{teams.reduce(
+																	(sum, team) => sum + team.players.length,
+																	0,
+																)}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Actions
+															</div>
+															<div className="text-lg font-semibold">
+																{actions.length}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Black Market
+															</div>
+															<div className="text-lg font-semibold">
+																{blackMarketItems.length}
+															</div>
+														</div>
+													</div>
+													<div className="rounded border border-slate-700 bg-slate-950/60 p-3 text-xs leading-6">
+														<div>تعداد کانترها: {actionCounters.length}</div>
+														<div>
+															حالت تنظیم اکشن:{" "}
+															{templateMode === "prepared" ? "آماده" : "دستی"}
+														</div>
+														<div>نسخه پیکربندی: {version}</div>
+													</div>
+													<Button
+														onClick={submitConfigureAll}
+														disabled={submitting}
+														className="bg-emerald-700 hover:bg-emerald-600 text-white"
+													>
+														{submitting
+															? "در حال ارسال..."
+															: "ارسال configure_all"}
+													</Button>
+												</motion.div>
 
-											<motion.div
-												initial={{ opacity: 0, y: 12 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{ duration: 0.24, delay: 0.04 }}
-												className="rounded-xl border border-emerald-700/30 bg-black/35 p-3"
+												<motion.div
+													initial={{ opacity: 0, y: 12 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{ duration: 0.24, delay: 0.04 }}
+													className="rounded-xl border border-emerald-700/30 bg-black/35 p-3"
+												>
+													<div className="font-semibold text-emerald-300 mb-2">
+														Server & Game Control
+													</div>
+													<div className="grid grid-cols-2 gap-2 mb-3">
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Game ID
+															</div>
+															<div className="text-sm font-mono">
+																{activeGameId ?? "—"}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Phase
+															</div>
+															<div className="text-sm">
+																{gameStateSummary?.phase ?? "—"}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Turn
+															</div>
+															<div className="text-sm font-mono">
+																{gameTurnText}
+															</div>
+														</div>
+														<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
+															<div className="text-[11px] text-slate-400">
+																Point Threshold
+															</div>
+															<div className="text-sm font-mono">
+																{typeof gameStateSummary?.pointThreshold ===
+																"number"
+																	? gameStateSummary.pointThreshold
+																	: "—"}
+															</div>
+														</div>
+													</div>
+
+													<div className="flex flex-wrap gap-2 mb-3">
+														<Button
+															onClick={() => void refreshAdminGameState()}
+															disabled={!adminToken || isGameStateLoading}
+															variant="outline"
+															className="border-slate-600"
+														>
+															<RefreshCw
+																className={`w-4 h-4 ml-2 ${isGameStateLoading ? "animate-spin" : ""}`}
+															/>
+															{isGameStateLoading
+																? "در حال دریافت..."
+																: "دریافت game_state"}
+														</Button>
+														<Button
+															onClick={startCurrentGame}
+															disabled={
+																!adminToken ||
+																!activeGameId ||
+																isStartLoading ||
+																submitting
+															}
+															className="bg-cyan-700 hover:bg-cyan-600 text-white"
+														>
+															<Swords className="w-4 h-4 ml-2" />
+															{isStartLoading ? "در حال شروع..." : "Start Game"}
+														</Button>
+														<Button
+															onClick={resetCurrentGame}
+															disabled={
+																!adminToken ||
+																!activeGameId ||
+																isResetLoading ||
+																submitting
+															}
+															variant="outline"
+															className="border-amber-600 text-amber-200 hover:bg-amber-950/30"
+														>
+															<RefreshCw
+																className={`w-4 h-4 ml-2 ${isResetLoading ? "animate-spin" : ""}`}
+															/>
+															{isResetLoading ? "در حال ریست..." : "Reset Game"}
+														</Button>
+													</div>
+
+													{controlMessage ? (
+														<div className="rounded border border-cyan-700/40 bg-cyan-950/30 p-2 text-xs text-cyan-100 mb-3">
+															{controlMessage}
+														</div>
+													) : null}
+
+													<div className="space-y-2 mb-3">
+														<div className="text-xs text-slate-300">
+															configure_all response
+														</div>
+														<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
+															{lastResponse ? (
+																<pre className="text-xs whitespace-pre-wrap">
+																	{JSON.stringify(lastResponse, null, 2)}
+																</pre>
+															) : (
+																<div className="text-sm text-slate-400">
+																	پس از ارسال، پاسخ configure_all اینجا نمایش
+																	داده می‌شود.
+																</div>
+															)}
+														</ScrollArea>
+													</div>
+
+													<div className="space-y-2">
+														<div className="text-xs text-slate-300">
+															admin/game_state response
+														</div>
+														<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
+															{adminGameState ? (
+																<pre className="text-xs whitespace-pre-wrap">
+																	{JSON.stringify(adminGameState, null, 2)}
+																</pre>
+															) : (
+																<div className="text-sm text-slate-400">
+																	پس از ورود یا ارسال، وضعیت بازی اینجا نمایش
+																	داده می‌شود.
+																</div>
+															)}
+														</ScrollArea>
+													</div>
+												</motion.div>
+											</div>
+
+											<button
+												type="button"
+												onClick={() =>
+													setShowPayloadPreview((isVisible) => !isVisible)
+												}
+												aria-expanded={showPayloadPreview}
+												className={`w-full rounded-xl border p-4 text-left transition-colors ${
+													showPayloadPreview
+														? "border-cyan-500/60 bg-cyan-950/25"
+														: "border-slate-700 bg-slate-950/50 hover:border-cyan-500/40"
+												}`}
 											>
-												<div className="font-semibold text-emerald-300 mb-2">
-													Server & Game Control
+												<div className="flex items-center justify-between gap-3">
+													<div className="flex items-center gap-3">
+														<span className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-cyan-200">
+															<FileText className="h-5 w-5" />
+														</span>
+														<span>
+															<span className="block text-sm font-semibold text-slate-100">
+																Payload Preview
+															</span>
+															<span className="block text-xs text-slate-400">
+																configure_all JSON
+															</span>
+														</span>
+													</div>
+													<span className="flex items-center gap-2 text-xs font-medium text-cyan-200">
+														<Eye className="h-4 w-4" />
+														{showPayloadPreview ? "Hide" : "Show"}
+													</span>
 												</div>
-												<div className="grid grid-cols-2 gap-2 mb-3">
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Game ID
-														</div>
-														<div className="text-sm font-mono">
-															{activeGameId ?? "—"}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Phase
-														</div>
-														<div className="text-sm">
-															{gameStateSummary?.phase ?? "—"}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Turn
-														</div>
-														<div className="text-sm font-mono">
-															{gameTurnText}
-														</div>
-													</div>
-													<div className="rounded border border-slate-700 bg-slate-950/60 p-2">
-														<div className="text-[11px] text-slate-400">
-															Point Threshold
-														</div>
-														<div className="text-sm font-mono">
-															{typeof gameStateSummary?.pointThreshold ===
-															"number"
-																? gameStateSummary.pointThreshold
-																: "—"}
-														</div>
-													</div>
-												</div>
+											</button>
 
-												<div className="flex flex-wrap gap-2 mb-3">
-													<Button
-														onClick={() => void refreshAdminGameState()}
-														disabled={!adminToken || isGameStateLoading}
-														variant="outline"
-														className="border-slate-600"
+											<AnimatePresence initial={false}>
+												{showPayloadPreview ? (
+													<motion.div
+														key="payload-preview"
+														initial={{ opacity: 0, height: 0 }}
+														animate={{ opacity: 1, height: "auto" }}
+														exit={{ opacity: 0, height: 0 }}
+														transition={{ duration: 0.2, ease: "easeOut" }}
+														className="overflow-hidden rounded-xl border border-slate-700 bg-slate-950/70"
 													>
-														<RefreshCw
-															className={`w-4 h-4 ml-2 ${isGameStateLoading ? "animate-spin" : ""}`}
-														/>
-														{isGameStateLoading
-															? "در حال دریافت..."
-															: "دریافت game_state"}
-													</Button>
-													<Button
-														onClick={startCurrentGame}
-														disabled={
-															!adminToken ||
-															!activeGameId ||
-															isStartLoading ||
-															submitting
-														}
-														className="bg-cyan-700 hover:bg-cyan-600 text-white"
-													>
-														<Swords className="w-4 h-4 ml-2" />
-														{isStartLoading ? "در حال شروع..." : "Start Game"}
-													</Button>
-													<Button
-														onClick={resetCurrentGame}
-														disabled={
-															!adminToken ||
-															!activeGameId ||
-															isResetLoading ||
-															submitting
-														}
-														variant="outline"
-														className="border-amber-600 text-amber-200 hover:bg-amber-950/30"
-													>
-														<RefreshCw
-															className={`w-4 h-4 ml-2 ${isResetLoading ? "animate-spin" : ""}`}
-														/>
-														{isResetLoading ? "در حال ریست..." : "Reset Game"}
-													</Button>
-												</div>
-
-												{controlMessage ? (
-													<div className="rounded border border-cyan-700/40 bg-cyan-950/30 p-2 text-xs text-cyan-100 mb-3">
-														{controlMessage}
-													</div>
+														<div className="flex items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
+															<div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+																<FileText className="h-4 w-4 text-cyan-200" />
+																Payload Preview
+															</div>
+															<div className="text-xs text-slate-400" dir="ltr">
+																{actions.length} actions / {teams.length} teams
+															</div>
+														</div>
+														<ScrollArea className="h-[620px] p-3">
+															<pre className="text-xs leading-6 text-emerald-200 font-mono whitespace-pre-wrap">
+																{payloadPreview}
+															</pre>
+														</ScrollArea>
+													</motion.div>
 												) : null}
-
-												<div className="space-y-2 mb-3">
-													<div className="text-xs text-slate-300">
-														configure_all response
-													</div>
-													<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
-														{lastResponse ? (
-															<pre className="text-xs whitespace-pre-wrap">
-																{JSON.stringify(lastResponse, null, 2)}
-															</pre>
-														) : (
-															<div className="text-sm text-slate-400">
-																پس از ارسال، پاسخ configure_all اینجا نمایش داده
-																می‌شود.
-															</div>
-														)}
-													</ScrollArea>
-												</div>
-
-												<div className="space-y-2">
-													<div className="text-xs text-slate-300">
-														admin/game_state response
-													</div>
-													<ScrollArea className="h-[150px] rounded border border-slate-800 bg-slate-950/60 p-3">
-														{adminGameState ? (
-															<pre className="text-xs whitespace-pre-wrap">
-																{JSON.stringify(adminGameState, null, 2)}
-															</pre>
-														) : (
-															<div className="text-sm text-slate-400">
-																پس از ورود یا ارسال، وضعیت بازی اینجا نمایش داده
-																می‌شود.
-															</div>
-														)}
-													</ScrollArea>
-												</div>
-											</motion.div>
+											</AnimatePresence>
 										</div>
 									) : null}
 								</motion.div>
 							</AnimatePresence>
-						</CardContent>
-					</Card>
-
-					<Card className="border-slate-700 bg-slate-900/75">
-						<CardHeader>
-							<CardTitle className="text-slate-200">Payload Preview</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ScrollArea className="h-[760px] rounded-lg border border-slate-800 bg-black/45 p-3">
-								<pre className="text-xs leading-6 text-emerald-200 font-mono whitespace-pre-wrap">
-									{payloadPreview}
-								</pre>
-							</ScrollArea>
 						</CardContent>
 					</Card>
 				</div>
