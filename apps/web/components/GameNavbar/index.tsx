@@ -121,7 +121,7 @@ const GameNavbar: FC<GameNavbarProps> = ({
 						>
 							<div className="flex items-center gap-3">
 								<div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-									راند
+									نوبت
 								</div>
 								<div className="flex items-baseline">
 									<span className="text-sm font-bold text-white">

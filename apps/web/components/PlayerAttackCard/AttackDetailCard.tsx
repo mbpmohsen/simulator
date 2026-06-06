@@ -36,9 +36,9 @@ export default function AttackDetailCard() {
                 پرس‌وجوهایی که یک برنامه در پایگاه داده خود انجام می‌دهد، دخالت کند.
             </p>
 
-            {/* آسیب پذیری */}
+            {/* آسیب‌پذیری */}
             <div className="flex items-center justify-end gap-2 mb-4">
-                <span className="text-white text-xl font-bold">آسیب پذیری:</span>
+                <span className="text-white text-xl font-bold">آسیب‌پذیری:</span>
                 <ShieldAlert className="text-yellow-400" size={26} />
             </div>
 

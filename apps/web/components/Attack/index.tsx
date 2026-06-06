@@ -64,7 +64,7 @@ export default function PlayerAttackCard({
 								<div>
 									<p className="text-sm font-medium text-gray-200">{a.name}</p>
 									<p className="text-[11px] text-gray-500">
-										DMG: {a.damage} | CD: {a.cooldown}s
+										آسیب: {a.damage} | مکث: {a.cooldown} ثانیه
 									</p>
 								</div>
 							</div>

@@ -435,11 +435,11 @@ const buildVisualEvent = (
 	if (type.includes("GAME_STARTED")) {
 		tone = "success";
 		title = "بازی شروع شد";
-		description = "فاز عملیاتی آغاز شد. آماده ارسال رأی اکشن باشید.";
+		description = "مرحله عملیات شروع شد. برای ثبت رأی آماده باشید.";
 	} else if (type.includes("TURN_STARTED")) {
 		tone = "info";
 		title = `شروع نوبت ${toNumberOrNull(data.turnNumber) ?? "—"}`;
-		description = `فاز جاری: ${pickString([data.phase, data.turnPhase]) ?? "نامشخص"}`;
+		description = `مرحله فعلی: ${pickString([data.phase, data.turnPhase]) ?? "نامشخص"}`;
 	} else if (type.includes("TEAM_TARGET_SELECTED")) {
 		tone = "warning";
 		title = "هدف تیم انتخاب شد";
@@ -448,12 +448,12 @@ const buildVisualEvent = (
 		]) ?? "نامشخص"} را انتخاب کرد.`;
 	} else if (type.includes("VOTING_STARTED")) {
 		tone = "info";
-		title = "فاز رأی‌گیری شروع شد";
-		description = `اکشن پیشنهادی: ${pickString([action?.name, action?.code]) ?? "نامشخص"}`;
+		title = "رأی‌گیری شروع شد";
+		description = `عملیات پیشنهادی: ${pickString([action?.name, action?.code]) ?? "نامشخص"}`;
 	} else if (type.includes("TEAMMATE_ACTION_SELECTED")) {
 		tone = "info";
-		title = "هم‌تیمی اکشن انتخاب کرد";
-		description = `${pickString([voter?.userName, data.userName, data.playerName]) ?? "یک بازیکن"} اکشن ${pickString([action?.name, action?.code]) ?? "نامشخص"} را انتخاب کرد.`;
+		title = "هم‌تیمی شما عملیات انتخاب کرد";
+		description = `${pickString([voter?.userName, data.userName, data.playerName]) ?? "یک بازیکن"} عملیات ${pickString([action?.name, action?.code]) ?? "نامشخص"} را انتخاب کرد.`;
 	} else if (type.includes("VOTE_SUBMITTED")) {
 		const approved = asRecord(data.currentTally)?.approved === true;
 		tone = approved ? "success" : "info";
@@ -463,19 +463,19 @@ const buildVisualEvent = (
 		const success = result?.success === true;
 		const blocked = result?.blocked === true;
 		tone = success ? "success" : blocked ? "warning" : "danger";
-		title = success ? "حمله موفق" : blocked ? "حمله بلاک شد" : "حمله ناموفق";
+		title = success ? "حمله موفق" : blocked ? "حمله دفع شد" : "حمله ناموفق";
 		description = `${pickString([attacker?.teamName]) ?? "تیم مهاجم"} با ${pickString([
 			attack?.name,
 			attack?.code,
-		]) ?? "اکشن"} به ${pickString([defender?.teamName]) ?? "تیم مقابل"} حمله کرد${defense ? ` (دفاع: ${pickString([defense.name, defense.code]) ?? "—"})` : ""}.`;
+		]) ?? "عملیات"} به ${pickString([defender?.teamName]) ?? "تیم مقابل"} حمله کرد${defense ? ` (دفاع: ${pickString([defense.name, defense.code]) ?? "—"})` : ""}.`;
 	} else if (type.includes("ACTION_UNLOCKED")) {
 		tone = "success";
-		title = "اکشن جدید باز شد";
-		description = `${pickString([action?.name, action?.code]) ?? "یک اکشن"} برای تیم قابل استفاده شد.`;
+		title = "عملیات جدید فعال شد";
+		description = `${pickString([action?.name, action?.code]) ?? "یک عملیات"} برای تیم قابل استفاده شد.`;
 	} else if (type.includes("EFFECT_APPLIED")) {
 		tone = "warning";
-		title = "افکت فعال شد";
-		description = `${pickString([effect?.name]) ?? "افکت"} اعمال شد (مدت: ${toNumberOrNull(effect?.remainingTurns) ?? toNumberOrNull(effect?.duration) ?? "?"} نوبت).`;
+		title = "اثر فعال شد";
+		description = `${pickString([effect?.name]) ?? "اثر"} اعمال شد (مدت: ${toNumberOrNull(effect?.remainingTurns) ?? toNumberOrNull(effect?.duration) ?? "?"} نوبت).`;
 	} else if (
 		type.includes("GAME_FINISHED") ||
 		type.includes("GAME_OVER") ||
@@ -491,7 +491,7 @@ const buildVisualEvent = (
 	} else if (type.includes("GAME_STATE_SNAPSHOT")) {
 		tone = "info";
 		title = "همگام‌سازی وضعیت";
-		description = `فاز فعلی: ${pickString([data.phase, asRecord(data.game)?.status]) ?? "نامشخص"}`;
+		description = `مرحله فعلی: ${pickString([data.phase, asRecord(data.game)?.status]) ?? "نامشخص"}`;
 	}
 
 	if (teamStatus?.readyForVoting === true) {
@@ -777,7 +777,7 @@ export default function PlayerGamePageV2() {
 		const payload: Record<string, unknown> = {};
 		if (isSelectionPhase) {
 			if (selectedTargetTeamId === null) {
-				setVoteError("برای فاز انتخاب، باید یک هدف انتخاب کنید.");
+				setVoteError("در مرحله انتخاب، باید یک هدف انتخاب کنید.");
 				return;
 			}
 			payload.selection_only = true;
@@ -788,7 +788,7 @@ export default function PlayerGamePageV2() {
 			}
 		} else {
 			if (selectedActionId === null) {
-				setVoteError("ابتدا یک اکشن انتخاب کنید.");
+				setVoteError("ابتدا یک عملیات انتخاب کنید.");
 				return;
 			}
 			payload.selection_only = false;
@@ -837,7 +837,7 @@ export default function PlayerGamePageV2() {
 
 			const message = extractMessageFromUnknown(
 				responseBody,
-				isSelectionPhase ? "انتخاب هدف با موفقیت ثبت شد." : "رأی اکشن با موفقیت ثبت شد.",
+				isSelectionPhase ? "انتخاب هدف با موفقیت ثبت شد." : "رأی شما با موفقیت ثبت شد.",
 			);
 			setVoteStatus(message);
 			void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.5);
@@ -1363,8 +1363,8 @@ export default function PlayerGamePageV2() {
 				<header className="rounded-2xl border border-cyan-500/30 bg-slate-950/65 backdrop-blur-xl shadow-[0_0_50px_rgba(14,116,144,.18)] p-4 md:p-5">
 					<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 						<div>
-							<div className="text-xs tracking-[0.24em] text-cyan-300 uppercase">Attack Navigator / Player Console</div>
-							<h1 className="mt-2 text-xl md:text-3xl font-bold text-white">میدان نبرد سایبری</h1>
+							<div className="text-xs tracking-[0.24em] text-cyan-300 uppercase">پنل بازیکن / انتخاب عملیات</div>
+							<h1 className="mt-2 text-xl md:text-3xl font-bold text-white">شبیه‌ساز عملیات سایبری</h1>
 							<div className="mt-1 text-sm text-cyan-100/80">
 								{user?.username ? `خوش آمدید ${user.username}` : "کاربر نامشخص"}
 							</div>
@@ -1372,7 +1372,7 @@ export default function PlayerGamePageV2() {
 
 						<div className="flex flex-wrap items-center gap-2">
 							<Badge variant="outline" className="border-cyan-500/50 text-cyan-200 bg-cyan-950/30">
-								Game ID: {activeGameId ?? "—"}
+								شناسه بازی: {activeGameId ?? "—"}
 							</Badge>
 							<Badge
 								variant="outline"
@@ -1382,7 +1382,7 @@ export default function PlayerGamePageV2() {
 										: "border-emerald-500/60 text-emerald-200 bg-emerald-950/30"
 								}
 							>
-								Phase: {phase}
+								مرحله: {phase}
 							</Badge>
 								<Button
 									onClick={() => void refreshAll()}
@@ -1390,7 +1390,7 @@ export default function PlayerGamePageV2() {
 									className="h-10 bg-cyan-700 hover:bg-cyan-600 text-white"
 							>
 									<RefreshCw className={`w-4 h-4 ml-2 ${isRefreshing ? "animate-spin" : ""}`} />
-									بروزرسانی
+									به‌روزرسانی
 								</Button>
 								<Button
 									variant="outline"
@@ -1457,7 +1457,7 @@ export default function PlayerGamePageV2() {
 							<ShieldAlert className="w-5 h-5 text-amber-300 mt-0.5" />
 							<div className="space-y-1 text-sm text-amber-100">
 							<div className="font-semibold">بازی هنوز در حالت انتظار است</div>
-							<div>برای شروع، همه بازیکنان باید حداقل یک بار وارد کلاینت شوند.</div>
+							<div>برای شروع، همه بازیکنان باید حداقل یک بار وارد برنامه شوند.</div>
 							<div className="text-amber-200/90">بازیکنان متصل: {connectedPlayers} / {totalKnownPlayers}</div>
 							</div>
 						</div>
@@ -1491,12 +1491,12 @@ export default function PlayerGamePageV2() {
 													<Badge variant="outline" className="border-emerald-500/60 text-emerald-300">برنده</Badge>
 												) : (
 													<Badge variant="outline" className="border-slate-600 text-slate-300">
-														{side?.name ?? `Side ${team.sideId}`}
+														{side?.name ?? `سمت ${team.sideId}`}
 													</Badge>
 												)}
 											</div>
 											<div className="mt-1 text-xs text-slate-300">
-												Points: {team.points} | Credits: {team.credits}
+												امتیاز: {team.points} | اعتبار: {team.credits}
 											</div>
 										</div>
 									);
@@ -1516,19 +1516,19 @@ export default function PlayerGamePageV2() {
 								<CardHeader>
 									<CardTitle className="text-base text-cyan-200 flex items-center gap-2">
 										<Zap className="w-4 h-4" />
-										دستور عملیات
+										ثبت رأی تیم
 									</CardTitle>
 								</CardHeader>
 								<CardContent className="text-sm text-slate-300 space-y-3">
 									<div className="space-y-1">
-										<div>1. اکشن، هدف و آیتم بازار سیاه را انتخاب کنید.</div>
-										<div>2. با دکمه ثبت، مستقیم به API `POST /client/vote_action` رأی ارسال کنید.</div>
-										<div>3. تایم‌لاین لحظه‌ای و صداها را برای جریان بازی دنبال کنید.</div>
+										<div>1. عملیات، هدف و آیتم بازار سیاه را انتخاب کنید.</div>
+										<div>2. با دکمه ثبت، رأی خود را برای بازی ارسال کنید.</div>
+										<div>3. رویدادهای زنده و اعلان‌های صوتی را دنبال کنید.</div>
 									</div>
 
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 										<div className="rounded border border-slate-700/80 bg-slate-900/80 px-3 py-2">
-											<div className="text-[11px] text-slate-400">اکشن انتخابی</div>
+											<div className="text-[11px] text-slate-400">عملیات انتخابی</div>
 											<div className="text-cyan-200 mt-1">{selectedAction?.displayName ?? selectedAction?.name ?? "—"}</div>
 										</div>
 										<div className="rounded border border-slate-700/80 bg-slate-900/80 px-3 py-2">
@@ -1564,7 +1564,7 @@ export default function PlayerGamePageV2() {
 											) : (
 												<Send className="w-4 h-4 ml-2" />
 											)}
-											{isSelectionPhase ? "ثبت انتخاب هدف" : "ثبت رأی اکشن"}
+											{isSelectionPhase ? "ثبت انتخاب هدف" : "ثبت رأی"}
 										</Button>
 											<Button
 												variant="outline"
@@ -1582,7 +1582,7 @@ export default function PlayerGamePageV2() {
 											پاک‌سازی انتخاب‌ها
 										</Button>
 										<span className="text-xs text-slate-400">
-											فاز فعلی: {isSelectionPhase ? "انتخاب هدف (Selection)" : isVotingPhase ? "رأی‌گیری اکشن (Voting)" : phase}
+											مرحله فعلی: {isSelectionPhase ? "انتخاب هدف" : isVotingPhase ? "رأی‌گیری" : phase}
 										</span>
 									</div>
 								</CardContent>
@@ -1592,13 +1592,13 @@ export default function PlayerGamePageV2() {
 							<CardHeader>
 								<CardTitle className="text-base flex items-center gap-2 text-rose-200">
 									<Swords className="w-4 h-4" />
-									کارت‌های حمله فعال
+									عملیات‌های قابل انتخاب
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-2">
 								{actionsError ? <div className="text-xs text-rose-300">{actionsError}</div> : null}
 									{actions.length === 0 ? (
-										<div className="text-sm text-slate-400">اکشنی برای شما فعال نشده است.</div>
+										<div className="text-sm text-slate-400">عملیاتی برای شما فعال نشده است.</div>
 									) : (
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 											{actions.map((action) => {
@@ -1625,14 +1625,14 @@ export default function PlayerGamePageV2() {
 															<div className="flex items-center gap-1">
 																<Coins className="w-3.5 h-3.5" /> هزینه: {action.cost}
 															</div>
-															<div>شانس: {action.probability}%</div>
+															<div>احتمال موفقیت: {action.probability}%</div>
 															<div className="col-span-2 text-slate-400">
-																Counter: {action.counterActionName ?? action.counterActionId ?? "—"}
+																دفاع مقابل: {action.counterActionName ?? action.counterActionId ?? "—"}
 															</div>
 														</div>
 														<div className="mt-3 text-xs">
 															<span className={isSelected ? "text-rose-200" : "text-slate-400"}>
-																{isSelected ? "انتخاب شد" : "برای انتخاب لمس کنید"}
+																{isSelected ? "انتخاب شد" : "انتخاب کنید"}
 															</span>
 														</div>
 													</button>
@@ -1647,13 +1647,13 @@ export default function PlayerGamePageV2() {
 							<CardHeader>
 								<CardTitle className="text-base flex items-center gap-2 text-emerald-200">
 									<Target className="w-4 h-4" />
-									اهداف قابل نفوذ
+									اهداف قابل انتخاب
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-2">
 								{targetsError ? <div className="text-xs text-rose-300">{targetsError}</div> : null}
 									{targets.length === 0 ? (
-										<div className="text-sm text-slate-400">فعلا هدفی برای تیم شما فعال نیست.</div>
+										<div className="text-sm text-slate-400">فعلاً هدفی برای تیم شما فعال نیست.</div>
 									) : (
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 											{targets.map((targetItem) => {
@@ -1672,13 +1672,13 @@ export default function PlayerGamePageV2() {
 														>
 														<div className="font-semibold text-slate-100">{targetItem.name}</div>
 														<div className="text-xs text-slate-400 mt-1">
-															{targetItem.sideName ?? `Side ${targetItem.sideId}`}
+															{targetItem.sideName ?? `سمت ${targetItem.sideId}`}
 														</div>
 														<div className="text-xs text-slate-300 mt-2">
-															Points: {targetItem.points ?? 0} | Credits: {targetItem.credits ?? 0}
+															امتیاز: {targetItem.points ?? 0} | اعتبار: {targetItem.credits ?? 0}
 														</div>
 														<div className={`text-xs mt-2 ${isSelected ? "text-emerald-200" : "text-slate-400"}`}>
-															{isSelected ? "هدف انتخاب شد" : "برای انتخاب هدف لمس کنید"}
+															{isSelected ? "هدف انتخاب شد" : "هدف را انتخاب کنید"}
 														</div>
 													</button>
 												);
@@ -1697,7 +1697,7 @@ export default function PlayerGamePageV2() {
 							</CardHeader>
 							<CardContent className="space-y-2">
 									{blackMarketItems.length === 0 ? (
-										<div className="text-sm text-slate-400">فعلا آیتمی برای خرید وجود ندارد.</div>
+										<div className="text-sm text-slate-400">فعلاً آیتمی برای خرید وجود ندارد.</div>
 									) : (
 										blackMarketItems.map((item) => {
 											const isSelected = selectedBlackMarketItemId === item.id;
@@ -1715,10 +1715,10 @@ export default function PlayerGamePageV2() {
 													>
 													<div className="font-semibold text-slate-100">{item.name}</div>
 													<div className="text-xs text-slate-300 mt-1">
-														Cost: {item.cost} | Type: {item.itemType ?? item.item_type ?? "—"}
+														هزینه: {item.cost} | نوع: {item.itemType ?? item.item_type ?? "—"}
 													</div>
 													<div className={`mt-2 text-xs ${isSelected ? "text-violet-200" : "text-slate-400"}`}>
-														{isSelected ? "برای رأی بعدی فعال شد" : "برای استفاده در رأی انتخاب کنید"}
+														{isSelected ? "در رأی بعدی لحاظ می‌شود" : "برای استفاده در رأی انتخاب کنید"}
 													</div>
 												</button>
 											);
@@ -1752,14 +1752,14 @@ export default function PlayerGamePageV2() {
 											<div className="flex items-center justify-between">
 												<div className="font-semibold">{team.name}</div>
 												<Badge variant="outline" className="border-slate-600 text-slate-200">
-													{side?.name ?? `Side ${team.sideId}`}
+													{side?.name ?? `سمت ${team.sideId}`}
 												</Badge>
 											</div>
 											<div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-300">
 												<div className="flex items-center gap-1">
 													<Coins className="w-3.5 h-3.5" /> {team.credits}
 												</div>
-												<div>Points: {team.points}</div>
+												<div>امتیاز: {team.points}</div>
 											</div>
 										</div>
 									);
@@ -1771,12 +1771,12 @@ export default function PlayerGamePageV2() {
 								<CardHeader>
 									<CardTitle className="text-base flex items-center gap-2 text-emerald-200">
 										<Radio className="w-4 h-4" />
-										لاگ رویداد لحظه‌ای
+										رویدادهای زنده
 									</CardTitle>
 								</CardHeader>
 								<CardContent className="space-y-2">
 									<div className="flex items-center justify-between text-xs text-slate-400">
-										<span>since={streamSinceRef.current}</span>
+										<span>شروع از رویداد {streamSinceRef.current}</span>
 											<Badge
 												variant="outline"
 												className={
@@ -1791,7 +1791,7 @@ export default function PlayerGamePageV2() {
 											</Badge>
 									</div>
 									<div className="text-[11px] text-slate-500">
-										صدا: {soundEnabled ? "فعال" : "غیرفعال"} | رویدادها به صورت تصویری نمایش داده می‌شوند.
+										صدا: {soundEnabled ? "فعال" : "غیرفعال"} | رویدادها اینجا نمایش داده می‌شوند.
 									</div>
 									{sseError ? (
 										<div className="text-xs text-amber-300 flex items-center gap-1">
@@ -1829,7 +1829,7 @@ export default function PlayerGamePageV2() {
 										)}
 									</ScrollArea>
 									<details className="rounded border border-slate-700/80 bg-slate-900/45 px-2 py-1">
-										<summary className="cursor-pointer text-xs text-slate-400">JSON خام رویدادها</summary>
+										<summary className="cursor-pointer text-xs text-slate-400">جزئیات خام رویدادها</summary>
 										<div className="mt-2 space-y-2 max-h-40 overflow-auto">
 											{sseEvents.slice(0, 12).map((event) => (
 												<div key={`raw-${event.id}`} className="rounded border border-slate-700/70 p-2 text-[11px] text-slate-200">
@@ -1910,7 +1910,7 @@ export default function PlayerGamePageV2() {
 													void handleSendChat();
 												}
 											}}
-											placeholder="پیام تاکتیکی برای تیم خود بنویسید..."
+											placeholder="پیام تیمی خود را بنویسید..."
 											className="bg-slate-900/90 border-slate-700 text-slate-100"
 											dir="rtl"
 										/>
@@ -1928,7 +1928,7 @@ export default function PlayerGamePageV2() {
 				</div>
 
 				<div className="mt-4 text-xs text-slate-500 text-center">
-					آخرین بروزرسانی: {lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString("fa-IR") : "—"}
+					آخرین به‌روزرسانی: {lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString("fa-IR") : "—"}
 				</div>
 			</div>
 

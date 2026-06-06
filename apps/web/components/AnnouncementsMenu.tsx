@@ -36,9 +36,9 @@ const announcementsData: Announcement[] = [
 	},
 	{
 		id: 3,
-		name: "ممد ممدی",
-		message: "بنظرم برای شروع بهتره که ....",
-		timestamp: "هم اکنون",
+		name: "محمد محمدی",
+		message: "به نظرم برای شروع بهتر است اول هدف را مشخص کنیم.",
+		timestamp: "هم‌اکنون",
 		team: "تیم سبز",
 	},
 ];
@@ -55,7 +55,7 @@ export default function AnnouncementsMenu() {
 			id: announcements.length + 1,
 			name: "شما", // Current user
 			message: newMessage,
-			timestamp: "هم اکنون",
+			timestamp: "هم‌اکنون",
 			team: "تیم شما",
 		};
 
@@ -69,9 +69,9 @@ export default function AnnouncementsMenu() {
 		setTimeout(() => {
 			const response: Announcement = {
 				id: announcements.length + 2,
-				name: "هم تیمی",
-				message: "پیام شما دریافت شد! استراتژی خوبیه",
-				timestamp: "هم اکنون",
+				name: "هم‌تیمی",
+				message: "پیام شما دریافت شد. ایده خوبی است.",
+				timestamp: "هم‌اکنون",
 				team: "تیم شما",
 			};
 			setAnnouncements((prev) => [response, ...prev]);
@@ -95,7 +95,7 @@ export default function AnnouncementsMenu() {
 					className="text-gray-400 hover:bg-white flex flex-col items-center gap-1 relative"
 				>
 					<Bell size={18} />
-					<span className="text-gray-400 text-xs">اعلانات</span>
+					<span className="text-gray-400 text-xs">پیام‌ها</span>
 					{/* Notification badge */}
 					<div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
 				</Button>
@@ -173,7 +173,7 @@ export default function AnnouncementsMenu() {
 						</Button>
 					</div>
 					<p className="text-xs text-gray-400 text-center mt-2">
-						Enter برای ارسال • Shift+Enter برای خط جدید
+						برای ارسال Enter را بزنید • برای خط جدید Shift+Enter
 					</p>
 				</div>
 			</DropdownMenuContent>

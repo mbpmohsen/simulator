@@ -170,11 +170,11 @@ export default function GameResultsDisplay() {
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-gray-300">کد:</span>
                                         <span className="text-red-300 font-mono">
-											{team1.players[0]?.code || "N/A"}
+											{team1.players[0]?.code || "نامشخص"}
 										</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-300">وزن رای:</span>
+                                        <span className="text-gray-300">وزن رأی:</span>
                                         <span className="text-white">
 											{team1.players[0]?.vote_weight ?? 1}
 										</span>
@@ -246,7 +246,7 @@ export default function GameResultsDisplay() {
 														هزینه: {team1?.current_costs?.attack?.[key] ?? 0}
 													</span>
                                                     <span className="text-gray-500">
-														فکتور فناوری:{" "}
+														ضریب فناوری:{" "}
                                                         {team1?.current_tech_factors?.attack?.[key] ?? 1}
 													</span>
                                                 </div>
@@ -275,7 +275,7 @@ export default function GameResultsDisplay() {
 														هزینه: {team1?.current_costs?.defense?.[key] ?? 0}
 													</span>
                                                     <span className="text-gray-500">
-														فکتور فناوری:{" "}
+														ضریب فناوری:{" "}
                                                         {team1?.current_tech_factors?.defense?.[key] ?? 1}
 													</span>
                                                 </div>
@@ -361,11 +361,11 @@ export default function GameResultsDisplay() {
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-gray-300">کد:</span>
                                         <span className="text-blue-300 font-mono">
-											{team2.players[0]?.code || "N/A"}
+											{team2.players[0]?.code || "نامشخص"}
 										</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-300">وزن رای:</span>
+                                        <span className="text-gray-300">وزن رأی:</span>
                                         <span className="text-white">
 											{team2.players[0]?.vote_weight ?? 1}
 										</span>
@@ -437,7 +437,7 @@ export default function GameResultsDisplay() {
 														هزینه: {team2?.current_costs?.attack?.[key] ?? 0}
 													</span>
                                                     <span className="text-gray-500">
-														فکتور فناوری:{" "}
+														ضریب فناوری:{" "}
                                                         {team2?.current_tech_factors?.attack?.[key] ?? 1}
 													</span>
                                                 </div>
@@ -466,7 +466,7 @@ export default function GameResultsDisplay() {
 														هزینه: {team2?.current_costs?.defense?.[key] ?? 0}
 													</span>
                                                     <span className="text-gray-500">
-														فکتور فناوری:{" "}
+														ضریب فناوری:{" "}
                                                         {team2?.current_tech_factors?.defense?.[key] ?? 1}
 													</span>
                                                 </div>
@@ -508,7 +508,7 @@ export default function GameResultsDisplay() {
                         <div className="bg-black/30 rounded-xl p-4 border border-purple-800/30">
                             <p className="text-sm text-gray-400 mb-1">شناسه بازی</p>
                             <p className="text-white font-mono text-sm">
-                                {gameState?.game_id || "N/A"}
+                                {gameState?.game_id || "نامشخص"}
                             </p>
                         </div>
 

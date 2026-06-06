@@ -51,7 +51,7 @@ export default function PlayerAttackCard() {
 
             await proxyClientVoteAction(playerCode, body);
 
-            toast.success("عملیات ثبت شد", {
+            toast.success("رأی ثبت شد", {
                 description: "رأی شما با موفقیت ارسال شد",
             });
 
@@ -202,7 +202,7 @@ export default function PlayerAttackCard() {
 
                         {!attacks.length && !defenses.length && (
                             <div className="text-center py-12 text-gray-500">
-                                هیچ عملیات قابل انتخابی در دسترس نیست
+                                هیچ عملیاتی برای انتخاب در دسترس نیست
                             </div>
                         )}
                     </div>
@@ -231,7 +231,7 @@ export default function PlayerAttackCard() {
                             disabled={isSubmitting || !selectedCode || !playerCode || !enemyTeam}
                             className="bg-green-600 hover:bg-green-700 min-w-[140px]"
                         >
-                            {isSubmitting ? "در حال ارسال..." : "ثبت عملیات"}
+                            {isSubmitting ? "در حال ارسال..." : "ثبت رأی"}
                         </Button>
                     </div>
                 </CardFooter>

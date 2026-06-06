@@ -65,7 +65,7 @@ export default function AttackStatusPanel() {
         if (gameState) {
             const attackEntries = Object.entries(gameState.available_actions.attack);
             const newAttacks = attackEntries.map(([name, data], index) => ({
-                category: "ATTACKS",
+                category: "حمله",
                 name,
                 short: "",
                 current: data.probability,
@@ -77,7 +77,7 @@ export default function AttackStatusPanel() {
 
             const defenseEntries = Object.entries(gameState.available_actions.defense);
             const newDefenses = defenseEntries.map(([name, data], index) => ({
-                category: "DEFENSES",
+                category: "دفاع",
                 name,
                 short: "",
                 current: data.probability,
@@ -150,12 +150,12 @@ export default function AttackStatusPanel() {
             <Card className="bg-black text-white border border-neutral-800 shadow-xl">
                 <CardHeader>
                     <CardTitle className="text-green-400 text-lg text-center">
-                        Attack Progress Monitor
+                        وضعیت عملیات‌ها
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {renderSection("ATTACKS", attacks)}
-                    {renderSection("DEFENCES", defenses)}
+                    {renderSection("حمله", attacks)}
+                    {renderSection("دفاع", defenses)}
                 </CardContent>
             </Card>
         </motion.div>

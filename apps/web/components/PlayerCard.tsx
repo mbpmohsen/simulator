@@ -284,7 +284,7 @@ export default function CompactPlayerCard({
 							whileTap={{ scale: 0.9 }}
 							onClick={prev}
 							className="p-1.5 text-slate-300 hover:text-white transition-colors"
-							title="Previous"
+							title="قبلی"
 						>
 							<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
 								<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
@@ -296,7 +296,7 @@ export default function CompactPlayerCard({
 							whileTap={{ scale: 0.9 }}
 							onClick={togglePlay}
 							className="p-2 bg-white text-slate-900 rounded-full hover:bg-slate-100 transition-colors"
-							title={isPlaying ? "Pause" : "Play"}
+							title={isPlaying ? "توقف" : "پخش"}
 						>
 							<AnimatePresence mode="wait">
 								{isPlaying ? (
@@ -332,7 +332,7 @@ export default function CompactPlayerCard({
 							whileTap={{ scale: 0.9 }}
 							onClick={next}
 							className="p-1.5 text-slate-300 hover:text-white transition-colors"
-							title="Next"
+							title="بعدی"
 						>
 							<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
 								<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />

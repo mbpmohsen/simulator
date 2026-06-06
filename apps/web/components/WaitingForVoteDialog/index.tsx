@@ -76,10 +76,10 @@ const WaitingForVoteDialog: FC<WaitingForVoteDialogProps> = ({
                                     </div>
                                 </div>
                                 <CardTitle className="text-blue-400 text-2xl">
-                                    منتظر رای سایرین...
+                                    منتظر رأی سایرین...
                                 </CardTitle>
                                 <CardDescription className="text-gray-300 text-base mt-2">
-                                    لطفاً منتظر بمانید تا سایر بازیکنان رای خود را ثبت کنند.
+                                    لطفاً منتظر بمانید تا سایر بازیکنان رأی خود را ثبت کنند.
                                 </CardDescription>
                             </CardHeader>
 
@@ -118,7 +118,7 @@ const WaitingForVoteDialog: FC<WaitingForVoteDialogProps> = ({
                                 <div className="flex items-center gap-2 mt-2 px-4 py-2 bg-blue-900/20 rounded-lg border border-blue-700/30">
                                     <Clock size={16} className="text-blue-400" />
                                     <span className="text-blue-300 text-sm">
-                    در حال انتظار برای {waitTime} ثانیه
+                    زمان انتظار: {waitTime} ثانیه
                   </span>
                                 </div>
                             </CardContent>

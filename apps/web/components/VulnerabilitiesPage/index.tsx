@@ -77,7 +77,7 @@ export default function PlayerBlackMarketCard() {
                         در حال حاضر زمان خرید از بازار سیاه نیست
                     </p>
                     {/* @ts-ignore */}
-                    <p>فاز فعلی: {gameState?.current_phase || "نامشخص"}</p>
+                    <p>مرحله فعلی: {gameState?.current_phase || "نامشخص"}</p>
                 </div>
             </div>
         );
@@ -151,7 +151,7 @@ export default function PlayerBlackMarketCard() {
                                                     <div>هزینه: {item.cost ?? 0}</div>
                                                     <div>
                                                         هدف: {item.target_action_type ?? "نامشخص"} (
-                                                        {item.target_action || "هیچ"})
+                                                        {item.target_action || "هیچ‌کدام"})
                                                     </div>
                                                 </div>
                                             </button>

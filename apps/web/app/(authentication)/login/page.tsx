@@ -45,7 +45,7 @@ export default function LoginPage() {
 	const { setPlayerCode } = useGameStore();
 
 	const title = useMemo(
-		() => (mode === "signup" ? "ورود نیروهای جدید" : "بازگشت به میدان"),
+		() => (mode === "signup" ? "ساخت حساب بازیکن" : "ورود به حساب"),
 		[mode],
 	);
 
@@ -127,20 +127,20 @@ export default function LoginPage() {
 							سامانه شبیه‌ساز عملیات
 						</motion.div>
 						<h1 className="mb-3 text-3xl font-extrabold leading-tight text-[#eafaf1] sm:text-4xl">
-							کنسول بازی جنگ
+							پنل ورود شبیه‌ساز
 						</h1>
 						<p className="max-w-xl text-sm leading-7 text-[#b5cdbf] sm:text-base">
-							برای ورود به اتاق عملیات، ابتدا حساب خود را ایجاد کنید یا با حساب
-							موجود وارد شوید. اطلاعات ورود شما برای ادامه بازی ذخیره می‌شود.
+							برای شروع، حساب جدید بسازید یا با حساب قبلی وارد شوید. اطلاعات
+							ورود شما برای ادامه بازی نگه داشته می‌شود.
 						</p>
 						<div className="mt-8 grid gap-3 sm:grid-cols-2">
 							<div className="rounded-xl border border-[#385b4c] bg-[#12241d] p-4">
-								<p className="text-xs text-[#97bba8]">وضعیت محیط</p>
-								<p className="mt-2 text-lg font-bold text-[#dbf4e5]">Live Match</p>
+								<p className="text-xs text-[#97bba8]">وضعیت بازی</p>
+								<p className="mt-2 text-lg font-bold text-[#dbf4e5]">بازی فعال</p>
 							</div>
 							<div className="rounded-xl border border-[#5f3f3f] bg-[#261313] p-4">
-								<p className="text-xs text-[#cdacac]">سطح هشدار</p>
-								<p className="mt-2 text-lg font-bold text-[#f4d9d9]">Condition RED</p>
+								<p className="text-xs text-[#cdacac]">وضعیت سامانه</p>
+								<p className="mt-2 text-lg font-bold text-[#f4d9d9]">آماده ورود</p>
 							</div>
 						</div>
 					</div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
 								</div>
 								<CardDescription className="text-[#a4beaf]">
 									{mode === "signup"
-										? "کاربر جدید بسازید و وارد شبیه‌ساز شوید."
+										? "حساب جدید بسازید و وارد شبیه‌ساز شوید."
 										: "با حساب قبلی وارد بازی شوید."}
 								</CardDescription>
 								<div className="grid grid-cols-2 gap-2 rounded-lg bg-[#13241d] p-1">

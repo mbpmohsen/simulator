@@ -107,7 +107,7 @@ export default function TeamStatusPanel() {
                     return {
                         id: index + 1,
                         name: teamName,
-                        role: "Team Side",
+                        role: "تیم شما",
                         xp: typeof credits === 'number' ? credits : 0,
                         icon: teamIcons[index % teamIcons.length],
                         color: teamColors[index % teamColors.length],
@@ -121,7 +121,7 @@ export default function TeamStatusPanel() {
                 .map(([side, credits], index) => ({
                     id: index + 100, // Fixed: Use a different ID range to avoid conflicts
                     name: side,
-                    role: "Enemy Side",
+                    role: "حریف",
                     xp: typeof credits === 'number' ? credits : 0,
                     icon: enemyIcons[index % enemyIcons.length],
                     color: enemyColors[index % enemyColors.length],
@@ -178,7 +178,7 @@ export default function TeamStatusPanel() {
 
                 <CardHeader className="pb-1">
                     <CardTitle className="text-red-400 text-center text-lg">
-                        ☠️ نفرات دشمن ({enemy.length} از 6)
+                        ☠️ نفرات حریف ({enemy.length} از 6)
                     </CardTitle>
                 </CardHeader>
                 <CardContent>{renderPlayers(enemy, "text-red-400")}</CardContent>

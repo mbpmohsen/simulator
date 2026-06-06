@@ -25,7 +25,7 @@ const fontVazir = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-	title: "بازی‌جنگ",
+	title: "شبیه‌ساز عملیات",
 };
 
 export default function RootLayout({
