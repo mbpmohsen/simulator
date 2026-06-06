@@ -167,6 +167,7 @@ const POLL_INTERVAL_MS = 6000;
 const SSE_RECONNECT_MS = 3000;
 const MAX_EVENTS = 80;
 const MAX_CHAT_MESSAGES = 180;
+const SILENT_SSE_EVENTS = new Set(["KEEPALIVE"]);
 
 const CHAT_ENDPOINT_CANDIDATES = [
 	"/client/team_chat",
@@ -254,6 +255,27 @@ const parseSsePayload = (raw: string): unknown => {
 	} catch {
 		return raw;
 	}
+};
+
+const isSilentSseEvent = (eventType: string, payload: unknown): boolean => {
+	const normalizedEventType = eventType.toUpperCase();
+	if (SILENT_SSE_EVENTS.has(normalizedEventType)) return true;
+
+	const root = asRecord(payload);
+	const data = asRecord(root?.data) ?? root;
+	const hints = [
+		root?.event,
+		root?.eventType,
+		root?.type,
+		data?.event,
+		data?.eventType,
+		data?.type,
+	];
+
+	return hints.some(
+		(hint) =>
+			typeof hint === "string" && SILENT_SSE_EVENTS.has(hint.trim().toUpperCase()),
+	);
 };
 
 const extractSinceFromPayload = (payload: unknown, fallback: number): number => {
@@ -550,6 +572,7 @@ export default function PlayerGamePageV2() {
 	const chatTransportModeRef = useRef<ChatTransportMode>("unknown");
 	const connectAttemptRef = useRef<string | null>(null);
 	const gameEndedRefreshRef = useRef(false);
+	const audioContextRef = useRef<AudioContext | null>(null);
 
 	const clientApi = useMemo(() => {
 		if (!token || !BASE_URL) return null;
@@ -741,10 +764,64 @@ export default function PlayerGamePageV2() {
 		[soundEnabled],
 	);
 
+	const playGameNotificationSound = useCallback(() => {
+		if (!soundEnabled) return;
+
+		try {
+			const AudioContextCtor =
+				window.AudioContext ??
+				(window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext })
+					.webkitAudioContext;
+			if (!AudioContextCtor) return;
+
+			const context = audioContextRef.current ?? new AudioContextCtor();
+			audioContextRef.current = context;
+
+			void (async () => {
+				await context.resume();
+				const now = context.currentTime + 0.01;
+
+				const scheduleTone = (
+					start: number,
+					duration: number,
+					frequency: number,
+					volume: number,
+				) => {
+					const oscillator = context.createOscillator();
+					const gain = context.createGain();
+
+					oscillator.type = "triangle";
+					oscillator.frequency.setValueAtTime(frequency, start);
+					oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.72, start + duration);
+
+					gain.gain.setValueAtTime(0.0001, start);
+					gain.gain.exponentialRampToValueAtTime(volume, start + 0.025);
+					gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+					oscillator.connect(gain);
+					gain.connect(context.destination);
+					oscillator.start(start);
+					oscillator.stop(start + duration + 0.02);
+				};
+
+				scheduleTone(now, 0.18, 220, 0.08);
+				scheduleTone(now + 0.12, 0.26, 330, 0.055);
+			})();
+		} catch {
+			// Browser might block Web Audio until user interaction.
+		}
+	}, [soundEnabled]);
+
 	const playEventSound = useCallback(
 		(eventType: string) => {
 			const type = eventType.toUpperCase();
-			if (type.includes("GAME_STATE_SNAPSHOT") || type === "MESSAGE") return;
+			if (
+				SILENT_SSE_EVENTS.has(type) ||
+				type.includes("GAME_STATE_SNAPSHOT") ||
+				type === "MESSAGE"
+			) {
+				return;
+			}
 
 			if (type.includes("ACTION_EXECUTED") || type.includes("TEAM_TARGET_SELECTED")) {
 				void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.55);
@@ -758,9 +835,9 @@ export default function PlayerGamePageV2() {
 				void playUiSound("/sounds/640149main_Computers20are20in20Control.mp3", 0.32);
 				return;
 			}
-			void playUiSound("/sounds/new-notification-021-370045.mp3", 0.35);
+			playGameNotificationSound();
 		},
-		[playUiSound],
+		[playGameNotificationSound, playUiSound],
 	);
 
 	const submitVoteAction = useCallback(async () => {
@@ -813,7 +890,7 @@ export default function PlayerGamePageV2() {
 					"Content-Type": "application/json",
 					Accept: "application/json",
 				},
-				body: JSON.stringify(payload),
+                    body: JSON.stringify(payload),
 			});
 
 			if (response.status === 401 || response.status === 403) {
@@ -1128,6 +1205,8 @@ export default function PlayerGamePageV2() {
 				fromPayload,
 				fromEventId ?? 0,
 			);
+
+			if (isSilentSseEvent(normalizedEventType, payload)) return;
 
 			setSseEvents((prev) => {
 				const next: SseLogEvent = {
