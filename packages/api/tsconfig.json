@@ -4,7 +4,8 @@
 		"outDir": "./dist",
 		"rootDir": "./",
 		"allowImportingTsExtensions": true,
-		"moduleResolution": "NodeNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
 		"esModuleInterop": true
 	},
 	"include": ["./**/*.ts"],

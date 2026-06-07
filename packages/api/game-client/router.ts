@@ -4,11 +4,8 @@ import type {
 	AvailableTargetsResponse,
 	ClientVoteActionRequest,
 	ClientVoteActionResponse,
-	ConnectResponse,
 	GameStateResponse,
 	HealthResponse,
-	WaitForPhaseRequest,
-	WaitForPhaseResponse,
 } from "./types.js";
 
 export interface GameClientApiConfig {
@@ -26,14 +23,6 @@ export interface GameClientApi {
 		payload: ClientVoteActionRequest,
 		config?: AxiosRequestConfig,
 	): Promise<ClientVoteActionResponse>;
-	waitForPhase(
-		payload: WaitForPhaseRequest,
-		config?: AxiosRequestConfig,
-	): Promise<WaitForPhaseResponse>;
-	connect(
-		playerCode: string,
-		config?: AxiosRequestConfig,
-	): Promise<ConnectResponse>;
 	health(config?: AxiosRequestConfig): Promise<HealthResponse>;
 }
 
@@ -78,24 +67,6 @@ export const createGameClientApi = (config: GameClientApiConfig): GameClientApi 
 			const { data } = await http.post<ClientVoteActionResponse>(
 				"/client/vote_action",
 				payload,
-				requestConfig,
-			);
-			return data;
-		},
-
-		async waitForPhase(payload, requestConfig) {
-			const { data } = await http.post<WaitForPhaseResponse>(
-				"/client/wait_for_phase",
-				payload,
-				requestConfig,
-			);
-			return data;
-		},
-
-		async connect(playerCode, requestConfig) {
-			const { data } = await http.post<ConnectResponse>(
-				`/client/connect/${encodeURIComponent(playerCode)}`,
-				undefined,
 				requestConfig,
 			);
 			return data;

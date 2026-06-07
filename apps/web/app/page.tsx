@@ -43,10 +43,15 @@ interface GameSummary {
 	id?: number | string;
 	gameId?: number | string;
 	phase?: string;
+	status?: string;
+	currentPhase?: string | null;
+	turnStatus?: string | null;
+	phaseStatus?: string | null;
 	currentTurn?: number;
 	totalTurns?: number;
 	pointThreshold?: number;
 	winnerSideId?: number | string | null;
+	serverTime?: number;
 }
 
 interface GameSide {
@@ -570,7 +575,6 @@ export default function PlayerGamePageV2() {
 	const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const streamSinceRef = useRef(0);
 	const chatTransportModeRef = useRef<ChatTransportMode>("unknown");
-	const connectAttemptRef = useRef<string | null>(null);
 	const gameEndedRefreshRef = useRef(false);
 	const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -621,14 +625,32 @@ export default function PlayerGamePageV2() {
 		return gameState.teams.find((team) => team.id === currentTeamId) ?? null;
 	}, [gameState, currentTeamId]);
 
-	const phaseName = useMemo(() => {
+	const lifecyclePhaseName = useMemo(() => {
 		return String(gameState?.game?.phase ?? "unknown");
 	}, [gameState]);
 
-	const normalizedPhase = useMemo(() => phaseName.toLowerCase(), [phaseName]);
-	const isSelectionPhase = normalizedPhase.includes("selection");
-	const isVotingPhase = normalizedPhase.includes("voting");
-	const isFinishedPhase = normalizedPhase.includes("finish");
+	const turnPhaseName = useMemo(() => {
+		return typeof gameState?.game?.currentPhase === "string"
+			? gameState.game.currentPhase
+			: "";
+	}, [gameState]);
+
+	const statusName = useMemo(() => {
+		return typeof gameState?.game?.status === "string" ? gameState.game.status : "";
+	}, [gameState]);
+
+	const normalizedLifecyclePhase = useMemo(
+		() => lifecyclePhaseName.toLowerCase(),
+		[lifecyclePhaseName],
+	);
+	const normalizedTurnPhase = useMemo(() => turnPhaseName.toUpperCase(), [turnPhaseName]);
+	const normalizedStatus = useMemo(() => statusName.toUpperCase(), [statusName]);
+	const isRunning = normalizedStatus === "RUNNING";
+	const isGovernmentPhase = isRunning && normalizedTurnPhase === "GOVERNMENT_SELECTION";
+	const isSelectionPhase = isRunning && normalizedTurnPhase === "SELECTION";
+	const isVotingPhase = isRunning && normalizedTurnPhase === "VOTING";
+	const isFinishedPhase =
+		normalizedStatus === "ENDED" || normalizedLifecyclePhase.includes("finish");
 	const shouldStopLiveUpdates = isFinishedPhase || gameEndedSignalReceived;
 
 	const chatStorageKey = useMemo(() => {
@@ -693,8 +715,9 @@ export default function PlayerGamePageV2() {
 					setGameState(parsedGame.data);
 					setLastUpdatedAt(Date.now());
 
-					const phaseFromApi = String(parsedGame.data.game.phase ?? "").toLowerCase();
-					if (phaseFromApi.includes("finish")) {
+					const statusFromApi = String(parsedGame.data.game.status ?? "").toUpperCase();
+					const lifecyclePhaseFromApi = String(parsedGame.data.game.phase ?? "").toLowerCase();
+					if (statusFromApi === "ENDED" || lifecyclePhaseFromApi.includes("finish")) {
 						setGameEndedSignalReceived(true);
 						setSseError("بازی پایان یافت. اتصال رویداد زنده متوقف شد.");
 					}
@@ -1092,34 +1115,6 @@ export default function PlayerGamePageV2() {
 	}, [token, clientApi, refreshAll, shouldStopLiveUpdates]);
 
 	useEffect(() => {
-		if (!token || !BASE_URL || currentPlayerId === null || shouldStopLiveUpdates) return;
-
-		const key = `${activeGameId ?? "nogame"}:${currentPlayerId}`;
-		if (connectAttemptRef.current === key) return;
-		connectAttemptRef.current = key;
-
-		void (async () => {
-			try {
-				const response = await fetch(
-					`${BASE_URL}/client/connect/${encodeURIComponent(String(currentPlayerId))}`,
-					{
-						method: "POST",
-						headers: {
-							Authorization: `Bearer ${token}`,
-							Accept: "application/json",
-						},
-					},
-				);
-				if (response.status === 401 || response.status === 403) {
-					logoutAndRedirect();
-				}
-			} catch {
-				// Optional readiness signal endpoint; ignore network errors.
-			}
-		})();
-	}, [token, currentPlayerId, activeGameId, logoutAndRedirect, shouldStopLiveUpdates]);
-
-	useEffect(() => {
 		const actions = actionsPayload?.actions ?? [];
 		if (selectedActionId !== null && !actions.some((item) => item.id === selectedActionId)) {
 			setSelectedActionId(null);
@@ -1408,8 +1403,12 @@ export default function PlayerGamePageV2() {
 	}
 
 	const game = gameState?.game;
-	const phase = phaseName;
-	const isWaiting = normalizedPhase === "waiting" || normalizedPhase.includes("waiting");
+	const phase = turnPhaseName || lifecyclePhaseName;
+	const isWaiting =
+		normalizedStatus === "NOT_STARTED" ||
+		normalizedStatus === "RESET" ||
+		normalizedLifecyclePhase === "waiting" ||
+		normalizedLifecyclePhase.includes("waiting");
 	const winnerSideId = toNumberOrNull(game?.winnerSideId);
 	const winnerSide =
 		winnerSideId !== null
@@ -1428,9 +1427,9 @@ export default function PlayerGamePageV2() {
 	const actions = actionsPayload?.actions ?? [];
 	const targets = targetsPayload?.targets ?? [];
 	const blackMarketItems = gameState?.blackMarketItems ?? [];
-	const canSubmitSelection = !isGameLocked && !isWaiting && selectedTargetTeamId !== null;
+	const canSubmitSelection = !isGameLocked && isSelectionPhase && selectedTargetTeamId !== null;
 	const canSubmitVoting =
-		!isGameLocked && !isWaiting && selectedActionId !== null && !isSelectionPhase;
+		!isGameLocked && (isVotingPhase || isGovernmentPhase) && selectedActionId !== null;
 	const canSubmitVote = isSelectionPhase ? canSubmitSelection : canSubmitVoting;
 
 	return (
@@ -1661,7 +1660,14 @@ export default function PlayerGamePageV2() {
 											پاک‌سازی انتخاب‌ها
 										</Button>
 										<span className="text-xs text-slate-400">
-											مرحله فعلی: {isSelectionPhase ? "انتخاب هدف" : isVotingPhase ? "رأی‌گیری" : phase}
+											مرحله فعلی:{" "}
+											{isGovernmentPhase
+												? "انتخاب دولت"
+												: isSelectionPhase
+													? "انتخاب هدف"
+													: isVotingPhase
+														? "رأی‌گیری"
+														: phase}
 										</span>
 									</div>
 								</CardContent>

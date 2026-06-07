@@ -1,16 +1,30 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import type {
+	AddDirectivesRequest,
+	ActiveDirectivesResponse,
 	AdminLoginRequest,
-	AuthResponse,
+	AdminClearEventsResponse,
+	AdminEventListQuery,
+	AdminEventListResponse,
+	AdminGameStateResponse,
+	AdminUsersResponse,
+	AdminAuthResponse,
 	ConfigureAllRequest,
+	ConfigureAllResponse,
 	ConfigureDirectivesRequest,
-	ConfigureEventsRequest,
-	CurrentEventsResponse,
 	DetailResponse,
-	EventStreamQuery,
-	GenericResponse,
+	DirectiveDeletedResponse,
+	DirectiveMessageResponse,
+	DirectivesAddedResponse,
+	DirectivesConfiguredResponse,
+	DirectivesListResponse,
+	EventReplayQuery,
+	EventReplayResponse,
+	EventStatusResponse,
 	ListUsersQuery,
-	UsersResponse,
+	ReadinessStatusResponse,
+	ServerHealthResponse,
+	UserAuthResponse,
 	UserLoginRequest,
 	UserSignupRequest,
 } from "./types.js";
@@ -24,55 +38,58 @@ export interface GameServerApiConfig {
 }
 
 export interface GameServerApi {
-	signup(payload: UserSignupRequest, config?: AxiosRequestConfig): Promise<AuthResponse>;
-	login(payload: UserLoginRequest, config?: AxiosRequestConfig): Promise<AuthResponse>;
+	signup(payload: UserSignupRequest, config?: AxiosRequestConfig): Promise<UserAuthResponse>;
+	login(payload: UserLoginRequest, config?: AxiosRequestConfig): Promise<UserAuthResponse>;
 	adminLogin(
 		payload: AdminLoginRequest,
 		config?: AxiosRequestConfig,
-	): Promise<AuthResponse>;
+	): Promise<AdminAuthResponse>;
 	configureAll(
 		payload: ConfigureAllRequest,
 		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
-	addEvents(
-		payload: ConfigureEventsRequest,
-		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
-	deleteEvent(
-		eventName: string,
-		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
-	clearEvents(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	): Promise<ConfigureAllResponse>;
 	startGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
 	resetGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
-	getAdminGameState(config?: AxiosRequestConfig): Promise<GenericResponse>;
-	listUsers(query?: ListUsersQuery, config?: AxiosRequestConfig): Promise<UsersResponse>;
-	health(config?: AxiosRequestConfig): Promise<GenericResponse>;
+	getAdminGameState(config?: AxiosRequestConfig): Promise<AdminGameStateResponse>;
+	listUsers(
+		query?: ListUsersQuery,
+		config?: AxiosRequestConfig,
+	): Promise<AdminUsersResponse>;
+	health(config?: AxiosRequestConfig): Promise<ServerHealthResponse>;
 	getEvents(
 		gameId: string,
-		query?: EventStreamQuery,
+		query?: EventReplayQuery,
 		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
-	getEventsStatus(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
-	getReadiness(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
-	getEventsAdminAll(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
-	clearGameEvents(gameId: string, config?: AxiosRequestConfig): Promise<GenericResponse>;
+	): Promise<EventReplayResponse>;
+	getEventsStatus(gameId: string, config?: AxiosRequestConfig): Promise<EventStatusResponse>;
+	getReadiness(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<ReadinessStatusResponse>;
+	getEventsAdminAll(
+		gameId: string,
+		query?: AdminEventListQuery,
+		config?: AxiosRequestConfig,
+	): Promise<AdminEventListResponse>;
+	clearGameEvents(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<AdminClearEventsResponse>;
 	configureDirectives(
 		payload: ConfigureDirectivesRequest,
 		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
+	): Promise<DirectivesConfiguredResponse>;
 	addDirectives(
-		payload: ConfigureDirectivesRequest,
+		payload: AddDirectivesRequest,
 		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
+	): Promise<DirectivesAddedResponse>;
 	deleteDirective(
 		directiveName: string,
 		config?: AxiosRequestConfig,
-	): Promise<GenericResponse>;
-	clearDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
-	listDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
-	getActiveDirectives(config?: AxiosRequestConfig): Promise<GenericResponse>;
-	getCurrentEvents(config?: AxiosRequestConfig): Promise<CurrentEventsResponse>;
+	): Promise<DirectiveDeletedResponse>;
+	clearDirectives(config?: AxiosRequestConfig): Promise<DirectiveMessageResponse>;
+	listDirectives(config?: AxiosRequestConfig): Promise<DirectivesListResponse>;
+	getActiveDirectives(config?: AxiosRequestConfig): Promise<ActiveDirectivesResponse>;
 }
 
 const createHttpClient = (config: GameServerApiConfig): AxiosInstance => {
@@ -96,7 +113,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 
 	return {
 		async signup(payload, requestConfig) {
-			const { data } = await http.post<AuthResponse>(
+			const { data } = await http.post<UserAuthResponse>(
 				"/auth/signup",
 				payload,
 				requestConfig,
@@ -105,7 +122,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async login(payload, requestConfig) {
-			const { data } = await http.post<AuthResponse>(
+			const { data } = await http.post<UserAuthResponse>(
 				"/auth/login",
 				payload,
 				requestConfig,
@@ -114,7 +131,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async adminLogin(payload, requestConfig) {
-			const { data } = await http.post<AuthResponse>(
+			const { data } = await http.post<AdminAuthResponse>(
 				"/auth/admin/login",
 				payload,
 				requestConfig,
@@ -123,34 +140,9 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async configureAll(payload, requestConfig) {
-			const { data } = await http.post<GenericResponse>(
+			const { data } = await http.post<ConfigureAllResponse>(
 				"/admin/configure_all",
 				payload,
-				requestConfig,
-			);
-			return data;
-		},
-
-		async addEvents(payload, requestConfig) {
-			const { data } = await http.post<GenericResponse>(
-				"/admin/add_events",
-				payload,
-				requestConfig,
-			);
-			return data;
-		},
-
-		async deleteEvent(eventName, requestConfig) {
-			const { data } = await http.delete<GenericResponse>(
-				`/admin/delete_event/${encodeURIComponent(eventName)}`,
-				requestConfig,
-			);
-			return data;
-		},
-
-		async clearEvents(requestConfig) {
-			const { data } = await http.delete<GenericResponse>(
-				"/admin/clear_events",
 				requestConfig,
 			);
 			return data;
@@ -175,7 +167,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async getAdminGameState(requestConfig) {
-			const { data } = await http.get<GenericResponse>(
+			const { data } = await http.get<AdminGameStateResponse>(
 				"/admin/game_state",
 				requestConfig,
 			);
@@ -183,7 +175,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async listUsers(query, requestConfig) {
-			const { data } = await http.get<UsersResponse>("/admin/users", {
+			const { data } = await http.get<AdminUsersResponse>("/admin/users", {
 				...requestConfig,
 				params: query,
 			});
@@ -191,12 +183,12 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async health(requestConfig) {
-			const { data } = await http.get<GenericResponse>("/health", requestConfig);
+			const { data } = await http.get<ServerHealthResponse>("/health", requestConfig);
 			return data;
 		},
 
 		async getEvents(gameId, query, requestConfig) {
-			const { data } = await http.get<GenericResponse>(
+			const { data } = await http.get<EventReplayResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/events`,
 				{
 					...requestConfig,
@@ -207,7 +199,7 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async getEventsStatus(gameId, requestConfig) {
-			const { data } = await http.get<GenericResponse>(
+			const { data } = await http.get<EventStatusResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/events/status`,
 				requestConfig,
 			);
@@ -215,23 +207,26 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async getReadiness(gameId, requestConfig) {
-			const { data } = await http.get<GenericResponse>(
+			const { data } = await http.get<ReadinessStatusResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/readiness`,
 				requestConfig,
 			);
 			return data;
 		},
 
-		async getEventsAdminAll(gameId, requestConfig) {
-			const { data } = await http.get<GenericResponse>(
+		async getEventsAdminAll(gameId, query, requestConfig) {
+			const { data } = await http.get<AdminEventListResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/events/admin/all`,
-				requestConfig,
+				{
+					...requestConfig,
+					params: query,
+				},
 			);
 			return data;
 		},
 
 		async clearGameEvents(gameId, requestConfig) {
-			const { data } = await http.delete<GenericResponse>(
+			const { data } = await http.delete<AdminClearEventsResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/events`,
 				requestConfig,
 			);
@@ -239,8 +234,8 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async configureDirectives(payload, requestConfig) {
-			const { data } = await http.post<GenericResponse>(
-				"/configure_directives",
+			const { data } = await http.post<DirectivesConfiguredResponse>(
+				"/admin/configure_directives",
 				payload,
 				requestConfig,
 			);
@@ -248,8 +243,8 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async addDirectives(payload, requestConfig) {
-			const { data } = await http.post<GenericResponse>(
-				"/add_directives",
+			const { data } = await http.post<DirectivesAddedResponse>(
+				"/admin/add_directives",
 				payload,
 				requestConfig,
 			);
@@ -257,40 +252,32 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async deleteDirective(directiveName, requestConfig) {
-			const { data } = await http.delete<GenericResponse>(
-				`/delete_directive/${encodeURIComponent(directiveName)}`,
+			const { data } = await http.delete<DirectiveDeletedResponse>(
+				`/admin/delete_directive/${encodeURIComponent(directiveName)}`,
 				requestConfig,
 			);
 			return data;
 		},
 
 		async clearDirectives(requestConfig) {
-			const { data } = await http.delete<GenericResponse>(
-				"/clear_directives",
+			const { data } = await http.delete<DirectiveMessageResponse>(
+				"/admin/clear_directives",
 				requestConfig,
 			);
 			return data;
 		},
 
 		async listDirectives(requestConfig) {
-			const { data } = await http.get<GenericResponse>(
-				"/directives",
+			const { data } = await http.get<DirectivesListResponse>(
+				"/admin/directives",
 				requestConfig,
 			);
 			return data;
 		},
 
 		async getActiveDirectives(requestConfig) {
-			const { data } = await http.get<GenericResponse>(
-				"/active_directives",
-				requestConfig,
-			);
-			return data;
-		},
-
-		async getCurrentEvents(requestConfig) {
-			const { data } = await http.get<CurrentEventsResponse>(
-				"/admin/get_current_events",
+			const { data } = await http.get<ActiveDirectivesResponse>(
+				"/admin/active_directives",
 				requestConfig,
 			);
 			return data;

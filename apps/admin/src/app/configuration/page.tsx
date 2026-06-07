@@ -8,6 +8,7 @@ import { Label } from "@workspace/ui/components/label";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+	Activity,
 	AlertTriangle,
 	ArrowLeft,
 	ArrowRight,
@@ -20,6 +21,7 @@ import {
 	Swords,
 	Users,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type RoleType = "attack_only" | "defense_only" | "hybrid";
@@ -192,6 +194,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string): string => {
 
 const BASE_URL =
 	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
+const ADMIN_TOKEN_STORAGE_KEY = "simulator-admin-token";
 const PREPARED_CATALOG_LANG = "fa";
 const STEP_ORDER: StepKey[] = ["base", "actions", "counter-market", "review"];
 const STEP_TITLE: Record<StepKey, string> = {
@@ -586,6 +589,7 @@ export default function AdminConfigurationPage() {
 			if (!token) {
 				throw new Error("توکن ادمین از پاسخ دریافت نشد.");
 			}
+			localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
 			setAdminToken(token);
 			await loadUsers(token);
 			await refreshAdminGameState(token);
@@ -1258,9 +1262,21 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 							مرحله‌به‌مرحله جلو بروید؛ هر بخش ساده و قابل ویرایش است.
 						</p>
 					</div>
-					<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs md:text-sm flex items-center gap-2 w-fit">
-						<ShieldCheck className="w-4 h-4 text-emerald-300" />
-						<span className="font-mono">{BASE_URL}</span>
+					<div className="flex flex-wrap items-center gap-2">
+						<Button
+							asChild
+							variant="outline"
+							className="border-cyan-500/50 bg-cyan-950/20 text-cyan-100 hover:bg-cyan-950/40"
+						>
+							<Link href="/monitoring">
+								<Activity className="w-4 h-4" />
+								Monitoring
+							</Link>
+						</Button>
+						<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs md:text-sm flex items-center gap-2 w-fit">
+							<ShieldCheck className="w-4 h-4 text-emerald-300" />
+							<span className="font-mono">{BASE_URL}</span>
+						</div>
 					</div>
 				</div>
 
