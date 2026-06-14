@@ -153,7 +153,7 @@ export type ActionConfig = ActionConfigRequest;
 
 export interface CounterActionMapping {
 	defense_code: string;
-	effectiveness?: number;
+	effectiveness: number;
 	description?: string;
 	[key: string]: unknown;
 }
@@ -321,6 +321,98 @@ export interface AdminEventListQuery {
 	since_seq?: number;
 	limit?: number;
 }
+
+export interface AdminGameCatalogEntry {
+	gameId: string;
+	status?: string | null;
+	phase?: string | null;
+	currentTurn?: number | null;
+	totalTurns?: number | null;
+	pointThreshold?: number | null;
+	currentPhase?: string | null;
+	createdAt?: string | null;
+	governmentEnabled?: boolean | null;
+	sides?: string[];
+	turnAnalyticsCount?: number;
+	lastAnalyticsTurn?: number | null;
+	plotCount?: number;
+	hasStoredAnalytics?: boolean;
+	hasStoredPlots?: boolean;
+	isActive?: boolean;
+	[key: string]: unknown;
+}
+
+export interface AdminGameCatalogData {
+	activeGameId?: string | null;
+	games: AdminGameCatalogEntry[];
+	count: number;
+	[key: string]: unknown;
+}
+
+export type AdminGameCatalogResponse = ServerApiEnvelope<AdminGameCatalogData>;
+
+export interface TurnAnalyticsListQuery {
+	since_turn?: number;
+	limit?: number;
+}
+
+export interface TurnAnalyticsSummary {
+	turn: number;
+	createdAt?: number | string | null;
+	actionCount?: number;
+	comparisonCount?: number;
+	teamCount?: number;
+	plotCount?: number;
+	bestTargets?: Record<string, string>;
+	[key: string]: unknown;
+}
+
+export interface TurnAnalyticsListData {
+	gameId: string;
+	reports: TurnAnalyticsSummary[];
+	count: number;
+	[key: string]: unknown;
+}
+
+export type TurnAnalyticsListResponse = ServerApiEnvelope<TurnAnalyticsListData>;
+
+export interface TurnAnalyticsPlotStorage {
+	provider?: string | null;
+	bucket?: string | null;
+	region?: string | null;
+	endpointUrl?: string | null;
+	objectKey?: string | null;
+	contentType?: string | null;
+	accessMethod?: string | null;
+	[key: string]: unknown;
+}
+
+export interface TurnAnalyticsPlot {
+	teamName?: string | null;
+	targetTeamName?: string | null;
+	fileName?: string | null;
+	storage?: TurnAnalyticsPlotStorage | null;
+	accessUrl?: string | null;
+	accessUrlExpiresAt?: number | null;
+	[key: string]: unknown;
+}
+
+export interface TurnAnalyticsDetailData {
+	gameId: string;
+	turn: number;
+	createdAt?: number | string | null;
+	mathematics?: Record<string, unknown>;
+	flow?: {
+		actions?: Record<string, unknown>[];
+		[key: string]: unknown;
+	};
+	comparison?: Record<string, unknown>[];
+	plots?: TurnAnalyticsPlot[];
+	turnState?: Record<string, unknown>;
+	[key: string]: unknown;
+}
+
+export type TurnAnalyticsDetailResponse = ServerApiEnvelope<TurnAnalyticsDetailData>;
 
 export interface AdminUserSummary {
 	id: number;

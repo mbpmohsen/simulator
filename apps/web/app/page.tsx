@@ -9,6 +9,7 @@ import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import {
 	Activity,
 	AlertTriangle,
+	BookOpen,
 	CheckCircle2,
 	Clock3,
 	Coins,
@@ -25,6 +26,7 @@ import {
 	Users,
 	Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "@/store/auth.store.ts";
@@ -850,14 +852,14 @@ export default function PlayerGamePageV2() {
 				void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.55);
 				return;
 			}
-			if (
-				type.includes("GAME_FINISHED") ||
-				type.includes("GAME_OVER") ||
-				type.includes("GAME_ENDED")
-			) {
-				void playUiSound("/sounds/640149main_Computers20are20in20Control.mp3", 0.32);
-				return;
-			}
+				if (
+					type.includes("GAME_FINISHED") ||
+					type.includes("GAME_OVER") ||
+					type.includes("GAME_ENDED")
+				) {
+					void playUiSound("/sounds/eaglaxle-gaming-victory-2-464017.mp3", 0.18);
+					return;
+				}
 			playGameNotificationSound();
 		},
 		[playGameNotificationSound, playUiSound],
@@ -1462,6 +1464,16 @@ export default function PlayerGamePageV2() {
 							>
 								مرحله: {phase}
 							</Badge>
+							<Button
+								asChild
+								variant="outline"
+								className="h-10 border-slate-500/60 text-slate-200 hover:bg-slate-900/55"
+							>
+								<Link href="/docs">
+									<BookOpen className="w-4 h-4 ml-2" />
+									راهنما
+								</Link>
+							</Button>
 								<Button
 									onClick={() => void refreshAll()}
 									disabled={isRefreshing || isInitialLoading}

@@ -44,6 +44,7 @@ interface PreparedCatalogRoot {
 }
 
 let cachedCatalog: PreparedCatalogRoot | null = null;
+const DEFAULT_COUNTER_EFFECTIVENESS = 80;
 
 const pickLocalizedText = (
 	lang: Lang,
@@ -69,6 +70,12 @@ const pickLocalizedArray = (
 		: [];
 	if (lang === "fa" && fa.length > 0) return fa;
 	return en;
+};
+
+const normalizeEffectiveness = (value: unknown): number => {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed)) return DEFAULT_COUNTER_EFFECTIVENESS;
+	return Math.min(100, Math.max(0, parsed));
 };
 
 const localizeActionTemplate = (
@@ -110,6 +117,7 @@ const localizeCounterTemplate = (
 		...counter,
 		countered_by: list.map((entry) => ({
 			...entry,
+			effectiveness: normalizeEffectiveness(entry.effectiveness),
 			description: pickLocalizedText(
 				lang,
 				entry.description,

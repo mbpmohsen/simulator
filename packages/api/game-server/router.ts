@@ -6,6 +6,7 @@ import type {
 	AdminClearEventsResponse,
 	AdminEventListQuery,
 	AdminEventListResponse,
+	AdminGameCatalogResponse,
 	AdminGameStateResponse,
 	AdminUsersResponse,
 	AdminAuthResponse,
@@ -24,6 +25,9 @@ import type {
 	ListUsersQuery,
 	ReadinessStatusResponse,
 	ServerHealthResponse,
+	TurnAnalyticsDetailResponse,
+	TurnAnalyticsListQuery,
+	TurnAnalyticsListResponse,
 	UserAuthResponse,
 	UserLoginRequest,
 	UserSignupRequest,
@@ -71,6 +75,17 @@ export interface GameServerApi {
 		query?: AdminEventListQuery,
 		config?: AxiosRequestConfig,
 	): Promise<AdminEventListResponse>;
+	getAdminGameCatalog(config?: AxiosRequestConfig): Promise<AdminGameCatalogResponse>;
+	listTurnAnalytics(
+		gameId: string,
+		query?: TurnAnalyticsListQuery,
+		config?: AxiosRequestConfig,
+	): Promise<TurnAnalyticsListResponse>;
+	getTurnAnalytics(
+		gameId: string,
+		turn: number,
+		config?: AxiosRequestConfig,
+	): Promise<TurnAnalyticsDetailResponse>;
 	clearGameEvents(
 		gameId: string,
 		config?: AxiosRequestConfig,
@@ -221,6 +236,33 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 					...requestConfig,
 					params: query,
 				},
+			);
+			return data;
+		},
+
+		async getAdminGameCatalog(requestConfig) {
+			const { data } = await http.get<AdminGameCatalogResponse>(
+				"/api/games/admin/catalog",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async listTurnAnalytics(gameId, query, requestConfig) {
+			const { data } = await http.get<TurnAnalyticsListResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/admin/turn-analytics`,
+				{
+					...requestConfig,
+					params: query,
+				},
+			);
+			return data;
+		},
+
+		async getTurnAnalytics(gameId, turn, requestConfig) {
+			const { data } = await http.get<TurnAnalyticsDetailResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/admin/turn-analytics/${encodeURIComponent(turn)}`,
+				requestConfig,
 			);
 			return data;
 		},

@@ -21,6 +21,7 @@ import {
 	Activity,
 	AlertTriangle,
 	Ban,
+	BarChart3,
 	Bell,
 	CheckCircle2,
 	Eye,
@@ -655,15 +656,21 @@ export default function AdminMonitoringPage() {
 						</div>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-						<Button asChild variant="outline" className="border-slate-600 bg-slate-950/30 text-slate-100">
-							<Link href="/configuration">
-								<SlidersHorizontal className="h-4 w-4" />
-								Configuration
-							</Link>
-						</Button>
-						<Button
-							onClick={() => void refreshAll()}
-							disabled={!api || isLoading}
+							<Button asChild variant="outline" className="border-slate-600 bg-slate-950/30 text-slate-100">
+								<Link href="/configuration">
+									<SlidersHorizontal className="h-4 w-4" />
+									Configuration
+								</Link>
+							</Button>
+							<Button asChild variant="outline" className="border-emerald-600 bg-emerald-950/30 text-emerald-100">
+								<Link href="/analytics">
+									<BarChart3 className="h-4 w-4" />
+									Analytics
+								</Link>
+							</Button>
+							<Button
+								onClick={() => void refreshAll()}
+								disabled={!api || isLoading}
 							className="bg-cyan-700 text-white hover:bg-cyan-600"
 						>
 							<RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />

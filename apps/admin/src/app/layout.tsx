@@ -1,30 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 
 import "@workspace/ui/globals.css";
 import { Providers } from "@/components/providers";
 
 import "./globals.css";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
 	title: "Attack Simulator",
 	description: "MITRE ATTACK simulator",
 };
-
-const fontVazir = Vazirmatn({
-	subsets: ["arabic"],
-	variable: "--font-vazir",
-});
 
 export default function RootLayout({
 	children,
@@ -33,9 +17,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="fa" suppressHydrationWarning dir="rtl">
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} ${fontVazir.variable} antialiased`}
-			>
+			<body className="antialiased">
 				<Providers>
 					{children}
 				</Providers>

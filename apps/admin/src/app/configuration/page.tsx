@@ -12,6 +12,7 @@ import {
 	AlertTriangle,
 	ArrowLeft,
 	ArrowRight,
+	BarChart3,
 	CheckCircle2,
 	Eye,
 	FileText,
@@ -25,6 +26,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type RoleType = "attack_only" | "defense_only" | "hybrid";
+type ApiRoleType = "ATTACKER" | "DEFENCER" | "BOTH";
 type ActionKind = "attack" | "defense";
 type StepKey = "base" | "actions" | "counter-market" | "review";
 type TemplateMode = "prepared" | "custom";
@@ -53,6 +55,8 @@ interface TeamDraft {
 	specializationsJson: string;
 	players: TeamPlayerDraft[];
 }
+
+type GovernmentPlayerAssignments = Record<string, string>;
 
 interface ActionDraft {
 	id: string;
@@ -196,6 +200,13 @@ const BASE_URL =
 	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
 const ADMIN_TOKEN_STORAGE_KEY = "simulator-admin-token";
 const PREPARED_CATALOG_LANG = "fa";
+const DEFAULT_COUNTER_EFFECTIVENESS = 80;
+const DEFAULT_SIDE_NAMES = ["Red", "Blue"] as const;
+const API_ROLE_BY_DRAFT_ROLE: Record<RoleType, ApiRoleType> = {
+	attack_only: "ATTACKER",
+	defense_only: "DEFENCER",
+	hybrid: "BOTH",
+};
 const STEP_ORDER: StepKey[] = ["base", "actions", "counter-market", "review"];
 const STEP_TITLE: Record<StepKey, string> = {
 	base: "۱) پایه بازی",
@@ -206,6 +217,51 @@ const STEP_TITLE: Record<StepKey, string> = {
 
 const makeId = (prefix: string): string =>
 	`${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const normalizeEffectiveness = (value: unknown): number => {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed)) return DEFAULT_COUNTER_EFFECTIVENESS;
+	return Math.min(100, Math.max(0, parsed));
+};
+
+const createApiSideId = (index: number): number =>
+	(index + 1) * 1_100_000_000 + 1;
+
+const createApiGovernmentTeamId = (index: number): number =>
+	createApiSideId(index) + 100;
+
+const createApiTeamId = (index: number): number =>
+	createApiSideId(index) + 101;
+
+const resolveSideName = (team: TeamDraft, index: number): string => {
+	const fallback = team.display_name.replace(/\s*Team$/i, "").trim() || team.name;
+	return DEFAULT_SIDE_NAMES[index] ?? fallback;
+};
+
+const getAllowedTeamRolesForAction = (type: ActionKind): ApiRoleType[] =>
+	type === "attack" ? ["ATTACKER", "BOTH"] : ["DEFENCER", "BOTH"];
+
+const createGovernmentCode = (sideName: string): string => {
+	const normalized = sideName
+		.trim()
+		.toUpperCase()
+		.replace(/[^A-Z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
+	return `${normalized || "SIDE"}-GOV`;
+};
+
+const createGovernmentSubsidyAction = (sideId: number) => ({
+	code: `gov_subsidy_${sideId}`,
+	name: "Security Subsidy",
+	intervention_type: "SUBSIDY",
+	duration: 1,
+	apply_to_all_teams_on_side: true,
+	base_stats: {
+		cost: 1,
+		success_probability: 100,
+		cooldown_turns: 0,
+	},
+});
 
 const createTeam = (
 	id: number,
@@ -341,6 +397,8 @@ export default function AdminConfigurationPage() {
 		createTeam(1, "attack_only", "#FF0000", "⚔️"),
 		createTeam(2, "defense_only", "#0000FF", "🛡️"),
 	]);
+	const [governmentPlayerAssignments, setGovernmentPlayerAssignments] =
+		useState<GovernmentPlayerAssignments>({});
 
 	const [templateMode, setTemplateMode] = useState<TemplateMode>("prepared");
 	const [preparedSearch, setPreparedSearch] = useState("");
@@ -374,8 +432,8 @@ export default function AdminConfigurationPage() {
 			id: makeId("counter"),
 			attackCode: "DDOS",
 			defenseCode: "DDOS_DEFENSE",
-			effectiveness: 90,
-			description: "Blocks 90%",
+			effectiveness: DEFAULT_COUNTER_EFFECTIVENESS,
+			description: `Blocks ${DEFAULT_COUNTER_EFFECTIVENESS}%`,
 		},
 	]);
 
@@ -419,6 +477,10 @@ export default function AdminConfigurationPage() {
 			),
 		);
 	}, [teams]);
+
+	const selectedGovernmentUserIds = useMemo(() => {
+		return new Set(Object.values(governmentPlayerAssignments).filter(Boolean));
+	}, [governmentPlayerAssignments]);
 
 	const attackCodes = useMemo(
 		() =>
@@ -764,7 +826,7 @@ export default function AdminConfigurationPage() {
 					id: makeId("counter-prepared"),
 					attackCode,
 					defenseCode: String(entry.defense_code ?? ""),
-					effectiveness: Number(entry.effectiveness ?? 80),
+					effectiveness: normalizeEffectiveness(entry.effectiveness),
 					description: String(entry.description ?? "Prepared counter"),
 				}));
 			})
@@ -885,7 +947,7 @@ export default function AdminConfigurationPage() {
 				id: makeId("counter"),
 				attackCode: attackCodes[0] ?? "",
 				defenseCode: defenseCodes[0] ?? "",
-				effectiveness: 80,
+				effectiveness: DEFAULT_COUNTER_EFFECTIVENESS,
 				description: "",
 			},
 		]);
@@ -956,12 +1018,28 @@ export default function AdminConfigurationPage() {
 				if (!team.players.some((player) => player.isLeader)) {
 					return `تیم ${team.name} باید یک لیدر داشته باشد.`;
 				}
-				for (const player of team.players) {
-					if (!player.userId)
-						return `برای تیم ${team.name} بازیکن انتخاب نشده است.`;
+					for (const player of team.players) {
+						if (!player.userId)
+							return `برای تیم ${team.name} بازیکن انتخاب نشده است.`;
+					}
+				}
+				for (const [index, team] of teams.entries()) {
+					const sideName = resolveSideName(team, index);
+					const governmentUserId = governmentPlayerAssignments[team.id];
+					if (!governmentUserId) {
+						return `برای ${sideName} Government بازیکن انتخاب نشده است.`;
+					}
+					if (selectedUserIds.has(governmentUserId)) {
+						return `بازیکن ${sideName} Government نباید در تیم عادی هم انتخاب شده باشد.`;
+					}
+				}
+				const governmentUserIds = Object.values(
+					governmentPlayerAssignments,
+				).filter(Boolean);
+				if (new Set(governmentUserIds).size !== governmentUserIds.length) {
+					return "هر تیم Government باید بازیکن جداگانه داشته باشد.";
 				}
 			}
-		}
 
 		if (step === "actions") {
 			if (actions.length === 0) return "حداقل یک اکشن تعریف کنید.";
@@ -993,7 +1071,7 @@ export default function AdminConfigurationPage() {
 		const countersError = validateStep("counter-market");
 		if (countersError) throw new Error(countersError);
 
-		const teamsPayload = teams.map((team) => {
+		const teamsPayload = teams.map((team, index) => {
 			const usedInTeam = new Set<string>();
 			const players = team.players.map((player) => {
 				if (usedInTeam.has(player.userId)) {
@@ -1015,13 +1093,16 @@ export default function AdminConfigurationPage() {
 			});
 
 			return {
+				id: createApiTeamId(index),
 				name: team.name,
+				side_id: createApiSideId(index),
+				side_name: resolveSideName(team, index),
 				display_name: team.display_name || team.name,
 				color: team.color,
 				icon: team.icon,
 				starting_credits: Number(team.starting_credits),
 				role: {
-					type: team.roleType,
+					type: API_ROLE_BY_DRAFT_ROLE[team.roleType],
 					allowed_action_types: team.allowedActionTypesCsv
 						.split(",")
 						.map((item) => item.trim())
@@ -1047,13 +1128,7 @@ export default function AdminConfigurationPage() {
 				globallyUsed.add(player.userId);
 			}
 		}
-
 		const actionsPayload = actions.map((action) => {
-			const allowedRoles =
-				action.type === "attack"
-					? ["attack_only", "hybrid"]
-					: ["defense_only", "hybrid"];
-
 			const mappedTactics = action.tacticsCsv
 				.split(",")
 				.map((item) => item.trim())
@@ -1084,7 +1159,7 @@ export default function AdminConfigurationPage() {
 					unlocked_by_default: true,
 					prerequisites: [],
 					min_credits: 0,
-					allowed_team_roles: allowedRoles,
+					allowed_team_roles: getAllowedTeamRolesForAction(action.type),
 				},
 				effects:
 					action.type === "attack"
@@ -1113,7 +1188,7 @@ export default function AdminConfigurationPage() {
 			countered_by: [
 				{
 					defense_code: counter.defenseCode,
-					effectiveness: Number(counter.effectiveness),
+					effectiveness: normalizeEffectiveness(counter.effectiveness),
 					description: counter.description || "Configured by admin",
 				},
 			],
@@ -1156,6 +1231,74 @@ export default function AdminConfigurationPage() {
 			},
 		}));
 
+		const governmentTeamsPayload = teamsPayload.map((team, index) => {
+			const sourceTeam = teams[index];
+			const governmentUserId = sourceTeam
+				? governmentPlayerAssignments[sourceTeam.id]
+				: "";
+
+			if (!governmentUserId) {
+				throw new Error(
+					`برای طرف ${team.side_name} باید بازیکن government را انتخاب کنید.`,
+				);
+			}
+
+			const governmentUser = users.find(
+				(user) => String(user.id) === governmentUserId,
+			);
+			if (!governmentUser) {
+				throw new Error(`بازیکن government طرف ${team.side_name} معتبر نیست.`);
+			}
+			if (globallyUsed.has(governmentUser.id)) {
+				throw new Error(
+					`کاربر ${governmentUser.username} قبلا در یک تیم عادی انتخاب شده است و نمی‌تواند بازیکن government هم باشد.`,
+				);
+			}
+			globallyUsed.add(governmentUser.id);
+
+			return {
+				id: createApiGovernmentTeamId(index),
+				name: `${team.side_name} Government`,
+				side_id: team.side_id,
+				side_name: team.side_name,
+				display_name: `${team.side_name} Government`,
+				color: team.color,
+				icon: "🏛️",
+				starting_credits: 5,
+				role: {
+					type: "GOVERNMENT",
+					allowed_action_types: ["government"],
+				},
+				specializations: {},
+				players: [
+					{
+						name: governmentUser.username,
+						userId: governmentUser.id,
+						isLeader: true,
+						voteWeight: 1,
+					},
+				],
+			};
+		});
+
+		const governmentPayload = {
+			enabled: true,
+			side_governments: governmentTeamsPayload.map((governmentTeam) => {
+				const governmentPlayer = governmentTeam.players[0];
+
+				return {
+					side_id: governmentTeam.side_id,
+					team_id: governmentTeam.id,
+					player: {
+						userId: governmentPlayer.userId,
+						name: governmentPlayer.name,
+						governmentCode: createGovernmentCode(governmentTeam.side_name),
+					},
+					actions: [createGovernmentSubsidyAction(governmentTeam.side_id)],
+				};
+			}),
+		};
+
 		return {
 			version,
 			game_config: {
@@ -1180,8 +1323,9 @@ export default function AdminConfigurationPage() {
 					vote_time_limit_seconds: Number(voteTimeLimitSeconds),
 				},
 			},
-			teams: teamsPayload,
+			teams: [...governmentTeamsPayload, ...teamsPayload],
 			actions: actionsPayload,
+			government: governmentPayload,
 			action_counters: countersPayload,
 			black_market: blackMarketPayload,
 		};
@@ -1263,19 +1407,29 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 						</p>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							asChild
-							variant="outline"
-							className="border-cyan-500/50 bg-cyan-950/20 text-cyan-100 hover:bg-cyan-950/40"
-						>
-							<Link href="/monitoring">
-								<Activity className="w-4 h-4" />
-								Monitoring
-							</Link>
-						</Button>
-						<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs md:text-sm flex items-center gap-2 w-fit">
-							<ShieldCheck className="w-4 h-4 text-emerald-300" />
-							<span className="font-mono">{BASE_URL}</span>
+							<Button
+								asChild
+								variant="outline"
+								className="border-cyan-500/50 bg-cyan-950/20 text-cyan-100 hover:bg-cyan-950/40"
+							>
+								<Link href="/monitoring">
+									<Activity className="w-4 h-4" />
+									Monitoring
+								</Link>
+							</Button>
+							<Button
+								asChild
+								variant="outline"
+								className="border-emerald-500/50 bg-emerald-950/20 text-emerald-100 hover:bg-emerald-950/40"
+							>
+								<Link href="/analytics">
+									<BarChart3 className="w-4 h-4" />
+									Analytics
+								</Link>
+							</Button>
+							<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs md:text-sm flex items-center gap-2 w-fit">
+								<ShieldCheck className="w-4 h-4 text-emerald-300" />
+								<span className="font-mono">{BASE_URL}</span>
 						</div>
 					</div>
 				</div>
@@ -1689,13 +1843,16 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 																		className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
 																	>
 																		<option value="">انتخاب کاربر</option>
-																		{users.map((user) => {
-																			const isUsedElsewhere =
-																				selectedUserIds.has(String(user.id)) &&
-																				String(user.id) !== player.userId;
-																			return (
-																				<option
-																					key={user.id}
+																			{users.map((user) => {
+																				const isUsedElsewhere =
+																					(selectedUserIds.has(String(user.id)) &&
+																						String(user.id) !== player.userId) ||
+																					selectedGovernmentUserIds.has(
+																						String(user.id),
+																					);
+																				return (
+																					<option
+																						key={user.id}
 																					value={String(user.id)}
 																					disabled={isUsedElsewhere}
 																				>
@@ -1753,11 +1910,77 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 																</div>
 															))}
 														</div>
+														</div>
+													))}
+												</div>
+
+												<div className="rounded-xl border border-cyan-700/30 bg-cyan-950/10 p-4 space-y-3">
+													<div className="font-semibold text-cyan-200 flex items-center gap-2">
+														<ShieldCheck className="w-4 h-4" />
+														تیم‌های Government
 													</div>
-												))}
+													<div className="text-xs text-slate-400 leading-6">
+														برای هر طرف بازی باید یک بازیکن جداگانه برای government انتخاب شود. این بازیکن نباید در تیم Red یا Blue انتخاب شده باشد.
+													</div>
+													<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+														{teams.map((team, index) => {
+															const sideName = resolveSideName(team, index);
+															const selectedGovernmentUserId =
+																governmentPlayerAssignments[team.id] ?? "";
+
+															return (
+																<div
+																	key={`government-${team.id}`}
+																	className="rounded-lg border border-slate-700 bg-slate-950/70 p-3 space-y-2"
+																>
+																	<div className="text-sm font-medium text-slate-200">
+																		{sideName} Government
+																	</div>
+																	<select
+																		value={selectedGovernmentUserId}
+																		onChange={(event) =>
+																			setGovernmentPlayerAssignments(
+																				(current) => ({
+																					...current,
+																					[team.id]: event.target.value,
+																				}),
+																			)
+																		}
+																		className="w-full h-10 rounded-md border border-slate-700 bg-slate-950/80 px-2 text-sm"
+																	>
+																		<option value="">انتخاب بازیکن government</option>
+																		{users.map((user) => {
+																			const userId = String(user.id);
+																			const isUsedByNormalTeam =
+																				selectedUserIds.has(userId);
+																			const isUsedByAnotherGovernment =
+																				selectedGovernmentUserIds.has(userId) &&
+																				userId !== selectedGovernmentUserId;
+
+																			return (
+																				<option
+																					key={user.id}
+																					value={userId}
+																					disabled={
+																						isUsedByNormalTeam ||
+																						isUsedByAnotherGovernment
+																					}
+																				>
+																					{user.username} ({user.id})
+																				</option>
+																			);
+																		})}
+																	</select>
+																	<div className="text-[11px] text-slate-500 font-mono">
+																		team_id: {createApiGovernmentTeamId(index)} · side_id: {createApiSideId(index)}
+																	</div>
+																</div>
+															);
+														})}
+													</div>
+												</div>
 											</div>
-										</div>
-									) : null}
+										) : null}
 
 									{currentStep === "actions" ? (
 										<div className="grid grid-cols-1 2xl:grid-cols-[0.92fr_1.08fr] gap-4">
@@ -1880,7 +2103,7 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 																	</div>
 																	<ScrollArea className="h-[290px] rounded border border-slate-700 bg-slate-950/40 p-2">
 																		<div className="space-y-3 pr-2">
-																			<div className="text-xs text-slate-300 leading-6">
+																			<div className="text-xs text-slate-300 leading-6" style={{ direction: "rtl" }}>
 																				{preparedDetail.description ||
 																					"بدون توضیح"}
 																			</div>
@@ -2897,3 +3120,8 @@ ${err instanceof Error ? err.message : "unknown error"}`;
 		</div>
 	);
 }
+
+
+//{
+//     "detail": "User '9000000001' is assigned to multiple teams ('Red Government' and 'Red Team'). Each user may belong to only one team."
+// }

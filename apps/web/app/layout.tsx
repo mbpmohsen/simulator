@@ -34,7 +34,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-        <html lang="fa" dir="rtl">
+        <html lang="fa" dir="rtl" suppressHydrationWarning>
             <body
                 className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className} font-sans antialiased`}
             >

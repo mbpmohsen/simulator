@@ -12,7 +12,8 @@ import {
 import { Input } from "@workspace/ui/components/input.tsx";
 import { Label } from "@workspace/ui/components/label.tsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { Shield, Swords } from "lucide-react";
+import { BookOpen, Shield, Swords } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -118,14 +119,24 @@ export default function LoginPage() {
 					className="grid overflow-hidden rounded-2xl border border-[#325647] bg-[#0f1a15]/90 shadow-[0_35px_120px_rgba(0,0,0,0.52)] lg:grid-cols-[1.2fr_1fr]"
 				>
 					<div className="relative border-b border-[#2a4238] p-6 sm:p-10 lg:border-b-0 lg:border-l">
-						<motion.div
-							animate={{ y: [0, -5, 0], opacity: [0.75, 1, 0.75] }}
-							transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-							className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#3f7c65] bg-[#0c231a] px-4 py-2 text-xs tracking-wide text-[#9ccbb3]"
-						>
-							<Shield className="h-4 w-4" />
-							سامانه شبیه‌ساز عملیات
-						</motion.div>
+						<div className="mb-8 flex flex-wrap items-center gap-3">
+							<motion.div
+								className="inline-flex items-center gap-2 rounded-full border border-[#3f7c65] bg-[#0c231a] px-4 py-2 text-xs tracking-wide text-[#9ccbb3]"
+							>
+								<Shield className="h-4 w-4" />
+								سامانه شبیه‌ساز عملیات
+							</motion.div>
+							<Button
+								asChild
+								variant="outline"
+								className="border-[#3f7c65] bg-[#0c231a]/80 text-[#c9ead8] hover:bg-[#143427]"
+							>
+								<Link href="/docs">
+									<BookOpen className="h-4 w-4" />
+									راهنمای فارسی
+								</Link>
+							</Button>
+						</div>
 						<h1 className="mb-3 text-3xl font-extrabold leading-tight text-[#eafaf1] sm:text-4xl">
 							پنل ورود شبیه‌ساز
 						</h1>
@@ -238,7 +249,7 @@ export default function LoginPage() {
 									) : null}
 								</CardContent>
 
-								<CardFooter className="flex flex-col gap-3 pt-2">
+								<CardFooter className="flex flex-col gap-3 pt-6">
 									<Button
 										type="submit"
 										disabled={isLoading}
