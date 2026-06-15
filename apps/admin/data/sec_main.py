@@ -408,7 +408,7 @@ def main():
     """Main execution function"""
 
     # Configuration
-    INPUT_FILE = "enterprise-attack-17.1-t.json"
+    INPUT_FILE = "enterprise-attack-18.1.json"
     OUTPUT_FILE = "output_translated.json"
     NUM_WORKERS = 15  # Increase this for more speed (10-20 is good)
 
