@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth.store.ts";
 
 type NullableNumber = number | null;
@@ -162,19 +163,100 @@ type EventTone = "info" | "success" | "warning" | "danger";
 interface VisualEvent {
 	id: string;
 	eventType: string;
+	eventTypeLabel: string | null;
 	title: string;
 	description: string;
+	details: string[];
 	tone: EventTone;
 	receivedAt: number;
 	payload: unknown;
 }
+
+interface LivePhaseSignal {
+	phase: string | null;
+	turn: number | null;
+	phaseOpen: boolean | null;
+	votingOpen: boolean | null;
+	endsAt: number | null;
+	duration: number | null;
+	reason: string | null;
+	eventType: string | null;
+	updatedAt: number | null;
+}
+
+type ToastTone = "info" | "success" | "warning" | "error";
 
 const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? "";
 const POLL_INTERVAL_MS = 6000;
 const SSE_RECONNECT_MS = 3000;
 const MAX_EVENTS = 80;
 const MAX_CHAT_MESSAGES = 180;
-const SILENT_SSE_EVENTS = new Set(["KEEPALIVE"]);
+const SILENT_SSE_EVENTS = new Set(["KEEPALIVE", "ACTION_REJECTED"]);
+
+const INITIAL_LIVE_PHASE_SIGNAL: LivePhaseSignal = {
+	phase: null,
+	turn: null,
+	phaseOpen: null,
+	votingOpen: null,
+	endsAt: null,
+	duration: null,
+	reason: null,
+	eventType: null,
+	updatedAt: null,
+};
+
+const EVENT_TYPE_LABELS_FA: Record<string, string> = {
+	ACTION_REJECTED: "رد عملیات",
+	PHASE_STARTED: "شروع مرحله",
+	PHASE_ENDED: "پایان مرحله",
+	VOTING_STARTED: "شروع رأی‌گیری",
+	VOTING_ENDED: "پایان رأی‌گیری",
+	GOVERNMENT_SELECTION_STARTED: "شروع انتخاب دولت",
+	GOVERNMENT_SELECTION_ENDED: "پایان انتخاب دولت",
+	CALCULATION_STARTED: "شروع محاسبه",
+	CALCULATION_ENDED: "پایان محاسبه",
+	TURN_STARTED: "شروع نوبت",
+	TURN_ENDED: "پایان نوبت",
+	TURN_RESULTS: "نتیجه نوبت",
+	TURN_ANALYTICS_RECORDED: "ثبت تحلیل نوبت",
+	GAME_STARTED: "شروع بازی",
+	GAME_ENDED: "پایان بازی",
+	GAME_STATE_SNAPSHOT: "همگام‌سازی وضعیت",
+	VOTE_SUBMITTED: "ثبت رأی",
+	VOTE_CAST: "ثبت رأی تیم",
+	TEAM_ACTION_SELECTED: "انتخاب عملیات تیم",
+	TEAM_MAJORITY_DECIDED: "تصمیم اکثریت تیم",
+	ACTION_EXECUTED: "اجرای عملیات",
+	ATTACK_DECLARED: "اعلام حمله",
+	ATTACK_RESOLVED: "حل نتیجه حمله",
+	POINTS_UPDATED: "به‌روزرسانی امتیاز",
+	TEAM_MEMBER_OFFLINE: "خروج عضو تیم",
+	USER_STREAM_DISCONNECTED: "قطع جریان کاربر",
+};
+
+const PHASE_LABELS_FA: Record<string, string> = {
+	waiting: "انتظار",
+	preparation: "آماده‌سازی",
+	government_selection: "انتخاب دولت",
+	selection: "انتخاب هدف",
+	voting: "رأی‌گیری",
+	resolution: "محاسبه نتیجه",
+	calculation: "محاسبه",
+	finished: "پایان بازی",
+	GOVERNMENT_SELECTION: "انتخاب دولت",
+	SELECTION: "انتخاب هدف",
+	VOTING: "رأی‌گیری",
+	CALCULATION: "محاسبه",
+	PREPARATION: "آماده‌سازی",
+};
+
+const EVENT_REASON_LABELS_FA: Record<string, string> = {
+	timeout: "اتمام زمان",
+	completed: "تکمیل‌شده",
+	game_ended: "پایان بازی",
+	turns_completed: "تکمیل همه نوبت‌ها",
+	stream_cancelled: "قطع جریان",
+};
 
 const CHAT_ENDPOINT_CANDIDATES = [
 	"/client/team_chat",
@@ -348,6 +430,214 @@ const pickString = (values: unknown[]): string | null => {
 	return null;
 };
 
+const getPayloadRecord = (payload: unknown): Record<string, unknown> => {
+	const root = asRecord(payload);
+	return asRecord(root?.data) ?? root ?? {};
+};
+
+const getPayloadText = (payload: unknown): string | null =>
+	typeof payload === "string" && payload.trim() ? payload.trim() : null;
+
+const translatePhaseName = (phase: unknown): string => {
+	if (typeof phase !== "string" || !phase.trim()) return "نامشخص";
+	const normalized = phase.trim();
+	return PHASE_LABELS_FA[normalized] ?? PHASE_LABELS_FA[normalized.toLowerCase()] ?? normalized;
+};
+
+const translateEventReason = (reason: unknown): string => {
+	if (typeof reason !== "string" || !reason.trim()) return "نامشخص";
+	const normalized = reason.trim();
+	return EVENT_REASON_LABELS_FA[normalized] ?? EVENT_REASON_LABELS_FA[normalized.toLowerCase()] ?? normalized;
+};
+
+const translateEventMessage = (message: string): string => {
+	const normalized = message.trim();
+	if (normalized === "Vote on proposed action") {
+		return "رأی‌گیری برای عملیات پیشنهادی شروع شد.";
+	}
+	if (normalized === "Government intervention execution failed.") {
+		return "اجرای مداخله دولت ناموفق بود.";
+	}
+	return EVENT_REASON_LABELS_FA[normalized] ?? EVENT_REASON_LABELS_FA[normalized.toLowerCase()] ?? normalized;
+};
+
+const formatDuration = (duration: number | null): string =>
+	duration === null ? "نامشخص" : `${new Intl.NumberFormat("fa-IR").format(duration)} ثانیه`;
+
+const formatEventTime = (value: unknown): string | null => {
+	const timestamp = toNumberOrNull(value);
+	if (timestamp === null) return null;
+	const date = new Date(timestamp < 10_000_000_000 ? timestamp * 1000 : timestamp);
+	if (Number.isNaN(date.getTime())) return null;
+	return date.toLocaleTimeString("fa-IR");
+};
+
+const resolveEventType = (eventType: string, payload: unknown): string => {
+	const normalizedEventType = (eventType || "message").trim().toUpperCase();
+	if (normalizedEventType !== "MESSAGE") return normalizedEventType;
+
+	const root = asRecord(payload);
+	const data = asRecord(root?.data) ?? root;
+	const hint = pickString([
+		root?.event,
+		root?.eventType,
+		root?.type,
+		data?.event,
+		data?.eventType,
+		data?.type,
+	]);
+	return hint ? hint.toUpperCase() : normalizedEventType;
+};
+
+const isActionRejectedEvent = (eventType: string, payload: unknown): boolean =>
+	resolveEventType(eventType, payload) === "ACTION_REJECTED";
+
+const buildActionRejectedDescription = (payload: unknown): string => {
+	const root = asRecord(payload);
+	const data = getPayloadRecord(payload);
+	const rawMessage =
+		pickString([
+			data.message,
+			data.detail,
+			data.reason,
+			root?.message,
+			root?.detail,
+			getPayloadText(payload),
+		]) ?? "درخواست عملیات توسط سرور رد شد.";
+	return translateEventMessage(rawMessage);
+};
+
+const buildLivePhaseUpdate = (
+	eventType: string,
+	payload: unknown,
+	fallbackTurn: number | null,
+): {
+	next: Partial<LivePhaseSignal>;
+	toast?: {
+		key: string;
+		tone: ToastTone;
+		title: string;
+		description?: string;
+	};
+} | null => {
+	const type = resolveEventType(eventType, payload);
+	const data = getPayloadRecord(payload);
+	const payloadText = getPayloadText(payload);
+	const turn =
+		toNumberOrNull(data.turn ?? data.turnNumber ?? data.currentTurn ?? data.current_turn) ??
+		fallbackTurn;
+	const phase = pickString([data.phase, data.turnPhase, data.currentPhase]);
+	const normalizedPhase = phase?.toLowerCase() ?? null;
+	const duration = toNumberOrNull(data.duration ?? data.durationSeconds ?? data.duration_seconds);
+	const endsAt = toNumberOrNull(data.endsAt ?? data.ends_at);
+	const reason = pickString([data.reason, data.status, payloadText]);
+	const phaseLabel = translatePhaseName(phase);
+	const reasonLabel = translateEventReason(reason);
+	const turnLabel = turn === null ? "نامشخص" : new Intl.NumberFormat("fa-IR").format(turn);
+
+	if (type === "PHASE_STARTED") {
+		const votingOpen = normalizedPhase === "voting" ? true : false;
+		const tone: ToastTone =
+			normalizedPhase === "finished"
+				? "success"
+				: normalizedPhase === "resolution" || normalizedPhase === "calculation"
+					? "warning"
+					: "info";
+		return {
+			next: {
+				phase: normalizedPhase ?? phase ?? null,
+				turn,
+				phaseOpen: true,
+				votingOpen,
+				endsAt,
+				duration,
+				reason: null,
+				eventType: type,
+			},
+			toast: {
+				key: `${type}:${turn ?? "?"}:${normalizedPhase ?? phase ?? "unknown"}`,
+				tone,
+				title: `مرحله ${phaseLabel} شروع شد`,
+				description: `نوبت ${turnLabel}${duration !== null ? ` | مدت ${formatDuration(duration)}` : ""}`,
+			},
+		};
+	}
+
+	if (type === "PHASE_ENDED") {
+		return {
+			next: {
+				phase: normalizedPhase,
+				turn,
+				phaseOpen: false,
+				votingOpen: false,
+				endsAt: null,
+				duration: null,
+				reason,
+				eventType: type,
+			},
+			toast: {
+				key: `${type}:${turn ?? "?"}:${reason ?? "unknown"}`,
+				tone: reason === "completed" ? "success" : "warning",
+				title: "مرحله پایان یافت",
+				description: `وضعیت: ${reasonLabel}`,
+			},
+		};
+	}
+
+	if (type === "VOTING_STARTED") {
+		const actionName = pickString([
+			data.actionName,
+			data.action_name,
+			data.action,
+			asRecord(data.action)?.name,
+			asRecord(data.action)?.code,
+		]);
+		return {
+			next: {
+				phase: "voting",
+				turn,
+				phaseOpen: true,
+				votingOpen: true,
+				endsAt,
+				duration,
+				reason: null,
+				eventType: type,
+			},
+			toast: {
+				key: `${type}:${turn ?? "?"}:${actionName ?? payloadText ?? "vote"}`,
+				tone: "info",
+				title: "رأی‌گیری شروع شد",
+				description: actionName
+					? `عملیات پیشنهادی: ${actionName}`
+					: "اکنون می‌توانید رأی خود را ثبت کنید.",
+			},
+		};
+	}
+
+	if (type === "VOTING_ENDED") {
+		return {
+			next: {
+				phase: "voting",
+				turn,
+				phaseOpen: false,
+				votingOpen: false,
+				endsAt: null,
+				duration: null,
+				reason,
+				eventType: type,
+			},
+			toast: {
+				key: `${type}:${turn ?? "?"}:${reason ?? "unknown"}`,
+				tone: "warning",
+				title: "رأی‌گیری پایان یافت",
+				description: `وضعیت: ${reasonLabel}`,
+			},
+		};
+	}
+
+	return null;
+};
+
 const parseChatEvent = (
 	eventType: string,
 	payload: unknown,
@@ -438,9 +728,10 @@ const buildVisualEvent = (
 	payload: unknown,
 	receivedAt: number,
 ): VisualEvent => {
-	const type = (eventType || "message").toUpperCase();
+	const type = resolveEventType(eventType, payload);
 	const root = asRecord(payload);
 	const data = asRecord(root?.data) ?? root ?? {};
+	const payloadText = getPayloadText(payload);
 
 	const attacker = asRecord(data.attacker);
 	const defender = asRecord(data.defender);
@@ -451,15 +742,17 @@ const buildVisualEvent = (
 	const teamStatus = asRecord(data.teamStatus);
 	const effect = asRecord(data.effect);
 	const action = asRecord(data.action);
+	const eventTypeLabel = EVENT_TYPE_LABELS_FA[type] ?? null;
+	const details: string[] = [];
 
 	let tone: EventTone = "info";
-	let title = prettifyEventType(type);
+	let title = eventTypeLabel ?? prettifyEventType(type);
 	let description = pickString([
 		data.message,
 		data.detail,
 		root?.message,
 		root?.detail,
-	]) ?? "رویداد جدید دریافت شد.";
+	]) ?? (payloadText ? translateEventMessage(payloadText) : "رویداد جدید دریافت شد.");
 
 	if (type.includes("GAME_STARTED")) {
 		tone = "success";
@@ -469,6 +762,55 @@ const buildVisualEvent = (
 		tone = "info";
 		title = `شروع نوبت ${toNumberOrNull(data.turnNumber) ?? "—"}`;
 		description = `مرحله فعلی: ${pickString([data.phase, data.turnPhase]) ?? "نامشخص"}`;
+	} else if (type === "PHASE_STARTED") {
+		const phase = pickString([data.phase, data.turnPhase, data.currentPhase]);
+		const turn = toNumberOrNull(data.turn ?? data.turnNumber ?? data.currentTurn);
+		const duration = toNumberOrNull(data.duration ?? data.durationSeconds);
+		const endsAtText = formatEventTime(data.endsAt ?? data.ends_at);
+		const phaseLabel = translatePhaseName(phase);
+		tone = phase?.toLowerCase() === "finished" ? "success" : "info";
+		title = `شروع مرحله ${phaseLabel}`;
+		description = `نوبت ${turn ?? "—"} وارد مرحله ${phaseLabel} شد.`;
+		details.push(`کد وضعیت: ${type}`);
+		details.push(`مرحله: ${phaseLabel}`);
+		details.push(`نوبت: ${turn ?? "—"}`);
+		details.push(`مدت: ${formatDuration(duration)}`);
+		if (endsAtText) details.push(`پایان برنامه‌ریزی‌شده: ${endsAtText}`);
+	} else if (type === "PHASE_ENDED") {
+		const reason = pickString([data.reason, data.status, payloadText]);
+		tone = reason === "completed" ? "success" : "warning";
+		title = "پایان مرحله";
+		description = `مرحله با وضعیت ${translateEventReason(reason)} پایان یافت.`;
+		details.push(`کد وضعیت: ${type}`);
+		details.push(`وضعیت: ${translateEventReason(reason)}`);
+	} else if (type === "VOTING_STARTED") {
+		const actionName = pickString([
+			action?.name,
+			action?.code,
+			data.actionName,
+			data.action_name,
+			data.action,
+			payloadText,
+		]);
+		const turn = toNumberOrNull(data.turn ?? data.turnNumber);
+		const duration = toNumberOrNull(data.duration ?? data.durationSeconds);
+		tone = "info";
+		title = "رأی‌گیری شروع شد";
+		description = actionName
+			? `رأی‌گیری برای ${translateEventMessage(actionName)} فعال شد.`
+			: "رأی‌گیری برای عملیات پیشنهادی فعال شد.";
+		details.push(`کد وضعیت: ${type}`);
+		if (turn !== null) details.push(`نوبت: ${turn}`);
+		if (duration !== null) details.push(`مدت: ${formatDuration(duration)}`);
+		if (actionName) details.push(`عملیات پیشنهادی: ${translateEventMessage(actionName)}`);
+		details.push("بازیکن‌های تیم می‌توانند رأی خود را ثبت کنند.");
+	} else if (type === "VOTING_ENDED") {
+		const reason = pickString([data.reason, data.status, payloadText]);
+		tone = "warning";
+		title = "رأی‌گیری پایان یافت";
+		description = `پنجره رأی‌گیری با وضعیت ${translateEventReason(reason)} بسته شد.`;
+		details.push(`کد وضعیت: ${type}`);
+		details.push(`وضعیت: ${translateEventReason(reason)}`);
 	} else if (type.includes("TEAM_TARGET_SELECTED")) {
 		tone = "warning";
 		title = "هدف تیم انتخاب شد";
@@ -530,8 +872,10 @@ const buildVisualEvent = (
 	return {
 		id: `${receivedAt}-${Math.random().toString(36).slice(2, 8)}`,
 		eventType: type,
+		eventTypeLabel,
 		title,
 		description,
+		details,
 		tone,
 		receivedAt,
 		payload,
@@ -559,6 +903,9 @@ export default function PlayerGamePageV2() {
 	const [sseEvents, setSseEvents] = useState<SseLogEvent[]>([]);
 	const [visualEvents, setVisualEvents] = useState<VisualEvent[]>([]);
 	const [gameEndedSignalReceived, setGameEndedSignalReceived] = useState(false);
+	const [livePhaseSignal, setLivePhaseSignal] = useState<LivePhaseSignal>(
+		INITIAL_LIVE_PHASE_SIGNAL,
+	);
 
 	const [selectedActionId, setSelectedActionId] = useState<number | null>(null);
 	const [selectedTargetTeamId, setSelectedTargetTeamId] = useState<number | null>(null);
@@ -579,6 +926,8 @@ export default function PlayerGamePageV2() {
 	const chatTransportModeRef = useRef<ChatTransportMode>("unknown");
 	const gameEndedRefreshRef = useRef(false);
 	const audioContextRef = useRef<AudioContext | null>(null);
+	const currentTurnRef = useRef<number | null>(null);
+	const toastHistoryRef = useRef<Map<string, number>>(new Map());
 
 	const clientApi = useMemo(() => {
 		if (!token || !BASE_URL) return null;
@@ -597,7 +946,12 @@ export default function PlayerGamePageV2() {
 	useEffect(() => {
 		gameEndedRefreshRef.current = false;
 		setGameEndedSignalReceived(false);
+		setLivePhaseSignal(INITIAL_LIVE_PHASE_SIGNAL);
 	}, [activeGameId]);
+
+	useEffect(() => {
+		currentTurnRef.current = toNumberOrNull(gameState?.game?.currentTurn);
+	}, [gameState]);
 
 	const currentPlayerId = useMemo(() => {
 		if (typeof actionsPayload?.playerId === "number") return actionsPayload.playerId;
@@ -654,6 +1008,49 @@ export default function PlayerGamePageV2() {
 	const isFinishedPhase =
 		normalizedStatus === "ENDED" || normalizedLifecyclePhase.includes("finish");
 	const shouldStopLiveUpdates = isFinishedPhase || gameEndedSignalReceived;
+	const currentTurnNumber = toNumberOrNull(gameState?.game?.currentTurn);
+	const livePhaseAppliesToCurrentTurn =
+		livePhaseSignal.turn === null ||
+		currentTurnNumber === null ||
+		livePhaseSignal.turn === currentTurnNumber;
+	const livePhaseName = livePhaseSignal.phase?.toLowerCase() ?? null;
+	const normalizedTurnPhaseKey = normalizedTurnPhase.toLowerCase();
+	const livePhaseEndedCurrentWindow =
+		livePhaseAppliesToCurrentTurn &&
+		livePhaseSignal.phaseOpen === false &&
+		(livePhaseSignal.eventType === "PHASE_ENDED" ||
+			livePhaseSignal.eventType === "VOTING_ENDED") &&
+		(livePhaseSignal.eventType === "VOTING_ENDED" ||
+			livePhaseName === normalizedTurnPhaseKey ||
+			(livePhaseName === null && normalizedTurnPhaseKey === "voting"));
+	const isSelectionWindowOpen =
+		(isSelectionPhase && !livePhaseEndedCurrentWindow) ||
+		(livePhaseAppliesToCurrentTurn &&
+			livePhaseName === "selection" &&
+			livePhaseSignal.phaseOpen !== false);
+	const isGovernmentSelectionWindowOpen =
+		(isGovernmentPhase && !livePhaseEndedCurrentWindow) ||
+		(livePhaseAppliesToCurrentTurn &&
+			livePhaseName === "government_selection" &&
+			livePhaseSignal.phaseOpen !== false);
+	const isVotingWindowOpen =
+		(isVotingPhase &&
+			!(livePhaseAppliesToCurrentTurn && livePhaseSignal.votingOpen === false)) ||
+		(livePhaseAppliesToCurrentTurn && livePhaseSignal.votingOpen === true);
+	const canEditChoices =
+		!shouldStopLiveUpdates &&
+		(isSelectionWindowOpen || isGovernmentSelectionWindowOpen || isVotingWindowOpen);
+	const livePhaseGuidance = (() => {
+		if (shouldStopLiveUpdates) return "بازی پایان یافته است و ثبت رأی جدید بسته شده است.";
+		if (isVotingWindowOpen) return "رأی‌گیری فعال است؛ رأی خود را پیش از پایان مهلت ثبت کنید.";
+		if (isSelectionWindowOpen) return "مرحله انتخاب هدف فعال است؛ ابتدا هدف را ثبت کنید.";
+		if (isGovernmentSelectionWindowOpen) return "مرحله انتخاب دولت فعال است؛ مداخله دولت را ثبت کنید.";
+		if (livePhaseEndedCurrentWindow && livePhaseSignal.reason) {
+			return `این پنجره با وضعیت ${translateEventReason(livePhaseSignal.reason)} بسته شده است.`;
+		}
+		if (normalizedTurnPhase === "CALCULATION") return "نتیجه نوبت در حال محاسبه است؛ ثبت رأی بسته است.";
+		return "در مرحله فعلی امکان ثبت رأی وجود ندارد.";
+	})();
 
 	const chatStorageKey = useMemo(() => {
 		if (!activeGameId || currentTeamId === null) return null;
@@ -865,6 +1262,33 @@ export default function PlayerGamePageV2() {
 		[playGameNotificationSound, playUiSound],
 	);
 
+	const showLiveToast = useCallback(
+		(notice: { key: string; tone: ToastTone; title: string; description?: string }) => {
+			const now = Date.now();
+			for (const [key, timestamp] of toastHistoryRef.current.entries()) {
+				if (now - timestamp > 5000) {
+					toastHistoryRef.current.delete(key);
+				}
+			}
+
+			const previous = toastHistoryRef.current.get(notice.key);
+			if (previous && now - previous < 5000) return;
+			toastHistoryRef.current.set(notice.key, now);
+
+			const options = notice.description ? { description: notice.description } : undefined;
+			if (notice.tone === "success") {
+				toast.success(notice.title, options);
+			} else if (notice.tone === "warning") {
+				toast.warning(notice.title, options);
+			} else if (notice.tone === "error") {
+				toast.error(notice.title, options);
+			} else {
+				toast.info(notice.title, options);
+			}
+		},
+		[],
+	);
+//Server & Game Control
 	const submitVoteAction = useCallback(async () => {
 		if (!token || !BASE_URL) return;
 		if (shouldStopLiveUpdates) {
@@ -875,9 +1299,14 @@ export default function PlayerGamePageV2() {
 			setVoteError("شما هنوز به تیمی اختصاص داده نشده‌اید.");
 			return;
 		}
+		if (!isSelectionWindowOpen && !isGovernmentSelectionWindowOpen && !isVotingWindowOpen) {
+			setVoteError(livePhaseGuidance);
+			return;
+		}
 
 		const payload: Record<string, unknown> = {};
-		if (isSelectionPhase) {
+		const submitSelectionOnly = isSelectionWindowOpen && !isGovernmentSelectionWindowOpen && !isVotingWindowOpen;
+		if (submitSelectionOnly) {
 			if (selectedTargetTeamId === null) {
 				setVoteError("در مرحله انتخاب، باید یک هدف انتخاب کنید.");
 				return;
@@ -939,14 +1368,14 @@ export default function PlayerGamePageV2() {
 
 			const message = extractMessageFromUnknown(
 				responseBody,
-				isSelectionPhase ? "انتخاب هدف با موفقیت ثبت شد." : "رأی شما با موفقیت ثبت شد.",
+				submitSelectionOnly ? "انتخاب هدف با موفقیت ثبت شد." : "رأی شما با موفقیت ثبت شد.",
 			);
 			setVoteStatus(message);
 			void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.5);
 
 			setVisualEvents((prev) => {
 				const localEvent = buildVisualEvent(
-					isSelectionPhase ? "TEAM_TARGET_SELECTED_LOCAL" : "VOTE_SUBMITTED_LOCAL",
+					submitSelectionOnly ? "TEAM_TARGET_SELECTED_LOCAL" : "VOTE_SUBMITTED_LOCAL",
 					{ data: { message, payload } },
 					Date.now(),
 				);
@@ -967,7 +1396,10 @@ export default function PlayerGamePageV2() {
 	}, [
 		token,
 		currentTeamId,
-		isSelectionPhase,
+		isGovernmentSelectionWindowOpen,
+		isSelectionWindowOpen,
+		isVotingWindowOpen,
+		livePhaseGuidance,
 		shouldStopLiveUpdates,
 		selectedTargetTeamId,
 		selectedActionId,
@@ -1194,6 +1626,7 @@ export default function PlayerGamePageV2() {
 		const handleSseEvent = (eventType: string, rawData: string, eventId: string | null) => {
 			const normalizedEventType = (eventType || "message").toUpperCase();
 			const payload = parseSsePayload(rawData);
+			const resolvedEventType = resolveEventType(normalizedEventType, payload);
 			const receivedAt = Date.now();
 			const fromPayload = extractSinceFromPayload(payload, streamSinceRef.current);
 			const fromEventId = toNumberOrNull(eventId);
@@ -1203,26 +1636,57 @@ export default function PlayerGamePageV2() {
 				fromEventId ?? 0,
 			);
 
+			if (isActionRejectedEvent(normalizedEventType, payload)) {
+				const description = buildActionRejectedDescription(payload);
+				showLiveToast({
+					key: `${resolvedEventType}:${description}`,
+					tone: "error",
+					title: "عملیات رد شد",
+					description,
+				});
+				setVoteError(description);
+				setVoteStatus(null);
+				return;
+			}
+
+			const phaseUpdate = buildLivePhaseUpdate(
+				normalizedEventType,
+				payload,
+				currentTurnRef.current,
+			);
+			if (phaseUpdate) {
+				setLivePhaseSignal((previous) => ({
+					...previous,
+					...phaseUpdate.next,
+					phase:
+						phaseUpdate.next.phase === null || phaseUpdate.next.phase === undefined
+							? previous.phase
+							: phaseUpdate.next.phase,
+					updatedAt: receivedAt,
+				}));
+				if (phaseUpdate.toast) showLiveToast(phaseUpdate.toast);
+			}
+
 			if (isSilentSseEvent(normalizedEventType, payload)) return;
 
 			setSseEvents((prev) => {
 				const next: SseLogEvent = {
 					id: `${receivedAt}-${Math.random().toString(36).slice(2, 8)}`,
 					receivedAt,
-					eventType: normalizedEventType || "message",
+					eventType: resolvedEventType || "message",
 					payload,
 				};
 				return [next, ...prev].slice(0, MAX_EVENTS);
 			});
 
 			setVisualEvents((prev) => {
-				const visual = buildVisualEvent(normalizedEventType || "message", payload, receivedAt);
+				const visual = buildVisualEvent(resolvedEventType || "message", payload, receivedAt);
 				return [visual, ...prev].slice(0, MAX_EVENTS);
 			});
 
-			playEventSound(normalizedEventType || "message");
+			playEventSound(resolvedEventType || "message");
 
-			if (normalizedEventType.includes("GAME_ENDED")) {
+			if (resolvedEventType.includes("GAME_ENDED")) {
 				setGameEndedSignalReceived(true);
 				setVoteStatus("بازی پایان یافت. نتیجه نهایی اعلام شد.");
 				setVoteError(null);
@@ -1383,6 +1847,7 @@ export default function PlayerGamePageV2() {
 		playEventSound,
 		refreshAll,
 		scheduleRefreshFromSse,
+		showLiveToast,
 		logoutAndRedirect,
 	]);
 
@@ -1429,10 +1894,15 @@ export default function PlayerGamePageV2() {
 	const actions = actionsPayload?.actions ?? [];
 	const targets = targetsPayload?.targets ?? [];
 	const blackMarketItems = gameState?.blackMarketItems ?? [];
-	const canSubmitSelection = !isGameLocked && isSelectionPhase && selectedTargetTeamId !== null;
+	const canSubmitSelection =
+		!isGameLocked && isSelectionWindowOpen && selectedTargetTeamId !== null;
 	const canSubmitVoting =
-		!isGameLocked && (isVotingPhase || isGovernmentPhase) && selectedActionId !== null;
-	const canSubmitVote = isSelectionPhase ? canSubmitSelection : canSubmitVoting;
+		!isGameLocked &&
+		(isVotingWindowOpen || isGovernmentSelectionWindowOpen) &&
+		selectedActionId !== null;
+	const isSubmittingSelectionOnly =
+		isSelectionWindowOpen && !isVotingWindowOpen && !isGovernmentSelectionWindowOpen;
+	const canSubmitVote = isSubmittingSelectionOnly ? canSubmitSelection : canSubmitVoting;
 
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_12%_15%,rgba(14,116,144,0.26),transparent_35%),radial-gradient(circle_at_86%_12%,rgba(185,28,28,0.25),transparent_36%),linear-gradient(120deg,#030712_0%,#0b1220_42%,#020617_100%)] text-slate-100">
@@ -1462,7 +1932,7 @@ export default function PlayerGamePageV2() {
 										: "border-emerald-500/60 text-emerald-200 bg-emerald-950/30"
 								}
 							>
-								مرحله: {phase}
+								مرحله: {translatePhaseName(phase)}
 							</Badge>
 							<Button
 								asChild
@@ -1615,6 +2085,15 @@ export default function PlayerGamePageV2() {
 										<div>2. با دکمه ثبت، رأی خود را برای بازی ارسال کنید.</div>
 										<div>3. رویدادهای زنده و اعلان‌های صوتی را دنبال کنید.</div>
 									</div>
+									<div
+										className={`rounded border px-3 py-2 text-xs ${
+											isVotingWindowOpen || isSelectionWindowOpen || isGovernmentSelectionWindowOpen
+												? "border-cyan-500/45 bg-cyan-950/25 text-cyan-100"
+												: "border-amber-500/45 bg-amber-950/25 text-amber-100"
+										}`}
+									>
+										{livePhaseGuidance}
+									</div>
 
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 										<div className="rounded border border-slate-700/80 bg-slate-900/80 px-3 py-2">
@@ -1654,32 +2133,32 @@ export default function PlayerGamePageV2() {
 											) : (
 												<Send className="w-4 h-4 ml-2" />
 											)}
-											{isSelectionPhase ? "ثبت انتخاب هدف" : "ثبت رأی"}
+											{isSubmittingSelectionOnly ? "ثبت انتخاب هدف" : "ثبت رأی"}
 										</Button>
 											<Button
 												variant="outline"
 												onClick={() => {
-													if (isGameLocked) return;
+													if (isGameLocked || !canEditChoices) return;
 													setSelectedActionId(null);
 													setSelectedTargetTeamId(null);
 													setSelectedBlackMarketItemId(null);
 													setVoteError(null);
 													setVoteStatus(null);
 												}}
-												disabled={isGameLocked}
+												disabled={isGameLocked || !canEditChoices}
 												className="border-slate-600 text-slate-200"
 											>
 											پاک‌سازی انتخاب‌ها
 										</Button>
 										<span className="text-xs text-slate-400">
 											مرحله فعلی:{" "}
-											{isGovernmentPhase
+											{isGovernmentSelectionWindowOpen
 												? "انتخاب دولت"
-												: isSelectionPhase
+												: isSelectionWindowOpen
 													? "انتخاب هدف"
-													: isVotingPhase
+													: isVotingWindowOpen
 														? "رأی‌گیری"
-														: phase}
+														: translatePhaseName(phase)}
 										</span>
 									</div>
 								</CardContent>
@@ -1704,13 +2183,13 @@ export default function PlayerGamePageV2() {
 														<button
 															type="button"
 															key={action.id}
-															disabled={isGameLocked}
+															disabled={!canEditChoices}
 															onClick={() => {
-																if (isGameLocked) return;
+																if (!canEditChoices) return;
 																setSelectedActionId(action.id);
 																void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
 															}}
-															className={`text-right rounded-xl border p-4 transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : "hover:scale-[1.01]"} ${isSelected ? "border-rose-400 bg-rose-950/25 shadow-[0_0_18px_rgba(244,63,94,.22)]" : "border-slate-700/90 bg-gradient-to-br from-slate-900 to-slate-950"}`}
+															className={`text-right rounded-xl border p-4 transition-all ${!canEditChoices ? "opacity-55 cursor-not-allowed" : "hover:scale-[1.01]"} ${isSelected ? "border-rose-400 bg-rose-950/25 shadow-[0_0_18px_rgba(244,63,94,.22)]" : "border-slate-700/90 bg-gradient-to-br from-slate-900 to-slate-950"}`}
 														>
 														<div className="flex items-center justify-between gap-2">
 															<div className="font-semibold text-slate-100">{action.displayName ?? action.name}</div>
@@ -1759,13 +2238,13 @@ export default function PlayerGamePageV2() {
 														<button
 															type="button"
 															key={targetItem.id}
-															disabled={isGameLocked}
+															disabled={!canEditChoices}
 															onClick={() => {
-																if (isGameLocked) return;
+																if (!canEditChoices) return;
 																setSelectedTargetTeamId(targetItem.id);
 																void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.4);
 															}}
-															className={`text-right rounded-xl border p-4 transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-emerald-400 bg-emerald-950/20 shadow-[0_0_18px_rgba(16,185,129,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
+															className={`text-right rounded-xl border p-4 transition-all ${!canEditChoices ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-emerald-400 bg-emerald-950/20 shadow-[0_0_18px_rgba(16,185,129,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
 														>
 														<div className="font-semibold text-slate-100">{targetItem.name}</div>
 														<div className="text-xs text-slate-400 mt-1">
@@ -1802,13 +2281,13 @@ export default function PlayerGamePageV2() {
 													<button
 														type="button"
 														key={item.id}
-														disabled={isGameLocked}
+														disabled={!canEditChoices}
 														onClick={() => {
-															if (isGameLocked) return;
+															if (!canEditChoices) return;
 															setSelectedBlackMarketItemId((prev) => (prev === item.id ? null : item.id));
 															void playUiSound("/sounds/computer-mouse-click-351398.mp3", 0.38);
 														}}
-														className={`w-full text-right rounded-lg border p-3 text-sm transition-all ${isGameLocked ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-violet-400 bg-violet-950/25 shadow-[0_0_16px_rgba(139,92,246,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
+														className={`w-full text-right rounded-lg border p-3 text-sm transition-all ${!canEditChoices ? "opacity-55 cursor-not-allowed" : ""} ${isSelected ? "border-violet-400 bg-violet-950/25 shadow-[0_0_16px_rgba(139,92,246,.2)]" : "border-slate-700/80 bg-slate-900/70"}`}
 													>
 													<div className="font-semibold text-slate-100">{item.name}</div>
 													<div className="text-xs text-slate-300 mt-1">
@@ -1919,7 +2398,22 @@ export default function PlayerGamePageV2() {
 															<span className="text-slate-400">{new Date(event.receivedAt).toLocaleTimeString("fa-IR")}</span>
 														</div>
 														<div className="text-slate-300">{event.description}</div>
-														<div className="mt-1 text-[11px] text-slate-500">{event.eventType}</div>
+														{event.details.length > 0 ? (
+															<div className="mt-2 flex flex-wrap gap-1">
+																{event.details.map((detail) => (
+																	<span
+																		key={detail}
+																		className="rounded border border-slate-700/70 bg-slate-950/50 px-2 py-0.5 text-[11px] text-slate-300"
+																	>
+																		{detail}
+																	</span>
+																))}
+															</div>
+														) : null}
+														<div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-slate-500">
+															<span dir="ltr">{event.eventType}</span>
+															{event.eventTypeLabel ? <span>({event.eventTypeLabel})</span> : null}
+														</div>
 													</div>
 												))}
 											</div>
@@ -1930,8 +2424,8 @@ export default function PlayerGamePageV2() {
 										<div className="mt-2 space-y-2 max-h-40 overflow-auto">
 											{sseEvents.slice(0, 12).map((event) => (
 												<div key={`raw-${event.id}`} className="rounded border border-slate-700/70 p-2 text-[11px] text-slate-200">
-													<div className="text-slate-400 mb-1">{event.eventType}</div>
-													<pre className="whitespace-pre-wrap">{JSON.stringify(event.payload, null, 2)}</pre>
+													<div className="text-slate-400 mb-1" dir="ltr">{event.eventType}</div>
+													<pre className="whitespace-pre-wrap text-left" dir="ltr">{JSON.stringify(event.payload, null, 2)}</pre>
 												</div>
 											))}
 										</div>

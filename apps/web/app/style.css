@@ -1,3 +1,8 @@
+html,
+body {
+	direction: rtl;
+}
+
 body {
 	font-family: var(--font-vazir), var(--font-vazir-local), sans-serif;
 }

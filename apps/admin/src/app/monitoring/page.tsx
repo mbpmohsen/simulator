@@ -3,7 +3,12 @@
 import { createGameServerApi, type DirectiveConfig } from "@workspace/trpc";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@workspace/ui/components/card";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
@@ -48,7 +53,8 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
+const BASE_URL =
+	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
 const ADMIN_TOKEN_STORAGE_KEY = "simulator-admin-token";
 const POLL_INTERVAL_MS = 6000;
 const MAX_EVENTS = 160;
@@ -103,16 +109,23 @@ const asRecord = (value: unknown): Record<string, unknown> | null => {
 	return value as Record<string, unknown>;
 };
 
-const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+const asArray = (value: unknown): unknown[] =>
+	Array.isArray(value) ? value : [];
 
-const getString = (record: Record<string, unknown> | null, key: string): string | null => {
+const getString = (
+	record: Record<string, unknown> | null,
+	key: string,
+): string | null => {
 	const value = record?.[key];
 	if (typeof value === "string" && value.trim()) return value;
 	if (typeof value === "number" && Number.isFinite(value)) return String(value);
 	return null;
 };
 
-const getNumber = (record: Record<string, unknown> | null, key: string): number | null => {
+const getNumber = (
+	record: Record<string, unknown> | null,
+	key: string,
+): number | null => {
 	const value = record?.[key];
 	if (typeof value === "number" && Number.isFinite(value)) return value;
 	if (typeof value === "string" && value.trim()) {
@@ -122,7 +135,10 @@ const getNumber = (record: Record<string, unknown> | null, key: string): number 
 	return null;
 };
 
-const getBoolean = (record: Record<string, unknown> | null, key: string): boolean | null => {
+const getBoolean = (
+	record: Record<string, unknown> | null,
+	key: string,
+): boolean | null => {
 	const value = record?.[key];
 	return typeof value === "boolean" ? value : null;
 };
@@ -142,8 +158,10 @@ const resolveApiErrorMessage = (error: unknown, fallback: string): string => {
 	if (typeof detail === "string" && detail.trim()) return detail;
 	const nestedDetail = asRecord(detail);
 	if (typeof nestedDetail?.message === "string") return nestedDetail.message;
-	if (typeof data?.message === "string" && data.message.trim()) return data.message;
-	if (typeof record?.message === "string" && record.message.trim()) return record.message;
+	if (typeof data?.message === "string" && data.message.trim())
+		return data.message;
+	if (typeof record?.message === "string" && record.message.trim())
+		return record.message;
 	return fallback;
 };
 
@@ -154,10 +172,10 @@ const normalizeGameId = (value: unknown): string | null => {
 };
 
 const formatDateTime = (value: string | undefined): string => {
-	if (!value) return "pending";
+	if (!value) return "در انتظار";
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) return value;
-	return new Intl.DateTimeFormat("en", {
+	return new Intl.DateTimeFormat("fa-IR", {
 		hour: "2-digit",
 		minute: "2-digit",
 		second: "2-digit",
@@ -168,16 +186,32 @@ const formatDateTime = (value: string | undefined): string => {
 
 const eventTone = (type: string): Tone => {
 	const upper = type.toUpperCase();
-	if (upper.includes("REJECT") || upper.includes("FAILED") || upper.includes("DISCONNECTED")) {
+	if (
+		upper.includes("REJECT") ||
+		upper.includes("FAILED") ||
+		upper.includes("DISCONNECTED")
+	) {
 		return "danger";
 	}
-	if (upper.includes("ALERT") || upper.includes("BANNED") || upper.includes("RESET")) {
+	if (
+		upper.includes("ALERT") ||
+		upper.includes("BANNED") ||
+		upper.includes("RESET")
+	) {
 		return "warning";
 	}
-	if (upper.includes("READY") || upper.includes("STARTED") || upper.includes("UPDATED")) {
+	if (
+		upper.includes("READY") ||
+		upper.includes("STARTED") ||
+		upper.includes("UPDATED")
+	) {
 		return "success";
 	}
-	if (upper.includes("VOTE") || upper.includes("ATTACK") || upper.includes("GOVERNMENT")) {
+	if (
+		upper.includes("VOTE") ||
+		upper.includes("ATTACK") ||
+		upper.includes("GOVERNMENT")
+	) {
 		return "info";
 	}
 	return "neutral";
@@ -198,7 +232,10 @@ const toneClass = (tone: Tone): string => {
 	}
 };
 
-const parseEvent = (value: unknown, fallbackType = "MESSAGE"): MonitoringEvent | null => {
+const parseEvent = (
+	value: unknown,
+	fallbackType = "MESSAGE",
+): MonitoringEvent | null => {
 	const record = asRecord(value);
 	if (!record) return null;
 	const seq = getNumber(record, "seq") ?? getNumber(record, "id") ?? Date.now();
@@ -217,12 +254,18 @@ const parseEvent = (value: unknown, fallbackType = "MESSAGE"): MonitoringEvent |
 				}
 			: undefined,
 		payload: asRecord(record.payload) ?? record,
-		createdAt: getString(record, "createdAt") ?? getString(record, "created_at") ?? undefined,
+		createdAt:
+			getString(record, "createdAt") ??
+			getString(record, "created_at") ??
+			undefined,
 		schemaVersion: getNumber(record, "schemaVersion") ?? undefined,
 	};
 };
 
-const parseSseData = (rawData: string, eventType: string): MonitoringEvent | null => {
+const parseSseData = (
+	rawData: string,
+	eventType: string,
+): MonitoringEvent | null => {
 	try {
 		const parsed = JSON.parse(rawData) as unknown;
 		return parseEvent(parsed, eventType);
@@ -239,7 +282,14 @@ const parseSseData = (rawData: string, eventType: string): MonitoringEvent | nul
 
 const eventSummary = (event: MonitoringEvent): string => {
 	const payload = event.payload;
-	for (const key of ["message", "detail", "reason", "action", "actionName", "teamName"]) {
+	for (const key of [
+		"message",
+		"detail",
+		"reason",
+		"action",
+		"actionName",
+		"teamName",
+	]) {
 		const value = payload[key];
 		if (typeof value === "string" && value.trim()) return value;
 	}
@@ -256,7 +306,14 @@ const directiveFromRecord = (value: unknown): DirectiveConfig | null => {
 	const startTurn = getNumber(record, "start_turn");
 	const duration = getNumber(record, "duration");
 	const directiveValue = getNumber(record, "value");
-	if (!name || !effectType || !targetAction || !targetActionType || !startTurn || !duration) {
+	if (
+		!name ||
+		!effectType ||
+		!targetAction ||
+		!targetActionType ||
+		!startTurn ||
+		!duration
+	) {
 		return null;
 	}
 	return {
@@ -270,14 +327,19 @@ const directiveFromRecord = (value: unknown): DirectiveConfig | null => {
 		duration,
 		modifier_type: getString(record, "modifier_type") ?? "increase",
 		affected_sides: Array.isArray(record.affected_sides)
-			? record.affected_sides.filter((item): item is string => typeof item === "string")
+			? record.affected_sides.filter(
+					(item): item is string => typeof item === "string",
+				)
 			: null,
 		limit_type: getString(record, "limit_type"),
 		limit_value: getNumber(record, "limit_value"),
 	};
 };
 
-const extractDirectives = (response: unknown, key: "directives" | "activeDirectives"): DirectiveConfig[] => {
+const extractDirectives = (
+	response: unknown,
+	key: "directives" | "activeDirectives",
+): DirectiveConfig[] => {
 	const data = unwrapData<Record<string, unknown>>(response);
 	const collection = asArray(asRecord(data)?.[key]);
 	return collection
@@ -299,12 +361,16 @@ export default function AdminMonitoringPage() {
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [isAuthLoading, setIsAuthLoading] = useState(false);
 
-	const [gameState, setGameState] = useState<Record<string, unknown> | null>(null);
+	const [gameState, setGameState] = useState<Record<string, unknown> | null>(
+		null,
+	);
 	const [readiness, setReadiness] = useState<ReadinessStatus | null>(null);
 	const [eventStatus, setEventStatus] = useState<EventStatus | null>(null);
 	const [events, setEvents] = useState<MonitoringEvent[]>([]);
 	const [directives, setDirectives] = useState<DirectiveConfig[]>([]);
-	const [activeDirectives, setActiveDirectives] = useState<DirectiveConfig[]>([]);
+	const [activeDirectives, setActiveDirectives] = useState<DirectiveConfig[]>(
+		[],
+	);
 	const [isLoading, setIsLoading] = useState(false);
 	const [controlMessage, setControlMessage] = useState<string | null>(null);
 	const [controlError, setControlError] = useState<string | null>(null);
@@ -336,15 +402,26 @@ export default function AdminMonitoringPage() {
 
 	const game = asRecord(gameState?.game);
 	const gameId = normalizeGameId(game?.gameId) ?? normalizeGameId(game?.id);
-	const teams = asArray(gameState?.teams).map((item) => asRecord(item)).filter(Boolean);
-	const players = asArray(gameState?.players).map((item) => asRecord(item)).filter(Boolean);
-	const sides = asArray(gameState?.sides).map((item) => asRecord(item)).filter(Boolean);
-	const actions = asArray(gameState?.actions).map((item) => asRecord(item)).filter(Boolean);
+	const teams = asArray(gameState?.teams)
+		.map((item) => asRecord(item))
+		.filter(Boolean);
+	const players = asArray(gameState?.players)
+		.map((item) => asRecord(item))
+		.filter(Boolean);
+	const sides = asArray(gameState?.sides)
+		.map((item) => asRecord(item))
+		.filter(Boolean);
+	const actions = asArray(gameState?.actions)
+		.map((item) => asRecord(item))
+		.filter(Boolean);
 	const currentTurn = getNumber(game, "currentTurn") ?? 1;
 	const totalTurns = getNumber(game, "totalTurns") ?? 0;
 	const gameStatus = getString(game, "status") ?? "UNKNOWN";
-	const currentPhase = getString(game, "currentPhase") ?? getString(game, "phase") ?? "waiting";
-	const connectedPlayers = players.filter((player) => getBoolean(player, "connected") === true).length;
+	const currentPhase =
+		getString(game, "currentPhase") ?? getString(game, "phase") ?? "waiting";
+	const connectedPlayers = players.filter(
+		(player) => getBoolean(player, "connected") === true,
+	).length;
 	const readinessPercent =
 		readiness && readiness.totalAssigned > 0
 			? Math.round((readiness.totalPresent / readiness.totalAssigned) * 100)
@@ -357,7 +434,8 @@ export default function AdminMonitoringPage() {
 	const filteredEvents = useMemo(() => {
 		const query = eventSearch.trim().toLowerCase();
 		return events.filter((event) => {
-			if (eventTypeFilter !== "all" && event.type !== eventTypeFilter) return false;
+			if (eventTypeFilter !== "all" && event.type !== eventTypeFilter)
+				return false;
 			if (!query) return true;
 			return (
 				event.type.toLowerCase().includes(query) ||
@@ -382,14 +460,19 @@ export default function AdminMonitoringPage() {
 					normalizeGameId(nextGame?.gameId) ?? normalizeGameId(nextGame?.id);
 				if (!nextGameId) return;
 
-				const [readinessResult, statusResult, adminEventsResult, directivesResult, activeResult] =
-					await Promise.allSettled([
-						api.getReadiness(nextGameId),
-						api.getEventsStatus(nextGameId),
-						api.getEventsAdminAll(nextGameId, { limit: MAX_EVENTS }),
-						api.listDirectives(),
-						api.getActiveDirectives(),
-					]);
+				const [
+					readinessResult,
+					statusResult,
+					adminEventsResult,
+					directivesResult,
+					activeResult,
+				] = await Promise.allSettled([
+					api.getReadiness(nextGameId),
+					api.getEventsStatus(nextGameId),
+					api.getEventsAdminAll(nextGameId, { limit: MAX_EVENTS }),
+					api.listDirectives(),
+					api.getActiveDirectives(),
+				]);
 
 				if (readinessResult.status === "fulfilled") {
 					setReadiness(unwrapData<ReadinessStatus>(readinessResult.value));
@@ -404,19 +487,31 @@ export default function AdminMonitoringPage() {
 						for (const event of [...replayed, ...previous]) {
 							merged.set(event.seq, event);
 						}
-						const next = Array.from(merged.values()).sort((a, b) => b.seq - a.seq);
-						lastSeqRef.current = Math.max(lastSeqRef.current, ...next.map((event) => event.seq), 0);
+						const next = Array.from(merged.values()).sort(
+							(a, b) => b.seq - a.seq,
+						);
+						lastSeqRef.current = Math.max(
+							lastSeqRef.current,
+							...next.map((event) => event.seq),
+							0,
+						);
 						return next.slice(0, MAX_EVENTS);
 					});
 				}
 				if (directivesResult.status === "fulfilled") {
-					setDirectives(extractDirectives(directivesResult.value, "directives"));
+					setDirectives(
+						extractDirectives(directivesResult.value, "directives"),
+					);
 				}
 				if (activeResult.status === "fulfilled") {
-					setActiveDirectives(extractDirectives(activeResult.value, "activeDirectives"));
+					setActiveDirectives(
+						extractDirectives(activeResult.value, "activeDirectives"),
+					);
 				}
 			} catch (error) {
-				setControlError(resolveApiErrorMessage(error, "Unable to refresh monitoring data."));
+				setControlError(
+					resolveApiErrorMessage(error, "داده‌های مانیتورینگ به‌روزرسانی نشد."),
+				);
 			} finally {
 				if (!background) setIsLoading(false);
 			}
@@ -452,15 +547,29 @@ export default function AdminMonitoringPage() {
 		let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 		let abortController: AbortController | null = null;
 
-		const handleSseEvent = (eventType: string, rawData: string, eventId: string | null) => {
+		const handleSseEvent = (
+			eventType: string,
+			rawData: string,
+			eventId: string | null,
+		) => {
 			const parsed = parseSseData(rawData, eventType);
 			if (!parsed) return;
 			const eventIdSeq = eventId ? Number(eventId) : Number.NaN;
-			const seq = Number.isFinite(eventIdSeq) ? Math.max(parsed.seq, eventIdSeq) : parsed.seq;
-			const event = { ...parsed, seq, type: parsed.type || eventType || "MESSAGE" };
+			const seq = Number.isFinite(eventIdSeq)
+				? Math.max(parsed.seq, eventIdSeq)
+				: parsed.seq;
+			const event = {
+				...parsed,
+				seq,
+				type: parsed.type || eventType || "MESSAGE",
+			};
 			lastSeqRef.current = Math.max(lastSeqRef.current, seq);
 			setEvents((previous) => {
-				if (previous.some((item) => item.seq === event.seq && item.type === event.type)) {
+				if (
+					previous.some(
+						(item) => item.seq === event.seq && item.type === event.type,
+					)
+				) {
 					return previous;
 				}
 				return [event, ...previous].slice(0, MAX_EVENTS);
@@ -472,7 +581,8 @@ export default function AdminMonitoringPage() {
 			try {
 				abortController = new AbortController();
 				const params = new URLSearchParams();
-				if (lastSeqRef.current > 0) params.set("since", String(lastSeqRef.current));
+				if (lastSeqRef.current > 0)
+					params.set("since", String(lastSeqRef.current));
 				const streamUrl = `${BASE_URL}/api/games/${encodeURIComponent(gameId)}/events/stream?${params.toString()}`;
 				const response = await fetch(streamUrl, {
 					method: "GET",
@@ -523,9 +633,13 @@ export default function AdminMonitoringPage() {
 						}
 						if (line.startsWith(":")) continue;
 						const separatorIndex = line.indexOf(":");
-						const field = separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
-						const rawValue = separatorIndex >= 0 ? line.slice(separatorIndex + 1) : "";
-						const fieldValue = rawValue.startsWith(" ") ? rawValue.slice(1) : rawValue;
+						const field =
+							separatorIndex >= 0 ? line.slice(0, separatorIndex) : line;
+						const rawValue =
+							separatorIndex >= 0 ? line.slice(separatorIndex + 1) : "";
+						const fieldValue = rawValue.startsWith(" ")
+							? rawValue.slice(1)
+							: rawValue;
 						if (field === "event") eventType = fieldValue || "message";
 						if (field === "id") eventId = fieldValue;
 						if (field === "data") dataLines.push(fieldValue);
@@ -534,7 +648,7 @@ export default function AdminMonitoringPage() {
 			} catch (error) {
 				if (cancelled) return;
 				setStreamConnected(false);
-				setStreamError(resolveApiErrorMessage(error, "Live stream disconnected."));
+				setStreamError(resolveApiErrorMessage(error, "جریان زنده قطع شد."));
 				reconnectTimer = setTimeout(connect, 3000);
 			}
 		};
@@ -553,16 +667,18 @@ export default function AdminMonitoringPage() {
 		setAuthError(null);
 		setIsAuthLoading(true);
 		try {
-			const result = await createGameServerApi({ baseURL: BASE_URL }).adminLogin({
+			const result = await createGameServerApi({
+				baseURL: BASE_URL,
+			}).adminLogin({
 				password: adminPassword,
 			});
 			const data = unwrapData<{ token?: string }>(result);
-			if (!data?.token) throw new Error("Admin token was not returned.");
+			if (!data?.token) throw new Error("توکن مدیر برگردانده نشد.");
 			localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
 			setAdminToken(data.token);
 			setAdminPassword("");
 		} catch (error) {
-			setAuthError(resolveApiErrorMessage(error, "Admin login failed."));
+			setAuthError(resolveApiErrorMessage(error, "ورود مدیر ناموفق بود."));
 		} finally {
 			setIsAuthLoading(false);
 		}
@@ -580,7 +696,10 @@ export default function AdminMonitoringPage() {
 		setStreamConnected(false);
 	};
 
-	const runControl = async (operation: () => Promise<unknown>, successMessage: string) => {
+	const runControl = async (
+		operation: () => Promise<unknown>,
+		successMessage: string,
+	) => {
 		setControlError(null);
 		setControlMessage(null);
 		try {
@@ -588,7 +707,9 @@ export default function AdminMonitoringPage() {
 			setControlMessage(successMessage);
 			await refreshAll();
 		} catch (error) {
-			setControlError(resolveApiErrorMessage(error, "Control action failed."));
+			setControlError(
+				resolveApiErrorMessage(error, "اجرای دستور کنترلی ناموفق بود."),
+			);
 		}
 	};
 
@@ -597,8 +718,12 @@ export default function AdminMonitoringPage() {
 		const nextStartTurn = Number(startTurn);
 		const nextDuration = Number(duration);
 		const nextValue = Number(directiveValue);
-		if (!directiveName.trim() || !Number.isFinite(nextStartTurn) || !Number.isFinite(nextDuration)) {
-			setControlError("Directive name, start turn, and duration are required.");
+		if (
+			!directiveName.trim() ||
+			!Number.isFinite(nextStartTurn) ||
+			!Number.isFinite(nextDuration)
+		) {
+			setControlError("نام دستور، نوبت شروع و مدت الزامی هستند.");
 			return;
 		}
 		const directive: DirectiveConfig = {
@@ -620,7 +745,7 @@ export default function AdminMonitoringPage() {
 
 		await runControl(
 			() => api.addDirectives({ directives: [directive] }),
-			`Directive "${directive.name}" added.`,
+			`دستور "${directive.name}" اضافه شد.`,
 		);
 	};
 
@@ -639,42 +764,59 @@ export default function AdminMonitoringPage() {
 			<div className="mx-auto max-w-[1680px] px-4 py-5 md:px-7">
 				<header className="flex flex-col gap-4 border-b border-slate-800 pb-5 lg:flex-row lg:items-center lg:justify-between">
 					<div>
-						<div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-300">
+						<div className="flex items-center gap-2 text-xs text-cyan-300">
 							<LayoutDashboard className="h-4 w-4" />
-							Admin monitoring
+							مانیتورینگ مدیر
 						</div>
 						<h1 className="mt-2 text-2xl font-black tracking-tight md:text-4xl">
-							Game Operations Console
+							کنسول عملیات بازی
 						</h1>
 						<div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-300">
-							<Badge variant="outline" className="border-slate-600 bg-slate-950/50 text-slate-200">
+							<Badge
+								variant="outline"
+								className="border-slate-600 bg-slate-950/50 text-slate-200"
+								dir="ltr"
+							>
 								{BASE_URL}
 							</Badge>
-							<Badge variant="outline" className="border-cyan-600/70 bg-cyan-950/30 text-cyan-100">
-								Game {gameId ?? "not configured"}
+							<Badge
+								variant="outline"
+								className="border-cyan-600/70 bg-cyan-950/30 text-cyan-100"
+							>
+								بازی <span dir="ltr">{gameId ?? "پیکربندی نشده"}</span>
 							</Badge>
 						</div>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-							<Button asChild variant="outline" className="border-slate-600 bg-slate-950/30 text-slate-100">
-								<Link href="/configuration">
-									<SlidersHorizontal className="h-4 w-4" />
-									Configuration
-								</Link>
-							</Button>
-							<Button asChild variant="outline" className="border-emerald-600 bg-emerald-950/30 text-emerald-100">
-								<Link href="/analytics">
-									<BarChart3 className="h-4 w-4" />
-									Analytics
-								</Link>
-							</Button>
-							<Button
-								onClick={() => void refreshAll()}
-								disabled={!api || isLoading}
+						<Button
+							asChild
+							variant="outline"
+							className="border-slate-600 bg-slate-950/30 text-slate-100"
+						>
+							<Link href="/configuration">
+								<SlidersHorizontal className="h-4 w-4" />
+								پیکربندی
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="outline"
+							className="border-emerald-600 bg-emerald-950/30 text-emerald-100"
+						>
+							<Link href="/analytics">
+								<BarChart3 className="h-4 w-4" />
+								آنالیتیکس
+							</Link>
+						</Button>
+						<Button
+							onClick={() => void refreshAll()}
+							disabled={!api || isLoading}
 							className="bg-cyan-700 text-white hover:bg-cyan-600"
 						>
-							<RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-							Refresh
+							<RefreshCw
+								className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+							/>
+							به‌روزرسانی
 						</Button>
 					</div>
 				</header>
@@ -683,7 +825,7 @@ export default function AdminMonitoringPage() {
 					<div className="rounded-lg border border-slate-800 bg-slate-950/65 p-3">
 						<div className="flex items-center gap-2 text-xs text-slate-400">
 							<Gauge className="h-4 w-4 text-cyan-300" />
-							Status
+							وضعیت
 						</div>
 						<div className="mt-2 text-xl font-semibold">{gameStatus}</div>
 						<div className="mt-1 text-xs text-slate-400">{currentPhase}</div>
@@ -691,40 +833,55 @@ export default function AdminMonitoringPage() {
 					<div className="rounded-lg border border-slate-800 bg-slate-950/65 p-3">
 						<div className="flex items-center gap-2 text-xs text-slate-400">
 							<FileClock className="h-4 w-4 text-amber-300" />
-							Turn
+							نوبت
 						</div>
 						<div className="mt-2 text-xl font-semibold">
 							{currentTurn} / {totalTurns || "-"}
 						</div>
-						<div className="mt-1 text-xs text-slate-400">Threshold {pointThreshold || "-"}</div>
+						<div className="mt-1 text-xs text-slate-400">
+							آستانه {pointThreshold || "-"}
+						</div>
 					</div>
 					<div className="rounded-lg border border-slate-800 bg-slate-950/65 p-3">
 						<div className="flex items-center gap-2 text-xs text-slate-400">
 							<Users className="h-4 w-4 text-emerald-300" />
-							Readiness
+							آمادگی
 						</div>
 						<div className="mt-2 text-xl font-semibold">
-							{readiness?.totalPresent ?? connectedPlayers} / {readiness?.totalAssigned ?? players.length}
+							{readiness?.totalPresent ?? connectedPlayers} /{" "}
+							{readiness?.totalAssigned ?? players.length}
 						</div>
 						<Progress value={readinessPercent} className="mt-2 bg-slate-800" />
 					</div>
 					<div className="rounded-lg border border-slate-800 bg-slate-950/65 p-3">
 						<div className="flex items-center gap-2 text-xs text-slate-400">
-							<Radio className={streamConnected ? "h-4 w-4 text-emerald-300" : "h-4 w-4 text-amber-300"} />
-							Live stream
+							<Radio
+								className={
+									streamConnected
+										? "h-4 w-4 text-emerald-300"
+										: "h-4 w-4 text-amber-300"
+								}
+							/>
+							جریان زنده
 						</div>
 						<div className="mt-2 text-xl font-semibold">
-							{streamConnected ? "Connected" : "Waiting"}
+							{streamConnected ? "متصل" : "در انتظار"}
 						</div>
-						<div className="mt-1 text-xs text-slate-400">Seq {eventStatus?.currentSeq ?? lastSeqRef.current}</div>
+						<div className="mt-1 text-xs text-slate-400" dir="ltr">
+							Seq {eventStatus?.currentSeq ?? lastSeqRef.current}
+						</div>
 					</div>
 					<div className="rounded-lg border border-slate-800 bg-slate-950/65 p-3">
 						<div className="flex items-center gap-2 text-xs text-slate-400">
 							<Activity className="h-4 w-4 text-violet-300" />
-							Activity
+							فعالیت
 						</div>
-						<div className="mt-2 text-xl font-semibold">{eventStatus?.eventCount ?? events.length}</div>
-						<div className="mt-1 text-xs text-slate-400">{activeDirectives.length} active directives</div>
+						<div className="mt-2 text-xl font-semibold">
+							{eventStatus?.eventCount ?? events.length}
+						</div>
+						<div className="mt-1 text-xs text-slate-400">
+							{activeDirectives.length} دستور فعال
+						</div>
 					</div>
 				</section>
 
@@ -760,22 +917,27 @@ export default function AdminMonitoringPage() {
 								<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 									<CardTitle className="flex items-center gap-2 text-base text-cyan-100">
 										<History className="h-4 w-4" />
-										Event Feed
+										جریان رویدادها
 									</CardTitle>
 									<div className="flex flex-wrap items-center gap-2">
 										<div className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs">
 											<Checkbox
 												checked={autoRefresh}
-												onCheckedChange={(checked) => setAutoRefresh(checked === true)}
+												onCheckedChange={(checked) =>
+													setAutoRefresh(checked === true)
+												}
 											/>
-											<span>Live</span>
+											<span>زنده</span>
 										</div>
-										<Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
+										<Select
+											value={eventTypeFilter}
+											onValueChange={setEventTypeFilter}
+										>
 											<SelectTrigger className="w-[180px] border-slate-700 bg-slate-900/80 text-slate-100">
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent className="border-slate-700 bg-slate-950 text-slate-100">
-												<SelectItem value="all">All event types</SelectItem>
+												<SelectItem value="all">همه نوع‌های رویداد</SelectItem>
 												{eventTypes.map((type) => (
 													<SelectItem key={type} value={type}>
 														{type}
@@ -788,7 +950,7 @@ export default function AdminMonitoringPage() {
 											<Input
 												value={eventSearch}
 												onChange={(event) => setEventSearch(event.target.value)}
-												placeholder="Filter events"
+												placeholder="فیلتر رویدادها"
 												className="w-[210px] border-slate-700 bg-slate-900/80 pl-9 text-slate-100"
 											/>
 										</div>
@@ -800,7 +962,7 @@ export default function AdminMonitoringPage() {
 									<div className="space-y-2">
 										{filteredEvents.length === 0 ? (
 											<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5 text-sm text-slate-400">
-												No events available.
+												رویدادی در دسترس نیست.
 											</div>
 										) : null}
 										{filteredEvents.map((event) => {
@@ -813,19 +975,35 @@ export default function AdminMonitoringPage() {
 													<div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
 														<div className="min-w-0">
 															<div className="flex flex-wrap items-center gap-2">
-																<Badge variant="outline" className="border-current bg-black/20 text-current">
+																<Badge
+																	variant="outline"
+																	className="border-current bg-black/20 text-current"
+																>
 																	#{event.seq}
 																</Badge>
-																<div className="font-mono text-sm font-semibold">{event.type}</div>
+																<div
+																	className="font-mono text-sm font-semibold"
+																	dir="ltr"
+																>
+																	{event.type}
+																</div>
 																{event.visibility?.scope ? (
-																	<Badge variant="outline" className="border-slate-600 bg-slate-950/40 text-slate-200">
+																	<Badge
+																		variant="outline"
+																		className="border-slate-600 bg-slate-950/40 text-slate-200"
+																	>
 																		{event.visibility.scope}
 																	</Badge>
 																) : null}
 															</div>
-															<div className="mt-2 text-sm text-slate-200/90">{eventSummary(event)}</div>
+															<div className="mt-2 text-sm text-slate-200/90">
+																{eventSummary(event)}
+															</div>
 														</div>
-														<div className="shrink-0 text-left font-mono text-xs text-slate-400">
+														<div
+															className="shrink-0 text-left font-mono text-xs text-slate-400"
+															dir="ltr"
+														>
 															{formatDateTime(event.createdAt)}
 														</div>
 													</div>
@@ -842,18 +1020,21 @@ export default function AdminMonitoringPage() {
 								<CardHeader>
 									<CardTitle className="flex items-center gap-2 text-base text-emerald-100">
 										<Users className="h-4 w-4" />
-										Teams And Readiness
+										تیم‌ها و آمادگی
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<div className="space-y-2">
 										{teams.map((team) => {
 											const id = getNumber(team, "id");
-											const readinessTeam = id !== null ? readinessByTeam.get(id) : null;
+											const readinessTeam =
+												id !== null ? readinessByTeam.get(id) : null;
 											const points = getNumber(team, "points") ?? 0;
 											const credits = getNumber(team, "credits") ?? 0;
 											const sideId = getNumber(team, "sideId");
-											const side = sides.find((item) => getNumber(item, "id") === sideId);
+											const side = sides.find(
+												(item) => getNumber(item, "id") === sideId,
+											);
 											return (
 												<div
 													key={id ?? getString(team, "name") ?? Math.random()}
@@ -861,9 +1042,13 @@ export default function AdminMonitoringPage() {
 												>
 													<div className="flex items-start justify-between gap-3">
 														<div>
-															<div className="font-semibold text-slate-100">{getString(team, "name") ?? "Unnamed team"}</div>
+															<div className="font-semibold text-slate-100">
+																{getString(team, "name") ?? "تیم بی‌نام"}
+															</div>
 															<div className="mt-1 text-xs text-slate-400">
-																		{getString(team, "role") ?? "role unknown"} / {getString(side ?? null, "name") ?? "side unknown"}
+																{getString(team, "role") ?? "نقش نامشخص"} /{" "}
+																{getString(side ?? null, "name") ??
+																	"سمت نامشخص"}
 															</div>
 														</div>
 														<Badge
@@ -874,22 +1059,27 @@ export default function AdminMonitoringPage() {
 																	: "border-amber-500/70 bg-amber-950/40 text-amber-100"
 															}
 														>
-															{readinessTeam?.isReady ? "Ready" : "Pending"}
+															{readinessTeam?.isReady ? "آماده" : "در انتظار"}
 														</Badge>
 													</div>
 													<div className="mt-3 grid grid-cols-3 gap-2 text-xs">
 														<div className="rounded border border-slate-800 bg-slate-950/60 p-2">
-															<div className="text-slate-500">Points</div>
-															<div className="mt-1 font-mono text-slate-100">{points}</div>
-														</div>
-														<div className="rounded border border-slate-800 bg-slate-950/60 p-2">
-															<div className="text-slate-500">Credits</div>
-															<div className="mt-1 font-mono text-slate-100">{credits}</div>
-														</div>
-														<div className="rounded border border-slate-800 bg-slate-950/60 p-2">
-															<div className="text-slate-500">Present</div>
+															<div className="text-slate-500">امتیاز</div>
 															<div className="mt-1 font-mono text-slate-100">
-																{readinessTeam?.presentCount ?? 0} / {readinessTeam?.assignedCount ?? 0}
+																{points}
+															</div>
+														</div>
+														<div className="rounded border border-slate-800 bg-slate-950/60 p-2">
+															<div className="text-slate-500">اعتبار</div>
+															<div className="mt-1 font-mono text-slate-100">
+																{credits}
+															</div>
+														</div>
+														<div className="rounded border border-slate-800 bg-slate-950/60 p-2">
+															<div className="text-slate-500">حاضر</div>
+															<div className="mt-1 font-mono text-slate-100">
+																{readinessTeam?.presentCount ?? 0} /{" "}
+																{readinessTeam?.assignedCount ?? 0}
 															</div>
 														</div>
 													</div>
@@ -898,7 +1088,7 @@ export default function AdminMonitoringPage() {
 										})}
 										{teams.length === 0 ? (
 											<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5 text-sm text-slate-400">
-												No configured teams.
+												تیمی پیکربندی نشده است.
 											</div>
 										) : null}
 									</div>
@@ -909,14 +1099,14 @@ export default function AdminMonitoringPage() {
 								<CardHeader>
 									<CardTitle className="flex items-center gap-2 text-base text-violet-100">
 										<Sparkles className="h-4 w-4" />
-										Directives
+										دستورهای فعال
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<div className="space-y-4">
 										<div>
 											<div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-												Active
+												فعال
 											</div>
 											<div className="space-y-2">
 												{activeDirectives.map((directive) => (
@@ -925,26 +1115,32 @@ export default function AdminMonitoringPage() {
 														className="rounded-lg border border-violet-500/40 bg-violet-950/20 p-3"
 													>
 														<div className="flex items-center justify-between gap-2">
-															<div className="font-semibold text-violet-100">{directive.name}</div>
-															<Badge variant="outline" className="border-violet-400/60 text-violet-100">
+															<div className="font-semibold text-violet-100">
+																{directive.name}
+															</div>
+															<Badge
+																variant="outline"
+																className="border-violet-400/60 text-violet-100"
+															>
 																{directive.effect_type}
 															</Badge>
 														</div>
 														<div className="mt-1 text-xs text-slate-400">
-																{directive.modifier_type ?? "increase"} {directive.value} / {directive.target_action}
+															{directive.modifier_type ?? "increase"}{" "}
+															{directive.value} / {directive.target_action}
 														</div>
 													</div>
 												))}
 												{activeDirectives.length === 0 ? (
 													<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-400">
-														No active directives.
+														دستور فعالی وجود ندارد.
 													</div>
 												) : null}
 											</div>
 										</div>
 										<div>
 											<div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-												Configured
+												پیکربندی‌شده
 											</div>
 											<ScrollArea className="h-[250px] pr-3">
 												<div className="space-y-2">
@@ -954,9 +1150,13 @@ export default function AdminMonitoringPage() {
 															className="flex items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-900/60 p-3"
 														>
 															<div className="min-w-0">
-																<div className="truncate font-semibold text-slate-100">{directive.name}</div>
+																<div className="truncate font-semibold text-slate-100">
+																	{directive.name}
+																</div>
 																<div className="mt-1 text-xs text-slate-400">
-																		T{directive.start_turn} / {directive.duration} turn(s) / {directive.effect_type}
+																	نوبت {directive.start_turn} /{" "}
+																	{directive.duration} نوبت /{" "}
+																	{directive.effect_type}
 																</div>
 															</div>
 															<Button
@@ -967,7 +1167,7 @@ export default function AdminMonitoringPage() {
 																	if (!api) return;
 																	void runControl(
 																		() => api.deleteDirective(directive.name),
-																		`Directive "${directive.name}" deleted.`,
+																		`دستور "${directive.name}" حذف شد.`,
 																	);
 																}}
 															>
@@ -977,7 +1177,7 @@ export default function AdminMonitoringPage() {
 													))}
 													{directives.length === 0 ? (
 														<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-sm text-slate-400">
-															No configured directives.
+															دستوری پیکربندی نشده است.
 														</div>
 													) : null}
 												</div>
@@ -994,7 +1194,7 @@ export default function AdminMonitoringPage() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-cyan-100">
 									<Lock className="h-4 w-4" />
-									Admin Session
+									نشست مدیر
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-3">
@@ -1003,7 +1203,7 @@ export default function AdminMonitoringPage() {
 										<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/25 p-3 text-sm text-emerald-100">
 											<div className="flex items-center gap-2">
 												<ShieldCheck className="h-4 w-4" />
-												Authenticated
+												احراز هویت شد
 											</div>
 										</div>
 										<Button
@@ -1012,17 +1212,19 @@ export default function AdminMonitoringPage() {
 											onClick={logoutAdmin}
 										>
 											<LogOut className="h-4 w-4" />
-											Log out
+											خروج
 										</Button>
 									</div>
 								) : (
 									<div className="space-y-3">
 										<div className="space-y-2">
-											<Label>Admin password</Label>
+											<Label>رمز مدیر</Label>
 											<Input
 												type="password"
 												value={adminPassword}
-												onChange={(event) => setAdminPassword(event.target.value)}
+												onChange={(event) =>
+													setAdminPassword(event.target.value)
+												}
 												className="border-slate-700 bg-slate-900/80 text-slate-100"
 											/>
 										</div>
@@ -1032,7 +1234,7 @@ export default function AdminMonitoringPage() {
 											className="w-full bg-cyan-700 text-white hover:bg-cyan-600"
 										>
 											<ShieldCheck className="h-4 w-4" />
-											{isAuthLoading ? "Signing in..." : "Sign in"}
+											{isAuthLoading ? "در حال ورود..." : "ورود"}
 										</Button>
 										{authError ? (
 											<div className="rounded border border-rose-500/40 bg-rose-950/30 p-2 text-xs text-rose-100">
@@ -1048,7 +1250,7 @@ export default function AdminMonitoringPage() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-amber-100">
 									<ShieldAlert className="h-4 w-4" />
-									Game Controls
+									کنترل بازی
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="grid grid-cols-1 gap-2">
@@ -1056,50 +1258,72 @@ export default function AdminMonitoringPage() {
 									disabled={!api || !gameId}
 									onClick={() => {
 										if (!api || !gameId) return;
-										void runControl(() => api.startGame(gameId), "Game started.");
+										void runControl(
+											() => api.startGame(gameId),
+											"بازی شروع شد.",
+										);
 									}}
 									className="bg-emerald-700 text-white hover:bg-emerald-600"
 								>
 									<Play className="h-4 w-4" />
-									Start Game
+									شروع بازی
 								</Button>
 								<Button
 									disabled={!api || !gameId}
 									variant="outline"
 									className="border-amber-500/60 text-amber-100 hover:bg-amber-950/30"
 									onClick={() => {
-										if (!api || !gameId || !window.confirm("Reset the active game?")) return;
-										void runControl(() => api.resetGame(gameId), "Game reset.");
+										if (
+											!api ||
+											!gameId ||
+											!window.confirm("بازی فعال بازنشانی شود؟")
+										)
+											return;
+										void runControl(
+											() => api.resetGame(gameId),
+											"بازی بازنشانی شد.",
+										);
 									}}
 								>
 									<RotateCcw className="h-4 w-4" />
-									Reset Game
+									بازنشانی بازی
 								</Button>
 								<Button
 									disabled={!api || !gameId}
 									variant="outline"
 									className="border-rose-500/60 text-rose-100 hover:bg-rose-950/30"
 									onClick={() => {
-										if (!api || !gameId || !window.confirm("Clear persisted events for this game?")) {
+										if (
+											!api ||
+											!gameId ||
+											!window.confirm("رویدادهای ذخیره‌شده این بازی پاک شوند؟")
+										) {
 											return;
 										}
-										void runControl(() => api.clearGameEvents(gameId), "Event log cleared.");
+										void runControl(
+											() => api.clearGameEvents(gameId),
+											"گزارش رویدادها پاک شد.",
+										);
 									}}
 								>
 									<Ban className="h-4 w-4" />
-									Clear Events
+									پاک‌کردن رویدادها
 								</Button>
 								<Button
 									disabled={!api || directives.length === 0}
 									variant="outline"
 									className="border-slate-600 text-slate-100 hover:bg-slate-900"
 									onClick={() => {
-										if (!api || !window.confirm("Clear all directives?")) return;
-										void runControl(() => api.clearDirectives(), "Directives cleared.");
+										if (!api || !window.confirm("همه دستورها پاک شوند؟"))
+											return;
+										void runControl(
+											() => api.clearDirectives(),
+											"دستورها پاک شدند.",
+										);
 									}}
 								>
 									<Trash2 className="h-4 w-4" />
-									Clear Directives
+									پاک‌کردن دستورها
 								</Button>
 							</CardContent>
 						</Card>
@@ -1108,13 +1332,13 @@ export default function AdminMonitoringPage() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-violet-100">
 									<Zap className="h-4 w-4" />
-									Add Live Directive
+									افزودن دستور زنده
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-3">
 								<div className="grid grid-cols-1 gap-3">
 									<div className="space-y-2">
-										<Label>Name</Label>
+										<Label>نام</Label>
 										<Input
 											value={directiveName}
 											onChange={(event) => setDirectiveName(event.target.value)}
@@ -1123,68 +1347,78 @@ export default function AdminMonitoringPage() {
 									</div>
 									<div className="grid grid-cols-2 gap-3">
 										<div className="space-y-2">
-											<Label>Effect</Label>
+											<Label>اثر</Label>
 											<Select value={effectType} onValueChange={setEffectType}>
 												<SelectTrigger className="w-full border-slate-700 bg-slate-900/80 text-slate-100">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent className="border-slate-700 bg-slate-950 text-slate-100">
-													<SelectItem value="probability">Probability</SelectItem>
-													<SelectItem value="cost">Cost</SelectItem>
-													<SelectItem value="growth">Growth</SelectItem>
-													<SelectItem value="tech">Tech</SelectItem>
-													<SelectItem value="limit">Limit</SelectItem>
+													<SelectItem value="probability">احتمال</SelectItem>
+													<SelectItem value="cost">هزینه</SelectItem>
+													<SelectItem value="growth">رشد</SelectItem>
+													<SelectItem value="tech">فناوری</SelectItem>
+													<SelectItem value="limit">محدودیت</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
 										<div className="space-y-2">
-											<Label>Operation</Label>
-											<Select value={modifierType} onValueChange={setModifierType}>
+											<Label>عملگر</Label>
+											<Select
+												value={modifierType}
+												onValueChange={setModifierType}
+											>
 												<SelectTrigger className="w-full border-slate-700 bg-slate-900/80 text-slate-100">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent className="border-slate-700 bg-slate-950 text-slate-100">
-													<SelectItem value="increase">Increase</SelectItem>
-													<SelectItem value="decrease">Decrease</SelectItem>
-													<SelectItem value="multiply">Multiply</SelectItem>
+													<SelectItem value="increase">افزایش</SelectItem>
+													<SelectItem value="decrease">کاهش</SelectItem>
+													<SelectItem value="multiply">ضرب</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
 									</div>
 									<div className="grid grid-cols-2 gap-3">
 										<div className="space-y-2">
-											<Label>Target action</Label>
+											<Label>عملیات هدف</Label>
 											<Input
 												value={targetAction}
-												onChange={(event) => setTargetAction(event.target.value)}
+												onChange={(event) =>
+													setTargetAction(event.target.value)
+												}
 												className="border-slate-700 bg-slate-900/80 text-slate-100"
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>Target type</Label>
-											<Select value={targetActionType} onValueChange={setTargetActionType}>
+											<Label>نوع هدف</Label>
+											<Select
+												value={targetActionType}
+												onValueChange={setTargetActionType}
+											>
 												<SelectTrigger className="w-full border-slate-700 bg-slate-900/80 text-slate-100">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent className="border-slate-700 bg-slate-950 text-slate-100">
-													<SelectItem value="attack">Attack</SelectItem>
-													<SelectItem value="defense">Defense</SelectItem>
-													<SelectItem value="both">Both</SelectItem>
+													<SelectItem value="attack">حمله</SelectItem>
+													<SelectItem value="defense">دفاع</SelectItem>
+													<SelectItem value="both">هر دو</SelectItem>
 												</SelectContent>
 											</Select>
 										</div>
 									</div>
 									<div className="grid grid-cols-3 gap-3">
 										<div className="space-y-2">
-											<Label>Value</Label>
+											<Label>مقدار</Label>
 											<Input
 												value={directiveValue}
-												onChange={(event) => setDirectiveValue(event.target.value)}
+												onChange={(event) =>
+													setDirectiveValue(event.target.value)
+												}
 												className="border-slate-700 bg-slate-900/80 text-slate-100"
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>Start</Label>
+											<Label>شروع</Label>
 											<Input
 												value={startTurn}
 												onChange={(event) => setStartTurn(event.target.value)}
@@ -1192,7 +1426,7 @@ export default function AdminMonitoringPage() {
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>Duration</Label>
+											<Label>مدت</Label>
 											<Input
 												value={duration}
 												onChange={(event) => setDuration(event.target.value)}
@@ -1201,7 +1435,7 @@ export default function AdminMonitoringPage() {
 										</div>
 									</div>
 									<div className="space-y-2">
-										<Label>Affected sides</Label>
+										<Label>سمت‌های متاثر</Label>
 										<Input
 											value={affectedSides}
 											onChange={(event) => setAffectedSides(event.target.value)}
@@ -1211,7 +1445,7 @@ export default function AdminMonitoringPage() {
 									</div>
 									<div className="grid grid-cols-2 gap-3">
 										<div className="space-y-2">
-											<Label>Limit type</Label>
+											<Label>نوع محدودیت</Label>
 											<Input
 												value={limitType}
 												onChange={(event) => setLimitType(event.target.value)}
@@ -1220,7 +1454,7 @@ export default function AdminMonitoringPage() {
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>Limit value</Label>
+											<Label>مقدار محدودیت</Label>
 											<Input
 												value={limitValue}
 												onChange={(event) => setLimitValue(event.target.value)}
@@ -1229,7 +1463,7 @@ export default function AdminMonitoringPage() {
 										</div>
 									</div>
 									<div className="space-y-2">
-										<Label>Payload preview</Label>
+										<Label>پیش‌نمایش payload</Label>
 										<Textarea
 											readOnly
 											value={JSON.stringify(
@@ -1249,14 +1483,17 @@ export default function AdminMonitoringPage() {
 																.map((item) => item.trim())
 																.filter(Boolean),
 															limit_type: limitType || null,
-															limit_value: limitValue ? Number(limitValue) : null,
+															limit_value: limitValue
+																? Number(limitValue)
+																: null,
 														},
 													],
 												},
 												null,
 												2,
 											)}
-											className="max-h-48 min-h-32 border-slate-700 bg-slate-900/80 font-mono text-xs text-slate-200"
+											className="max-h-48 min-h-32 border-slate-700 bg-slate-900/80 font-mono text-left text-xs text-slate-200"
+											dir="ltr"
 										/>
 									</div>
 								</div>
@@ -1266,7 +1503,7 @@ export default function AdminMonitoringPage() {
 									className="w-full bg-violet-700 text-white hover:bg-violet-600"
 								>
 									<Send className="h-4 w-4" />
-									Add Directive
+									افزودن دستور
 								</Button>
 							</CardContent>
 						</Card>
@@ -1275,21 +1512,27 @@ export default function AdminMonitoringPage() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-slate-100">
 									<Eye className="h-4 w-4" />
-									Catalog Snapshot
+									نمای کاتالوگ
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="grid grid-cols-3 gap-2 text-xs">
 								<div className="rounded border border-slate-800 bg-slate-900/60 p-3">
-									<div className="text-slate-500">Sides</div>
-									<div className="mt-1 text-lg font-semibold">{sides.length}</div>
+									<div className="text-slate-500">سمت‌ها</div>
+									<div className="mt-1 text-lg font-semibold">
+										{sides.length}
+									</div>
 								</div>
 								<div className="rounded border border-slate-800 bg-slate-900/60 p-3">
-									<div className="text-slate-500">Teams</div>
-									<div className="mt-1 text-lg font-semibold">{teams.length}</div>
+									<div className="text-slate-500">تیم‌ها</div>
+									<div className="mt-1 text-lg font-semibold">
+										{teams.length}
+									</div>
 								</div>
 								<div className="rounded border border-slate-800 bg-slate-900/60 p-3">
-									<div className="text-slate-500">Actions</div>
-									<div className="mt-1 text-lg font-semibold">{actions.length}</div>
+									<div className="text-slate-500">عملیات‌ها</div>
+									<div className="mt-1 text-lg font-semibold">
+										{actions.length}
+									</div>
 								</div>
 							</CardContent>
 						</Card>
