@@ -397,6 +397,8 @@ export interface TurnAnalyticsPlot {
 	[key: string]: unknown;
 }
 
+export type TurnAnalyticsPlotResponse = Blob;
+
 export interface TurnAnalyticsDetailData {
 	gameId: string;
 	turn: number;

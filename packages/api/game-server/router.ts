@@ -1,15 +1,15 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import type {
-	AddDirectivesRequest,
 	ActiveDirectivesResponse,
-	AdminLoginRequest,
+	AddDirectivesRequest,
+	AdminAuthResponse,
 	AdminClearEventsResponse,
 	AdminEventListQuery,
 	AdminEventListResponse,
 	AdminGameCatalogResponse,
 	AdminGameStateResponse,
+	AdminLoginRequest,
 	AdminUsersResponse,
-	AdminAuthResponse,
 	ConfigureAllRequest,
 	ConfigureAllResponse,
 	ConfigureDirectivesRequest,
@@ -28,6 +28,7 @@ import type {
 	TurnAnalyticsDetailResponse,
 	TurnAnalyticsListQuery,
 	TurnAnalyticsListResponse,
+	TurnAnalyticsPlotResponse,
 	UserAuthResponse,
 	UserLoginRequest,
 	UserSignupRequest,
@@ -86,6 +87,11 @@ export interface GameServerApi {
 		turn: number,
 		config?: AxiosRequestConfig,
 	): Promise<TurnAnalyticsDetailResponse>;
+	getTurnAnalyticsPlot(
+		gameId: string,
+		filename: string,
+		config?: AxiosRequestConfig,
+	): Promise<TurnAnalyticsPlotResponse>;
 	clearGameEvents(
 		gameId: string,
 		config?: AxiosRequestConfig,
@@ -263,6 +269,17 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 			const { data } = await http.get<TurnAnalyticsDetailResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/admin/turn-analytics/${encodeURIComponent(turn)}`,
 				requestConfig,
+			);
+			return data;
+		},
+
+		async getTurnAnalyticsPlot(gameId, filename, requestConfig) {
+			const { data } = await http.get<TurnAnalyticsPlotResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/admin/plots/${encodeURIComponent(filename)}`,
+				{
+					...requestConfig,
+					responseType: "blob",
+				},
 			);
 			return data;
 		},

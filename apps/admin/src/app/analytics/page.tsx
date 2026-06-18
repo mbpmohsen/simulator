@@ -3,6 +3,7 @@
 import {
 	type AdminGameCatalogEntry,
 	createGameServerApi,
+	type GameServerApi,
 	type TurnAnalyticsDetailData,
 	type TurnAnalyticsPlot,
 	type TurnAnalyticsSummary,
@@ -40,10 +41,10 @@ import {
 	CheckCircle2,
 	Clock,
 	Database,
+	Download,
 	FileClock,
 	Gauge,
 	ImageIcon,
-	Link2,
 	LogOut,
 	Radio,
 	RefreshCw,
@@ -367,7 +368,35 @@ const parseSseBlock = (block: string): AnalyticsEvent | null => {
 
 const plotIsExpired = (plot: TurnAnalyticsPlot): boolean => {
 	if (!plot.accessUrlExpiresAt) return false;
-	return Date.now() > plot.accessUrlExpiresAt;
+	const expiresAtMs =
+		plot.accessUrlExpiresAt < 10_000_000_000
+			? plot.accessUrlExpiresAt * 1000
+			: plot.accessUrlExpiresAt;
+	return Date.now() > expiresAtMs;
+};
+
+const plotAccessFilename = (plot: TurnAnalyticsPlot): string | null => {
+	if (typeof plot.accessUrl === "string" && plot.accessUrl.trim()) {
+		return plot.accessUrl.trim();
+	}
+	if (typeof plot.fileName === "string" && plot.fileName.trim()) {
+		return plot.fileName.trim();
+	}
+	if (
+		typeof plot.storage?.objectKey === "string" &&
+		plot.storage.objectKey.trim()
+	) {
+		return plot.storage.objectKey.trim();
+	}
+	return null;
+};
+
+const plotDisplayName = (plot: TurnAnalyticsPlot): string =>
+	plot.fileName ?? plot.storage?.objectKey ?? plot.accessUrl ?? "plot";
+
+const plotDownloadName = (plot: TurnAnalyticsPlot, index: number): string => {
+	const candidate = plotDisplayName(plot).split(/[\\/]/).pop()?.trim();
+	return candidate || `analytics-plot-${index + 1}.png`;
 };
 
 const MetricTile = ({
@@ -502,6 +531,147 @@ const TurnTrendGraph = ({
 					})}
 				</div>
 			)}
+		</div>
+	);
+};
+
+const AnalyticsPlotCard = ({
+	api,
+	gameId,
+	plot,
+	index,
+}: {
+	api: GameServerApi | null;
+	gameId: string;
+	plot: TurnAnalyticsPlot;
+	index: number;
+}) => {
+	const filename = plotAccessFilename(plot);
+	const displayName = plotDisplayName(plot);
+	const downloadName = plotDownloadName(plot, index);
+	const [imageUrl, setImageUrl] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [loadError, setLoadError] = useState<string | null>(null);
+	const [reloadKey, setReloadKey] = useState(0);
+
+	useEffect(() => {
+		if (!api || !gameId || !filename) {
+			setImageUrl(null);
+			setIsLoading(false);
+			setLoadError(filename ? null : "شناسه فایل نمودار وجود ندارد.");
+			return;
+		}
+
+		let cancelled = false;
+		let objectUrl: string | null = null;
+		setImageUrl(null);
+		setIsLoading(true);
+		setLoadError(null);
+
+		const loadPlot = async () => {
+			try {
+				const blob = await api.getTurnAnalyticsPlot(gameId, filename, {
+					params: reloadKey > 0 ? { _: reloadKey } : undefined,
+				});
+				if (cancelled) return;
+				objectUrl = URL.createObjectURL(blob);
+				setImageUrl(objectUrl);
+			} catch (err) {
+				if (!cancelled) {
+					setLoadError(
+						resolveApiErrorMessage(err, "دانلود فایل نمودار ناموفق بود."),
+					);
+				}
+			} finally {
+				if (!cancelled) setIsLoading(false);
+			}
+		};
+
+		void loadPlot();
+
+		return () => {
+			cancelled = true;
+			if (objectUrl) URL.revokeObjectURL(objectUrl);
+		};
+	}, [api, gameId, filename, reloadKey]);
+
+	return (
+		<div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900/60">
+			<div className="flex items-center justify-between gap-3 border-b border-slate-800 p-3">
+				<div className="min-w-0">
+					<div className="truncate font-semibold text-slate-50">
+						{plot.teamName ?? "تیم"} به {plot.targetTeamName ?? "هدف"}
+					</div>
+					<div className="mt-1 truncate text-xs text-slate-500" dir="ltr">
+						{displayName}
+					</div>
+				</div>
+				<div className="flex shrink-0 items-center gap-2">
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={isLoading || !filename}
+						onClick={() => setReloadKey((current) => current + 1)}
+						className="border-slate-600 bg-slate-950/30 text-slate-100"
+						title="بارگذاری دوباره"
+					>
+						<RefreshCw
+							className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+						/>
+					</Button>
+					{imageUrl ? (
+						<Button
+							asChild
+							size="sm"
+							variant="outline"
+							className="border-slate-600 bg-slate-950/30 text-slate-100"
+							title="دانلود"
+						>
+							<a href={imageUrl} download={downloadName}>
+								<Download className="h-4 w-4" />
+							</a>
+						</Button>
+					) : (
+						<Button
+							size="sm"
+							variant="outline"
+							disabled
+							className="border-slate-700 bg-slate-950/30 text-slate-500"
+							title="دانلود"
+						>
+							<Download className="h-4 w-4" />
+						</Button>
+					)}
+				</div>
+			</div>
+			{imageUrl ? (
+				<Image
+					src={imageUrl}
+					alt={`نمودار آنالیتیکس ${plot.teamName ?? "تیم"}`}
+					width={960}
+					height={540}
+					unoptimized
+					className="aspect-video w-full bg-slate-950 object-contain"
+					onError={() => setLoadError("نمایش تصویر نمودار ناموفق بود.")}
+				/>
+			) : (
+				<div className="flex aspect-video items-center justify-center bg-slate-950 px-4 text-center text-sm text-slate-500">
+					{isLoading
+						? "در حال دریافت نمودار..."
+						: loadError || "فایل نمودار در دسترس نیست"}
+				</div>
+			)}
+			<div className="flex items-center justify-between gap-2 p-3 text-xs text-slate-400">
+				<span>انقضا {formatTimestamp(plot.accessUrlExpiresAt)}</span>
+				{plotIsExpired(plot) ? (
+					<Badge
+						variant="outline"
+						className="border-amber-500/60 text-amber-100"
+					>
+						نیازمند به‌روزرسانی
+					</Badge>
+				) : null}
+			</div>
 		</div>
 	);
 };
@@ -1388,71 +1558,13 @@ export default function AdminAnalyticsPage() {
 											<TabsContent value="plots" className="mt-4">
 												<div className="grid gap-3 lg:grid-cols-2">
 													{detailPlots.map((plot, index) => (
-														<div
+														<AnalyticsPlotCard
 															key={`${plot.fileName ?? plot.accessUrl ?? "plot"}-${index}`}
-															className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900/60"
-														>
-															<div className="flex items-center justify-between gap-3 border-b border-slate-800 p-3">
-																<div className="min-w-0">
-																	<div className="truncate font-semibold text-slate-50">
-																		{plot.teamName ?? "تیم"} به{" "}
-																		{plot.targetTeamName ?? "هدف"}
-																	</div>
-																	<div
-																		className="mt-1 truncate text-xs text-slate-500"
-																		dir="ltr"
-																	>
-																		{plot.fileName ??
-																			plot.storage?.objectKey ??
-																			"plot"}
-																	</div>
-																</div>
-																{plot.accessUrl ? (
-																	<Button
-																		asChild
-																		size="sm"
-																		variant="outline"
-																		className="border-slate-600 bg-slate-950/30 text-slate-100"
-																	>
-																		<a
-																			href={plot.accessUrl}
-																			target="_blank"
-																			rel="noreferrer"
-																		>
-																			<Link2 className="h-4 w-4" />
-																		</a>
-																	</Button>
-																) : null}
-															</div>
-															{plot.accessUrl ? (
-																<Image
-																	src={plot.accessUrl}
-																	alt={`نمودار آنالیتیکس ${plot.teamName ?? "تیم"}`}
-																	width={960}
-																	height={540}
-																	unoptimized
-																	className="aspect-video w-full bg-slate-950 object-contain"
-																/>
-															) : (
-																<div className="flex aspect-video items-center justify-center bg-slate-950 text-sm text-slate-500">
-																	آدرس دسترسی وجود ندارد
-																</div>
-															)}
-															<div className="flex items-center justify-between gap-2 p-3 text-xs text-slate-400">
-																<span>
-																	انقضا{" "}
-																	{formatTimestamp(plot.accessUrlExpiresAt)}
-																</span>
-																{plotIsExpired(plot) ? (
-																	<Badge
-																		variant="outline"
-																		className="border-amber-500/60 text-amber-100"
-																	>
-																		نیازمند به‌روزرسانی
-																	</Badge>
-																) : null}
-															</div>
-														</div>
+															api={api}
+															gameId={selectedGameId}
+															plot={plot}
+															index={index}
+														/>
 													))}
 													{detailPlots.length === 0 ? (
 														<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
