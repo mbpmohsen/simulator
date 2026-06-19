@@ -319,6 +319,31 @@ const summaryFromDetail = (
 	bestTargets: deriveBestTargets(detail),
 });
 
+type MathTeamMetricRow = {
+	teamName: string;
+	bestTarget: string;
+	expectedValue: number | null;
+	sas: number | null;
+	pointsProgress: number | null;
+};
+
+const mathTeamMetricRows = (
+	teams: [string, Record<string, unknown>][],
+): MathTeamMetricRow[] =>
+	teams.map(([teamName, values]) => ({
+		teamName,
+		bestTarget:
+			getString(values, "best_target") ??
+			getString(values, "bestTarget") ??
+			"-",
+		expectedValue:
+			getNumber(values, "expected_value") ?? getNumber(values, "expectedValue"),
+		sas: getNumber(values, "sas"),
+		pointsProgress:
+			getNumber(values, "points_progress") ??
+			getNumber(values, "pointsProgress"),
+	}));
+
 const mergeSummary = (
 	current: TurnAnalyticsSummary[],
 	incoming: TurnAnalyticsSummary,
@@ -424,24 +449,39 @@ const MetricTile = ({
 );
 
 const TurnTrendGraph = ({
-	summaries,
 	selectedTurn,
-	onSelectTurn,
+	teams,
 }: {
-	summaries: TurnAnalyticsSummary[];
 	selectedTurn: number | null;
-	onSelectTurn: (turn: number) => void;
+	teams: [string, Record<string, unknown>][];
 }) => {
-	const items = summaries.slice(-12);
-	const maxValue = Math.max(
-		1,
-		...items.flatMap((summary) => [
-			summary.actionCount ?? 0,
-			summary.comparisonCount ?? 0,
-			summary.teamCount ?? 0,
-			summary.plotCount ?? 0,
-		]),
-	);
+	const rows = mathTeamMetricRows(teams);
+	const charts = [
+		{
+			key: "expectedValue",
+			label: "EV",
+			description: "ارزش مورد انتظار",
+			className: "bg-cyan-400",
+			textClassName: "text-cyan-200",
+			value: (row: MathTeamMetricRow) => row.expectedValue,
+		},
+		{
+			key: "sas",
+			label: "SAS",
+			description: "امتیاز SAS",
+			className: "bg-emerald-400",
+			textClassName: "text-emerald-200",
+			value: (row: MathTeamMetricRow) => row.sas,
+		},
+		{
+			key: "pointsProgress",
+			label: "پیشرفت",
+			description: "پیشرفت امتیاز",
+			className: "bg-amber-400",
+			textClassName: "text-amber-200",
+			value: (row: MathTeamMetricRow) => row.pointsProgress,
+		},
+	];
 
 	return (
 		<div className="rounded-lg border border-slate-800 bg-slate-900/55 p-4">
@@ -452,81 +492,86 @@ const TurnTrendGraph = ({
 						نمای روند نوبت‌ها
 					</div>
 					<div className="mt-1 text-xs text-slate-400">
-						مقایسه سریع عملیات، بررسی‌ها، تیم‌ها و نمودارهای ذخیره‌شده در هر نوبت
+						مقایسه EV، SAS و پیشرفت تیم‌ها در نوبت{" "}
+						{selectedTurn === null ? "-" : formatNumber(selectedTurn)}
 					</div>
 				</div>
 				<div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
 					<span className="flex items-center gap-1">
-						<span className="h-2 w-2 rounded-sm bg-cyan-400" /> عملیات
+						<span className="h-2 w-2 rounded-sm bg-cyan-400" /> EV
 					</span>
 					<span className="flex items-center gap-1">
-						<span className="h-2 w-2 rounded-sm bg-emerald-400" /> بررسی
+						<span className="h-2 w-2 rounded-sm bg-emerald-400" /> SAS
 					</span>
 					<span className="flex items-center gap-1">
-						<span className="h-2 w-2 rounded-sm bg-amber-400" /> تیم
-					</span>
-					<span className="flex items-center gap-1">
-						<span className="h-2 w-2 rounded-sm bg-violet-400" /> نمودار
+						<span className="h-2 w-2 rounded-sm bg-amber-400" /> پیشرفت
 					</span>
 				</div>
 			</div>
-			{items.length === 0 ? (
+			{rows.length === 0 ? (
 				<div className="flex h-44 items-center justify-center rounded border border-dashed border-slate-700 text-sm text-slate-400">
-					هنوز داده‌ای برای نمایش نمودار وجود ندارد.
+					بخش ریاضی برای نمایش نمودار وجود ندارد.
 				</div>
 			) : (
-				<div className="grid h-56 grid-cols-[repeat(auto-fit,minmax(44px,1fr))] items-end gap-2">
-					{items.map((summary) => {
-						const active = selectedTurn === summary.turn;
-						const bars = [
-							{
-								key: "actions",
-								value: summary.actionCount ?? 0,
-								className: "bg-cyan-400",
-							},
-							{
-								key: "checks",
-								value: summary.comparisonCount ?? 0,
-								className: "bg-emerald-400",
-							},
-							{
-								key: "teams",
-								value: summary.teamCount ?? 0,
-								className: "bg-amber-400",
-							},
-							{
-								key: "plots",
-								value: summary.plotCount ?? 0,
-								className: "bg-violet-400",
-							},
-						];
+				<div className="grid gap-3 lg:grid-cols-3">
+					{charts.map((chart) => {
+						const maxValue = Math.max(
+							1,
+							...rows.map((row) => Math.abs(chart.value(row) ?? 0)),
+						);
 						return (
-							<button
-								key={summary.turn}
-								type="button"
-								onClick={() => onSelectTurn(summary.turn)}
-								className={`flex h-full flex-col justify-end rounded-md border px-2 py-2 transition ${
-									active
-										? "border-cyan-400/70 bg-cyan-950/25"
-										: "border-slate-800 bg-slate-950/40 hover:border-slate-600"
-								}`}
+							<div
+								key={chart.key}
+								className="rounded-md border border-slate-800 bg-slate-950/40 p-3"
 							>
-								<div className="flex h-40 items-end justify-center gap-1">
-									{bars.map((bar) => (
-										<span
-											key={bar.key}
-											className={`w-2 rounded-t ${bar.className}`}
-											style={{
-												height: `${Math.max(8, (bar.value / maxValue) * 100)}%`,
-											}}
-											title={`${bar.key}: ${bar.value}`}
-										/>
-									))}
+								<div className="flex items-center justify-between gap-2">
+									<div>
+										<div
+											className={`text-sm font-semibold ${chart.textClassName}`}
+										>
+											{chart.label}
+										</div>
+										<div className="mt-1 text-[11px] text-slate-500">
+											{chart.description}
+										</div>
+									</div>
+									<Badge
+										variant="outline"
+										className="border-slate-700 text-slate-300"
+									>
+										{formatNumber(rows.length)} تیم
+									</Badge>
 								</div>
-								<div className="mt-2 text-center text-[11px] text-slate-300">
-									نوبت {formatNumber(summary.turn)}
+								<div className="mt-4 grid h-48 grid-cols-[repeat(auto-fit,minmax(48px,1fr))] items-end gap-2">
+									{rows.map((row) => {
+										const value = chart.value(row);
+										const height =
+											value === null
+												? 0
+												: Math.max(6, (Math.abs(value) / maxValue) * 100);
+										return (
+											<div
+												key={`${chart.key}-${row.teamName}`}
+												className="flex h-full min-w-0 flex-col justify-end"
+												title={`${row.teamName} | ${chart.label}: ${formatNumber(value)} | بهترین هدف: ${row.bestTarget}`}
+											>
+												<div className="mb-1 truncate text-center font-mono text-[10px] text-slate-300">
+													{formatNumber(value)}
+												</div>
+												<div className="flex h-32 items-end justify-center">
+													<span
+														className={`w-full max-w-8 rounded-t ${chart.className} ${value === null ? "opacity-0" : ""}`}
+														style={{ height: `${height}%` }}
+													/>
+												</div>
+												<div className="mt-2 truncate text-center text-[10px] text-slate-400">
+													{row.teamName}
+												</div>
+											</div>
+										);
+									})}
 								</div>
-							</button>
+							</div>
 						);
 					})}
 				</div>
@@ -1316,12 +1361,8 @@ export default function AdminAnalyticsPage() {
 								{detail ? (
 									<div className="space-y-5">
 										<TurnTrendGraph
-											summaries={summaries}
 											selectedTurn={selectedTurn}
-											onSelectTurn={(turn) => {
-												if (selectedGameId)
-													void loadTurnDetail(selectedGameId, turn);
-											}}
+											teams={detailTeams}
 										/>
 										<div className="grid gap-3 md:grid-cols-4">
 											<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
