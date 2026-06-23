@@ -149,7 +149,7 @@ const formatTimestamp = (value: number | string | null | undefined): string => {
 
 const formatNumber = (value: unknown): string => {
 	if (typeof value === "number" && Number.isFinite(value)) {
-		return new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 3 }).format(
+		return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
 			value,
 		);
 	}

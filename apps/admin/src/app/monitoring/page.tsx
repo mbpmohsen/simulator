@@ -175,11 +175,10 @@ const formatDateTime = (value: string | undefined): string => {
 	if (!value) return "در انتظار";
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) return value;
-	return new Intl.DateTimeFormat("fa-IR", {
+	return new Intl.DateTimeFormat("en-US", {
 		hour: "2-digit",
 		minute: "2-digit",
 		second: "2-digit",
-		month: "short",
 		day: "2-digit",
 	}).format(date);
 };
