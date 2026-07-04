@@ -60,6 +60,8 @@ export type AuthResponse = UserAuthResponse | AdminAuthResponse;
 
 export interface TeamPlayerRequest {
 	userId: number;
+	name?: string;
+	name_fa?: string;
 	isLeader?: boolean;
 	voteWeight?: number;
 	[key: string]: unknown;
@@ -67,14 +69,24 @@ export interface TeamPlayerRequest {
 
 export type PlayerConfig = TeamPlayerRequest;
 
+export type TeamRoleType = "ATTACKER" | "DEFENCER" | "BOTH" | "GOVERNMENT";
+
 export interface TeamRoleRequest {
 	type: string;
 	allowed_action_types?: string[];
+	type_fa?: string;
+	allowed_action_types_fa?: string[];
 	description?: string;
 	[key: string]: unknown;
 }
 
-export type TeamRole = TeamRoleRequest;
+export type TeamRole = Omit<
+	TeamRoleRequest,
+	"type" | "allowed_action_types"
+> & {
+	type: TeamRoleType;
+	allowed_action_types?: ActionType[];
+};
 
 export interface TeamRequest {
 	id?: number;
@@ -82,6 +94,12 @@ export interface TeamRequest {
 	side_id?: number;
 	side_name?: string | null;
 	display_name?: string | null;
+	display_name_fa?: string | null;
+	name_fa?: string | null;
+	side_name_fa?: string | null;
+	team_type?: "PLAYER" | "GOVERNMENT";
+	team_type_fa?: string;
+	governmentCode?: string;
 	color?: string | null;
 	icon?: string | null;
 	starting_credits?: number;
@@ -92,6 +110,7 @@ export interface TeamRequest {
 }
 
 export type TeamConfig = TeamRequest;
+export type Team = TeamRequest;
 
 export interface SideConfig {
 	id?: number | null;
@@ -136,11 +155,16 @@ export interface ActionRequirementsRequest {
 
 export type ActionRequirements = ActionRequirementsRequest;
 
+export type ActionType = "attack" | "defense";
+
 export interface ActionConfigRequest {
 	code: string;
 	name?: string | null;
-	type: string;
+	name_fa?: string | null;
+	type: ActionType;
+	type_fa?: string;
 	description?: string | null;
+	description_fa?: string | null;
 	base_stats: ActionBaseStatsRequest;
 	requirements?: ActionRequirementsRequest;
 	effects?: Record<string, unknown>;
@@ -165,6 +189,7 @@ export interface ActionCounterRequest {
 }
 
 export type AttackCounterMap = ActionCounterRequest;
+export type ActionCounter = ActionCounterRequest;
 
 export interface GovernmentPlayerRequest {
 	userId: number;
@@ -217,8 +242,12 @@ export interface SideGovernmentRequest {
 export interface GovernmentConfigRequest {
 	enabled: boolean;
 	side_governments: SideGovernmentRequest[];
+	actions?: GovernmentActionRequest[];
 	[key: string]: unknown;
 }
+
+export type GovernmentConfig = GovernmentConfigRequest;
+export type GovernmentAction = GovernmentActionRequest;
 
 export interface BlackMarketTargetRequest {
 	action_code?: string | null;
@@ -250,8 +279,11 @@ export type BlackMarketAvailability = BlackMarketAvailabilityRequest;
 export interface BlackMarketItemRequest {
 	code: string;
 	name?: string | null;
+	name_fa?: string | null;
 	description?: string;
+	description_fa?: string;
 	item_type: string;
+	item_type_fa?: string;
 	effect_type: string;
 	target?: BlackMarketTargetRequest;
 	effect: BlackMarketEffectRequest;
@@ -264,6 +296,7 @@ export interface BlackMarketItemRequest {
 }
 
 export type BlackMarketItemConfig = BlackMarketItemRequest;
+export type BlackMarketItem = BlackMarketItemRequest;
 
 export interface ConfigureAllRequest {
 	version: string;
@@ -276,6 +309,352 @@ export interface ConfigureAllRequest {
 	max_players?: number | null;
 	sides?: SideConfig[] | null;
 	[key: string]: unknown;
+}
+
+export type SubjectType =
+	| "mitre_technique"
+	| "asset"
+	| "critical_infrastructure";
+export type ScenarioType = "attack_path" | "defense_path";
+export type ExecutionMode = "ordered" | "checklist" | "branching";
+export type StepStatus = "available" | "completed" | "failed" | "locked";
+export type SubjectStatus = "active" | "stalled" | "completed";
+export type GamePhase =
+	| "GOVERNMENT_SELECTION"
+	| "SELECTION"
+	| "VOTING"
+	| "CALCULATION";
+export type ImpactEffectType =
+	| "ADVANCE_PROGRESS"
+	| "STALL_SUBJECT"
+	| "RESUME_SUBJECT"
+	| "DISABLE_ACTION"
+	| "ENABLE_ACTION"
+	| "LOCK_SCENARIO"
+	| "UNLOCK_SCENARIO"
+	| "SKIP_STEP"
+	| "CREDIT_DELTA"
+	| "POINT_DELTA"
+	| "REVEAL_TO_GOVERNMENT"
+	| "REDUCE_VISIBILITY"
+	| "PROBABILITY_MODIFIER"
+	| "REMOVE_ACTIVE_EFFECT";
+export type GovernmentOrderType =
+	| "ASSIGN_SUBJECT"
+	| "FORCE_SUBJECT"
+	| "ALLOCATE_CREDIT"
+	| "BAN_ACTION"
+	| "UNBAN_ACTION"
+	| "DISABLE_TEAM"
+	| "ENABLE_TEAM";
+
+export interface Goal {
+	id: string;
+	title: string;
+	title_fa?: string;
+	description?: string | null;
+	description_fa?: string | null;
+	side_id: number;
+}
+
+export interface Subject {
+	id: string;
+	goal_id: string;
+	title: string;
+	title_fa?: string;
+	description?: string | null;
+	description_fa?: string | null;
+	subject_type: SubjectType;
+	subject_type_fa?: string;
+	target_team_id: number;
+	owner_side_id: number;
+	criticality?: number | null;
+	mitre_mapping?: Record<string, unknown>;
+}
+
+export interface SubSubject {
+	id: string;
+	subject_id: string;
+	title: string;
+	title_fa?: string;
+	progress_share: number;
+	source?: Record<string, unknown>;
+	completion_rule?: Record<string, unknown>;
+}
+
+export interface Scenario {
+	id: string;
+	sub_subject_id: string;
+	title: string;
+	title_fa?: string;
+	scenario_type: ScenarioType;
+	scenario_type_fa?: string;
+	execution_mode: ExecutionMode;
+	execution_mode_fa?: string;
+	allowed_team_roles?: Exclude<TeamRoleType, "GOVERNMENT">[];
+	allowed_team_roles_fa?: string[];
+	base_reward_points?: number | null;
+	base_credit_cost?: number | null;
+	risk_level?: string | null;
+	risk_level_fa?: string | null;
+}
+
+export interface ImpactEffect {
+	type: ImpactEffectType;
+	target?: string | null;
+	value?: number | null;
+	duration_turns?: number | null;
+	confidence?: "low" | "medium" | "high" | null;
+	reason?: string | null;
+}
+
+export interface ScenarioStep {
+	id: string;
+	scenario_id: string;
+	order?: number | null;
+	action_code: string;
+	required?: boolean;
+	depends_on?: string[];
+	on_success?: ImpactEffect[];
+	on_failure?: ImpactEffect[];
+}
+
+export interface ImpactRule {
+	id: string;
+	trigger: {
+		event: string;
+		action_code?: string;
+	};
+	effects: ImpactEffect[];
+}
+
+export type VisibilityAudienceType = "user" | "team" | "side" | "role";
+
+export interface VisibilityAudience {
+	type: VisibilityAudienceType;
+	id?: number;
+	user_id?: number;
+	team_id?: number;
+	side_id?: number;
+	role_value?: TeamRoleType | "ADMIN";
+}
+
+export interface CrossSideVisibilityGrantee extends VisibilityAudience {
+	actor_side_id: number;
+	target_side_id?: number;
+}
+
+export interface VisibilityConfig {
+	events: Record<string, { audiences: VisibilityAudience[] }>;
+	cross_side_result: {
+		enabled: boolean;
+		grantees: CrossSideVisibilityGrantee[];
+	};
+}
+
+export interface ConfigureAllRequestV2 {
+	version: "2.0";
+	game_config: GameConfigRequest;
+	teams: TeamRequest[];
+	actions: ActionConfigRequest[];
+	government?: GovernmentConfigRequest | null;
+	action_counters?: ActionCounterRequest[];
+	black_market?: BlackMarketItemRequest[];
+	max_players?: number | null;
+	sides?: SideConfig[] | null;
+	goals: Goal[];
+	subjects: Subject[];
+	sub_subjects: SubSubject[];
+	scenarios: Scenario[];
+	scenario_steps: ScenarioStep[];
+	impact_rules: ImpactRule[];
+	visibility_config: VisibilityConfig;
+}
+
+export interface SubjectSubSubjectView {
+	id: string;
+	title: string;
+	title_fa?: string;
+	progress_share: number;
+	completed: boolean;
+	stalled?: boolean;
+}
+
+export interface SubjectView {
+	id: string;
+	title: string;
+	title_fa?: string;
+	subject_type: SubjectType;
+	progress_percent: number;
+	status?: SubjectStatus;
+	sub_subjects: SubjectSubSubjectView[];
+}
+
+export interface ScenarioView {
+	id: string;
+	title: string;
+	title_fa?: string;
+	scenario_type: ScenarioType;
+	execution_mode: ExecutionMode;
+}
+
+export interface StepView {
+	id: string;
+	action_code: string;
+	action_name?: string;
+	action_name_fa?: string;
+	order: number | null;
+	required: boolean;
+	status: StepStatus;
+	available: boolean;
+	cost?: number;
+	probability?: number;
+}
+
+export interface LockReason {
+	code: string;
+	message: string;
+	source: string | null;
+}
+
+export interface LockReasonsResponse {
+	node_id: string;
+	locked: boolean;
+	reasons: LockReason[];
+}
+
+export interface OrderView {
+	turn: number;
+	government_team_id: number;
+	target_team_id: number;
+	order_type: GovernmentOrderType;
+	payload: Record<string, unknown>;
+	forced: boolean;
+}
+
+export interface PlayerStateResponse {
+	team_id: number;
+	current_turn: number;
+	current_phase?: GamePhase;
+	credits: number;
+	active_subject_id: string | null;
+	active_sub_subject_id: string | null;
+	active_scenario_id: string | null;
+	assigned_subjects: SubjectView[];
+	orders?: OrderView[];
+}
+
+export interface GovernmentTeamProgress {
+	team_id: number;
+	credits?: number;
+	assigned_subjects: Array<
+		Pick<
+			SubjectView,
+			"id" | "title" | "title_fa" | "progress_percent" | "status"
+		> & {
+			sub_subjects?: SubjectSubSubjectView[];
+		}
+	>;
+}
+
+export interface GovernmentOverviewResponse {
+	side_id: number;
+	goal_id: string | null;
+	teams: GovernmentTeamProgress[];
+	orders?: OrderView[];
+}
+
+export type GovernmentOrder =
+	| {
+			order_type: "ASSIGN_SUBJECT" | "FORCE_SUBJECT";
+			target_team_id: number;
+			payload: { subject_id: string };
+	  }
+	| {
+			order_type: "ALLOCATE_CREDIT";
+			target_team_id: number;
+			payload: { amount: number };
+	  }
+	| {
+			order_type: "BAN_ACTION";
+			target_team_id: number;
+			payload: { action_code: string; duration?: number };
+	  }
+	| {
+			order_type: "UNBAN_ACTION";
+			target_team_id: number;
+			payload: { action_code: string };
+	  }
+	| {
+			order_type: "DISABLE_TEAM";
+			target_team_id: number;
+			payload: { duration?: number; reason?: string };
+	  }
+	| {
+			order_type: "ENABLE_TEAM";
+			target_team_id: number;
+			payload: Record<string, never>;
+	  };
+
+export interface GamePlanValidationError {
+	loc: string;
+	code: string;
+	message: string;
+}
+
+export interface GamePlanValidationResponse {
+	valid: boolean;
+	errors: GamePlanValidationError[];
+}
+
+export interface SubjectStateResponse {
+	subject_id: string;
+	teams: Array<{
+		team_id: number;
+		progress_percent: number;
+		status: SubjectStatus;
+		sub_subjects: Array<
+			Pick<
+				SubjectSubSubjectView,
+				"id" | "progress_share" | "completed" | "stalled"
+			>
+		>;
+	}>;
+}
+
+export interface GamePlanGraphResponse {
+	nodes: Array<Record<string, unknown>>;
+	edges: Array<Record<string, unknown>>;
+}
+
+export interface SelectScenarioResponse {
+	ok: true;
+	active_subject_id: string;
+	active_sub_subject_id: string;
+	active_scenario_id: string;
+	target_team_id: number | null;
+}
+
+export interface VoteStepResponse {
+	ok: true;
+	scenario_id: string;
+	step_id: string;
+	action_code: string;
+	category: ActionType;
+}
+
+export interface GoalSelectResponse {
+	ok: true;
+	side_id: number;
+	goal_id: string;
+}
+
+export interface GovernmentOrderResultResponse {
+	ok: true;
+	order_type: GovernmentOrderType;
+	target_team_id: number;
+	subject_id?: string;
+	forced?: boolean;
 }
 
 export interface DirectiveConfig {
@@ -374,7 +753,8 @@ export interface TurnAnalyticsListData {
 	[key: string]: unknown;
 }
 
-export type TurnAnalyticsListResponse = ServerApiEnvelope<TurnAnalyticsListData>;
+export type TurnAnalyticsListResponse =
+	ServerApiEnvelope<TurnAnalyticsListData>;
 
 export interface TurnAnalyticsPlotStorage {
 	provider?: string | null;
@@ -414,7 +794,8 @@ export interface TurnAnalyticsDetailData {
 	[key: string]: unknown;
 }
 
-export type TurnAnalyticsDetailResponse = ServerApiEnvelope<TurnAnalyticsDetailData>;
+export type TurnAnalyticsDetailResponse =
+	ServerApiEnvelope<TurnAnalyticsDetailData>;
 
 export interface AdminUserSummary {
 	id: number;
@@ -438,7 +819,7 @@ export interface EventVisibility {
 	[key: string]: unknown;
 }
 
-export interface GameEvent {
+export interface BaseGameEvent {
 	seq: number;
 	gameId: string;
 	type: string;
@@ -447,8 +828,50 @@ export interface GameEvent {
 	payload: Record<string, unknown>;
 	createdAt: string;
 	schemaVersion?: number;
-	[key: string]: unknown;
 }
+
+export interface ScenarioStepResolvedPayload {
+	subject_id: string;
+	sub_subject_id: string;
+	scenario_id: string;
+	step_id: string;
+	action_code: string;
+	result: "success" | "failed";
+	team_id: number;
+	target_team_id: number | null;
+	effects: Array<
+		ImpactEffect | { type: "SUBJECT_PROGRESS"; target: string; value: number }
+	>;
+	message: string;
+	actor_side: number;
+	target_side: number;
+}
+
+export interface GovernmentOrderIssuedPayload {
+	order_type: GovernmentOrderType;
+	government_team_id: number;
+	target_team_id: number;
+	subject_id: string | null;
+	forced: boolean | null;
+	message: string;
+}
+
+export interface ScenarioStepResolvedEvent
+	extends Omit<BaseGameEvent, "type" | "payload"> {
+	type: "SCENARIO_STEP_RESOLVED";
+	payload: ScenarioStepResolvedPayload;
+}
+
+export interface GovernmentOrderIssuedEvent
+	extends Omit<BaseGameEvent, "type" | "payload"> {
+	type: "GOVERNMENT_ORDER_ISSUED";
+	payload: GovernmentOrderIssuedPayload;
+}
+
+export type GameEvent =
+	| ScenarioStepResolvedEvent
+	| GovernmentOrderIssuedEvent
+	| BaseGameEvent;
 
 export interface EventReplayData {
 	events: GameEvent[];
@@ -502,14 +925,26 @@ export interface ConfigureAllResponse extends Record<string, unknown> {
 	events: unknown[];
 }
 
-export type DirectivesConfiguredResponse = ServerApiEnvelope<Record<string, unknown>>;
-export type DirectivesAddedResponse = ServerApiEnvelope<Record<string, unknown>>;
-export type DirectiveDeletedResponse = ServerApiEnvelope<Record<string, unknown>>;
-export type DirectiveMessageResponse = ServerApiEnvelope<Record<string, unknown>>;
+export type DirectivesConfiguredResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
+export type DirectivesAddedResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
+export type DirectiveDeletedResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
+export type DirectiveMessageResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
 export type DirectivesListResponse = ServerApiEnvelope<Record<string, unknown>>;
-export type ActiveDirectivesResponse = ServerApiEnvelope<Record<string, unknown>>;
+export type ActiveDirectivesResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
 export type AdminEventListResponse = ServerApiEnvelope<Record<string, unknown>>;
-export type AdminClearEventsResponse = ServerApiEnvelope<Record<string, unknown>>;
+export type AdminClearEventsResponse = ServerApiEnvelope<
+	Record<string, unknown>
+>;
 export type AdminGameStateResponse = ServerApiEnvelope<Record<string, unknown>>;
 
 export interface ServerHealthResponse {

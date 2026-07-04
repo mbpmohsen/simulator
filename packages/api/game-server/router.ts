@@ -11,6 +11,7 @@ import type {
 	AdminLoginRequest,
 	AdminUsersResponse,
 	ConfigureAllRequest,
+	ConfigureAllRequestV2,
 	ConfigureAllResponse,
 	ConfigureDirectivesRequest,
 	DetailResponse,
@@ -22,9 +23,12 @@ import type {
 	EventReplayQuery,
 	EventReplayResponse,
 	EventStatusResponse,
+	GamePlanGraphResponse,
+	GamePlanValidationResponse,
 	ListUsersQuery,
 	ReadinessStatusResponse,
 	ServerHealthResponse,
+	SubjectStateResponse,
 	TurnAnalyticsDetailResponse,
 	TurnAnalyticsListQuery,
 	TurnAnalyticsListResponse,
@@ -43,19 +47,43 @@ export interface GameServerApiConfig {
 }
 
 export interface GameServerApi {
-	signup(payload: UserSignupRequest, config?: AxiosRequestConfig): Promise<UserAuthResponse>;
-	login(payload: UserLoginRequest, config?: AxiosRequestConfig): Promise<UserAuthResponse>;
+	signup(
+		payload: UserSignupRequest,
+		config?: AxiosRequestConfig,
+	): Promise<UserAuthResponse>;
+	login(
+		payload: UserLoginRequest,
+		config?: AxiosRequestConfig,
+	): Promise<UserAuthResponse>;
 	adminLogin(
 		payload: AdminLoginRequest,
 		config?: AxiosRequestConfig,
 	): Promise<AdminAuthResponse>;
 	configureAll(
-		payload: ConfigureAllRequest,
+		payload: ConfigureAllRequest | ConfigureAllRequestV2,
 		config?: AxiosRequestConfig,
 	): Promise<ConfigureAllResponse>;
-	startGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
-	resetGame(gameId: string, config?: AxiosRequestConfig): Promise<DetailResponse>;
-	getAdminGameState(config?: AxiosRequestConfig): Promise<AdminGameStateResponse>;
+	validateGamePlan(
+		payload: ConfigureAllRequestV2,
+		config?: AxiosRequestConfig,
+	): Promise<GamePlanValidationResponse>;
+	getGamePlan(config?: AxiosRequestConfig): Promise<ConfigureAllRequestV2>;
+	getGamePlanGraph(config?: AxiosRequestConfig): Promise<GamePlanGraphResponse>;
+	getSubjectState(
+		subjectId: string,
+		config?: AxiosRequestConfig,
+	): Promise<SubjectStateResponse>;
+	startGame(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<DetailResponse>;
+	resetGame(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<DetailResponse>;
+	getAdminGameState(
+		config?: AxiosRequestConfig,
+	): Promise<AdminGameStateResponse>;
 	listUsers(
 		query?: ListUsersQuery,
 		config?: AxiosRequestConfig,
@@ -66,7 +94,10 @@ export interface GameServerApi {
 		query?: EventReplayQuery,
 		config?: AxiosRequestConfig,
 	): Promise<EventReplayResponse>;
-	getEventsStatus(gameId: string, config?: AxiosRequestConfig): Promise<EventStatusResponse>;
+	getEventsStatus(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<EventStatusResponse>;
 	getReadiness(
 		gameId: string,
 		config?: AxiosRequestConfig,
@@ -76,7 +107,9 @@ export interface GameServerApi {
 		query?: AdminEventListQuery,
 		config?: AxiosRequestConfig,
 	): Promise<AdminEventListResponse>;
-	getAdminGameCatalog(config?: AxiosRequestConfig): Promise<AdminGameCatalogResponse>;
+	getAdminGameCatalog(
+		config?: AxiosRequestConfig,
+	): Promise<AdminGameCatalogResponse>;
 	listTurnAnalytics(
 		gameId: string,
 		query?: TurnAnalyticsListQuery,
@@ -108,9 +141,13 @@ export interface GameServerApi {
 		directiveName: string,
 		config?: AxiosRequestConfig,
 	): Promise<DirectiveDeletedResponse>;
-	clearDirectives(config?: AxiosRequestConfig): Promise<DirectiveMessageResponse>;
+	clearDirectives(
+		config?: AxiosRequestConfig,
+	): Promise<DirectiveMessageResponse>;
 	listDirectives(config?: AxiosRequestConfig): Promise<DirectivesListResponse>;
-	getActiveDirectives(config?: AxiosRequestConfig): Promise<ActiveDirectivesResponse>;
+	getActiveDirectives(
+		config?: AxiosRequestConfig,
+	): Promise<ActiveDirectivesResponse>;
 }
 
 const createHttpClient = (config: GameServerApiConfig): AxiosInstance => {
@@ -129,7 +166,9 @@ const createHttpClient = (config: GameServerApiConfig): AxiosInstance => {
 	});
 };
 
-export const createGameServerApi = (config: GameServerApiConfig): GameServerApi => {
+export const createGameServerApi = (
+	config: GameServerApiConfig,
+): GameServerApi => {
 	const http = createHttpClient(config);
 
 	return {
@@ -164,6 +203,39 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 			const { data } = await http.post<ConfigureAllResponse>(
 				"/admin/configure_all",
 				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async validateGamePlan(payload, requestConfig) {
+			const { data } = await http.post<GamePlanValidationResponse>(
+				"/admin/game_plan/validate",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getGamePlan(requestConfig) {
+			const { data } = await http.get<ConfigureAllRequestV2>(
+				"/admin/game_plan",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getGamePlanGraph(requestConfig) {
+			const { data } = await http.get<GamePlanGraphResponse>(
+				"/admin/game_plan/graph",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getSubjectState(subjectId, requestConfig) {
+			const { data } = await http.get<SubjectStateResponse>(
+				`/admin/subjects/${encodeURIComponent(subjectId)}/state`,
 				requestConfig,
 			);
 			return data;
@@ -204,7 +276,10 @@ export const createGameServerApi = (config: GameServerApiConfig): GameServerApi 
 		},
 
 		async health(requestConfig) {
-			const { data } = await http.get<ServerHealthResponse>("/health", requestConfig);
+			const { data } = await http.get<ServerHealthResponse>(
+				"/health",
+				requestConfig,
+			);
 			return data;
 		},
 

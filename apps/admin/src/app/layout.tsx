@@ -1,8 +1,9 @@
+import { vazirmatn } from "@/styles/fonts";
+
 import type { Metadata } from "next";
-
 import "@workspace/ui/globals.css";
-import { Providers } from "@/components/providers";
 
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="fa" suppressHydrationWarning dir="rtl">
+		<html lang="fa" suppressHydrationWarning dir="rtl" className={vazirmatn.className}>
 			<body className="antialiased">
 				<Providers>
 					{children}

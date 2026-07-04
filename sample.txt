@@ -1,0 +1,1297 @@
+
+https://game.darkube.ir/api/games/1781854310765287937/admin/turn-analytics/1
+
+{
+    "success": true,
+    "data": {
+        "gameId": "1781854310765287937",
+        "turn": 1,
+        "createdAt": 1781854615889,
+        "mathematics": {
+            "teams": {
+                "Red Government": {
+                    "best_target": "Blue Government",
+                    "expected_value": 0.8775,
+                    "sas": 0.5265,
+                    "points_progress": 0.0,
+                    "equilibrium": {
+                        "type": "nashpy",
+                        "x": [
+                            1.0
+                        ],
+                        "y": [
+                            1.0
+                        ]
+                    },
+                    "strategies_i": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Blue Government",
+                            null
+                        ]
+                    ],
+                    "strategies_j": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Red Government",
+                            null
+                        ]
+                    ],
+                    "Ui": [
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "Uj": [
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "per_target": {
+                        "Blue Government": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0
+                                ],
+                                "y": [
+                                    1.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    null
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    null
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265
+                            ]
+                        },
+                        "Blue Team": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0
+                                ],
+                                "y": [
+                                    1.0,
+                                    0.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    null
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ]
+                        }
+                    },
+                    "plots": []
+                },
+                "Red Team": {
+                    "best_target": "Blue Government",
+                    "expected_value": 0.8775,
+                    "sas": 0.5265,
+                    "points_progress": 0.0,
+                    "equilibrium": {
+                        "type": "nashpy",
+                        "x": [
+                            1.0,
+                            0.0
+                        ],
+                        "y": [
+                            1.0
+                        ]
+                    },
+                    "strategies_i": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Blue Government",
+                            null
+                        ],
+                        [
+                            "attack",
+                            "T1539",
+                            "Blue Government",
+                            "T1539_BOOST"
+                        ]
+                    ],
+                    "strategies_j": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Red Team",
+                            null
+                        ]
+                    ],
+                    "Ui": [
+                        [
+                            0.8775
+                        ],
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "Uj": [
+                        [
+                            0.8775
+                        ],
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "per_target": {
+                        "Blue Government": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0,
+                                    0.0
+                                ],
+                                "y": [
+                                    1.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    null
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775
+                                ],
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775
+                                ],
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265
+                            ]
+                        },
+                        "Blue Team": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0,
+                                    0.0
+                                ],
+                                "y": [
+                                    1.0,
+                                    0.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ],
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ],
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ]
+                        }
+                    },
+                    "plots": []
+                },
+                "Blue Government": {
+                    "best_target": "Red Government",
+                    "expected_value": 0.8775,
+                    "sas": 0.5265,
+                    "points_progress": 0.0,
+                    "equilibrium": {
+                        "type": "nashpy",
+                        "x": [
+                            1.0
+                        ],
+                        "y": [
+                            1.0
+                        ]
+                    },
+                    "strategies_i": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Red Government",
+                            null
+                        ]
+                    ],
+                    "strategies_j": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Blue Government",
+                            null
+                        ]
+                    ],
+                    "Ui": [
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "Uj": [
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "per_target": {
+                        "Red Government": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0
+                                ],
+                                "y": [
+                                    1.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    null
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    null
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265
+                            ]
+                        },
+                        "Red Team": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0
+                                ],
+                                "y": [
+                                    1.0,
+                                    0.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    null
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Government",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ]
+                        }
+                    },
+                    "plots": []
+                },
+                "Blue Team": {
+                    "best_target": "Red Government",
+                    "expected_value": 0.8775,
+                    "sas": 0.5265,
+                    "points_progress": 0.0,
+                    "equilibrium": {
+                        "type": "nashpy",
+                        "x": [
+                            1.0,
+                            0.0
+                        ],
+                        "y": [
+                            1.0
+                        ]
+                    },
+                    "strategies_i": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Red Government",
+                            null
+                        ],
+                        [
+                            "attack",
+                            "T1539",
+                            "Red Government",
+                            "T1539_BOOST"
+                        ]
+                    ],
+                    "strategies_j": [
+                        [
+                            "attack",
+                            "T1539",
+                            "Blue Team",
+                            null
+                        ]
+                    ],
+                    "Ui": [
+                        [
+                            0.8775
+                        ],
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "Uj": [
+                        [
+                            0.8775
+                        ],
+                        [
+                            0.8775
+                        ]
+                    ],
+                    "per_target": {
+                        "Red Government": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0,
+                                    0.0
+                                ],
+                                "y": [
+                                    1.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Government",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    null
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775
+                                ],
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775
+                                ],
+                                [
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265
+                            ]
+                        },
+                        "Red Team": {
+                            "equilibrium": {
+                                "type": "nashpy",
+                                "x": [
+                                    1.0,
+                                    0.0
+                                ],
+                                "y": [
+                                    1.0,
+                                    0.0
+                                ]
+                            },
+                            "strategies_i": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Red Team",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "strategies_j": [
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    null
+                                ],
+                                [
+                                    "attack",
+                                    "T1539",
+                                    "Blue Team",
+                                    "T1539_BOOST"
+                                ]
+                            ],
+                            "Ui": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ],
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "Uj": [
+                                [
+                                    0.8775,
+                                    0.8775
+                                ],
+                                [
+                                    0.8775,
+                                    0.8775
+                                ]
+                            ],
+                            "row_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "row_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ],
+                            "col_ev_per_strategy": [
+                                0.8775,
+                                0.8775
+                            ],
+                            "col_sas_per_strategy": [
+                                0.5265,
+                                0.5265
+                            ]
+                        }
+                    },
+                    "plots": []
+                }
+            }
+        },
+        "flow": {
+            "actions": [
+                {
+                    "order": 1,
+                    "teamId": 2200000102,
+                    "teamName": "Blue Team",
+                    "teamRole": "DEFENCER",
+                    "sideId": 2200000001,
+                    "sideName": "Blue",
+                    "targetTeamId": null,
+                    "targetTeamName": null,
+                    "actionCategory": "defense",
+                    "actionName": "M1047_DEFENSE",
+                    "actionCode": "2",
+                    "voteTotal": 2.0,
+                    "successful": false,
+                    "probabilities": {
+                        "base": 80.0,
+                        "current": 80.0,
+                        "effective": 80.0
+                    },
+                    "costs": {
+                        "base": 14.0,
+                        "effective": 14.0
+                    },
+                    "growthFactors": {
+                        "base": 0.0,
+                        "effective": null
+                    },
+                    "techFactors": {
+                        "base": 0.0,
+                        "effective": null
+                    },
+                    "probabilityIncrementTotal": null,
+                    "newProbability": null,
+                    "teamStatesBefore": {
+                        "Red Government": {
+                            "points": 0,
+                            "credits": 5.0,
+                            "vulnerabilities": {},
+                            "current_probabilities": {
+                                "attack": {
+                                    "T1539": 75.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 80.0
+                                }
+                            },
+                            "current_costs": {
+                                "attack": {
+                                    "T1539": 20.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 14.0
+                                }
+                            },
+                            "current_growth_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "current_tech_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "active_effects": []
+                        },
+                        "Red Team": {
+                            "points": 0,
+                            "credits": 200.0,
+                            "vulnerabilities": {},
+                            "current_probabilities": {
+                                "attack": {
+                                    "T1539": 75.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 80.0
+                                }
+                            },
+                            "current_costs": {
+                                "attack": {
+                                    "T1539": 20.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 14.0
+                                }
+                            },
+                            "current_growth_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "current_tech_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "active_effects": []
+                        },
+                        "Blue Government": {
+                            "points": 0,
+                            "credits": 5.0,
+                            "vulnerabilities": {},
+                            "current_probabilities": {
+                                "attack": {
+                                    "T1539": 75.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 80.0
+                                }
+                            },
+                            "current_costs": {
+                                "attack": {
+                                    "T1539": 20.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 14.0
+                                }
+                            },
+                            "current_growth_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "current_tech_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "active_effects": []
+                        },
+                        "Blue Team": {
+                            "points": 0,
+                            "credits": 200.0,
+                            "vulnerabilities": {},
+                            "current_probabilities": {
+                                "attack": {
+                                    "T1539": 75.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 80.0
+                                }
+                            },
+                            "current_costs": {
+                                "attack": {
+                                    "T1539": 20.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 14.0
+                                }
+                            },
+                            "current_growth_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "current_tech_factors": {
+                                "attack": {
+                                    "T1539": 0.0
+                                },
+                                "defense": {
+                                    "M1047_DEFENSE": 0.0
+                                }
+                            },
+                            "active_effects": []
+                        }
+                    },
+                    "activeEffects": {
+                        "Red Government": [],
+                        "Red Team": [],
+                        "Blue Government": [],
+                        "Blue Team": []
+                    },
+                    "activeDirectives": [],
+                    "blackMarketPurchases": [],
+                    "creditsSpent": 14.0,
+                    "creditsRemaining": 186.0,
+                    "timestamp": 1781854615.8522854
+                }
+            ]
+        },
+        "comparison": [
+            {
+                "teamId": 2200000102,
+                "teamName": "Blue Team",
+                "teamRole": "DEFENCER",
+                "sideId": 2200000001,
+                "sideName": "Blue",
+                "actualAction": {
+                    "category": "defense",
+                    "name": "M1047_DEFENSE",
+                    "targetTeamName": null,
+                    "successful": false,
+                    "creditsSpent": 14.0,
+                    "creditsRemaining": 186.0,
+                    "observedPointsDelta": 0
+                },
+                "predicted": {
+                    "bestTargetTeamName": "Red Government",
+                    "bestExpectedValue": 0.8775,
+                    "bestSas": 0.5265,
+                    "pointsProgress": 0.0,
+                    "recommendedStrategy": {
+                        "key": [
+                            "attack",
+                            "T1539",
+                            "Red Government",
+                            null
+                        ],
+                        "category": "attack",
+                        "name": "T1539",
+                        "targetTeamName": "Red Government",
+                        "itemName": null,
+                        "expectedValue": 0.8775,
+                        "sas": 0.5265,
+                        "equilibriumProbability": 1.0,
+                        "perTargetTeamName": "Red Government"
+                    },
+                    "actualStrategy": {
+                        "found": false,
+                        "matchedBestTarget": null,
+                        "matchedRecommendedStrategy": null,
+                        "expectedValueGapToRecommended": null,
+                        "key": null,
+                        "category": "defense",
+                        "name": "M1047_DEFENSE"
+                    }
+                }
+            }
+        ],
+        "plots": [],
+        "turnState": {
+            "summary": {
+                "actions_executed": 1,
+                "total_credits_spent": 14.0,
+                "vulnerabilities_created": 0,
+                "active_effects_count": 0
+            },
+            "teams": {
+                "Red Government": {
+                    "points": 0,
+                    "credits": 5.0,
+                    "vulnerabilities": {},
+                    "active_effects": [],
+                    "current_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "current_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "current_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "current_tech_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "base_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "base_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "base_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "action_executed": false,
+                    "credits_spent_this_turn": 0.0
+                },
+                "Red Team": {
+                    "points": 0,
+                    "credits": 200.0,
+                    "vulnerabilities": {},
+                    "active_effects": [],
+                    "current_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "current_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "current_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "current_tech_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "base_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "base_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "base_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "action_executed": false,
+                    "credits_spent_this_turn": 0.0
+                },
+                "Blue Government": {
+                    "points": 0,
+                    "credits": 5.0,
+                    "vulnerabilities": {},
+                    "active_effects": [],
+                    "current_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "current_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "current_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "current_tech_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "base_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "base_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "base_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "action_executed": false,
+                    "credits_spent_this_turn": 0.0
+                },
+                "Blue Team": {
+                    "points": 0,
+                    "credits": 186.0,
+                    "vulnerabilities": {},
+                    "active_effects": [],
+                    "current_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "current_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "current_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "current_tech_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "base_probabilities": {
+                        "attack": {
+                            "T1539": 75.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 80.0
+                        }
+                    },
+                    "base_costs": {
+                        "attack": {
+                            "T1539": 20.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 14.0
+                        }
+                    },
+                    "base_growth_factors": {
+                        "attack": {
+                            "T1539": 0.0
+                        },
+                        "defense": {
+                            "M1047_DEFENSE": 0.0
+                        }
+                    },
+                    "action_executed": true,
+                    "credits_spent_this_turn": 14.0
+                }
+            },
+            "blackMarketActivity": []
+        }
+    },
+    "timestamp": 1781855003189,
+    "schemaVersion": 1
+}
+
+// here :
+
+https://game.darkube.ir/api/games/1781854310765287937/admin/turn-analytics?limit=50
+{
+    "success": true,
+    "data": {
+        "gameId": "1781854310765287937",
+        "reports": [
+            {
+                "turn": 1,
+                "createdAt": 1781854615889,
+                "actionCount": 1,
+                "comparisonCount": 1,
+                "teamCount": 4,
+                "plotCount": 0,
+                "bestTargets": {
+                    "Red Government": "Blue Government",
+                    "Red Team": "Blue Government",
+                    "Blue Government": "Red Government",
+                    "Blue Team": "Red Government"
+                }
+            },
+            {
+                "turn": 2,
+                "createdAt": 1781854751212,
+                "actionCount": 0,
+                "comparisonCount": 0,
+                "teamCount": 4,
+                "plotCount": 0,
+                "bestTargets": {
+                    "Red Government": "Blue Government",
+                    "Red Team": "Blue Government",
+                    "Blue Government": "Red Government",
+                    "Blue Team": "Red Government"
+                }
+            },
+            {
+                "turn": 3,
+                "createdAt": 1781854963793,
+                "actionCount": 0,
+                "comparisonCount": 0,
+                "teamCount": 4,
+                "plotCount": 0,
+                "bestTargets": {
+                    "Red Government": "Blue Government",
+                    "Red Team": "Blue Government",
+                    "Blue Government": "Red Government",
+                    "Blue Team": "Red Government"
+                }
+            }
+        ],
+        "count": 3
+    },
+    "timestamp": 1781855003041,
+    "schemaVersion": 1
+}
+

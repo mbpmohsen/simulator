@@ -1,12 +1,13 @@
 @import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
 
 :root {
 	--background: #ffffff;
 	--foreground: #171717;
 	--font-geist-sans: Arial, Helvetica, sans-serif;
 	--font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-	--font-vazir: Tahoma, Arial, Helvetica, sans-serif;
-	--font-vazir-local: Tahoma, Arial, Helvetica, sans-serif;
+	/*--font-vazir: Tahoma, Arial, Helvetica, sans-serif;*/
+	/*--font-vazir-local: Tahoma, Arial, Helvetica, sans-serif;*/
 }
 
 /* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS v4 uses @theme. */
