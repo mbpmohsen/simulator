@@ -37,6 +37,7 @@ import {
 	Activity,
 	AlertTriangle,
 	BarChart3,
+	BookOpen,
 	Calculator,
 	CheckCircle2,
 	Clock,
@@ -44,6 +45,7 @@ import {
 	Download,
 	FileClock,
 	Gauge,
+	GitBranch,
 	ImageIcon,
 	LogOut,
 	Radio,
@@ -929,7 +931,7 @@ export default function AdminAnalyticsPage() {
 	}, [api, loadSummaries, selectedGameId]);
 
 	useEffect(() => {
-		if (!adminToken || !selectedGameId || !liveEnabled) {
+		if (!api || !selectedGameId || !liveEnabled) {
 			setStreamState("idle");
 			return;
 		}
@@ -940,19 +942,13 @@ export default function AdminAnalyticsPage() {
 		const run = async () => {
 			setStreamState("connecting");
 			try {
-				const params = new URLSearchParams();
-				if (streamSeqRef.current > 0)
-					params.set("since", String(streamSeqRef.current));
-				params.set("types", "TURN_ANALYTICS_RECORDED");
-				const response = await fetch(
-					`${BASE_URL}/api/games/${encodeURIComponent(selectedGameId)}/events/stream?${params.toString()}`,
+				const response = await api.openEventsStream(
+					selectedGameId,
 					{
-						headers: {
-							Accept: "text/event-stream",
-							Authorization: `Bearer ${adminToken}`,
-						},
-						signal: controller.signal,
+						since: streamSeqRef.current > 0 ? streamSeqRef.current : undefined,
+						types: "TURN_ANALYTICS_RECORDED",
 					},
+					{ signal: controller.signal },
 				);
 				if (!response.ok || !response.body) {
 					throw new Error(`SSE stream returned ${response.status}.`);
@@ -992,7 +988,7 @@ export default function AdminAnalyticsPage() {
 			cancelled = true;
 			controller.abort();
 		};
-	}, [adminToken, ingestAnalyticsEvent, liveEnabled, selectedGameId]);
+	}, [api, ingestAnalyticsEvent, liveEnabled, selectedGameId]);
 
 	return (
 		<div dir="rtl" className="min-h-screen bg-[#070a0f] text-slate-100">
@@ -1039,9 +1035,28 @@ export default function AdminAnalyticsPage() {
 							variant="outline"
 							className="border-slate-600 bg-slate-950/30 text-slate-100"
 						>
-							<Link href="/configuration">
+							<Link href="/admin/game-plan">
 								<SlidersHorizontal className="h-4 w-4" />
 								پیکربندی
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="outline"
+							className="border-violet-600 bg-violet-950/30 text-violet-100"
+						>
+							<Link href="/admin/current-flow">
+								<GitBranch className="h-4 w-4" />
+								نقشه فعلی
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="outline"
+							className="border-slate-600 bg-slate-950/30 text-slate-100"
+						>
+							<Link href="/docs">
+								<BookOpen className="h-4 w-4" /> راهنما
 							</Link>
 						</Button>
 						<Button

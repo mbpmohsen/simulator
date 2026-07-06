@@ -1,52 +1,26 @@
 "use client";
 
 import type { GameEvent } from "@workspace/trpc";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { parseRuntimeApiError } from "@/lib/apiErrorParser";
+import { createGameEventsApi, parseSseBuffer } from "@/lib/gameEventsApi";
 
-const BASE_URL = process.env.NEXT_PUBLIC_CLIENT_URL ?? "";
 const MAX_EVENTS = 100;
+const RECONNECT_MS = 3000;
+const POLL_MS = 6000;
 
-type ConnectionStatus = "idle" | "connecting" | "live" | "polling" | "error";
+export type GameEventsStatus =
+	| "idle"
+	| "connecting"
+	| "live"
+	| "polling"
+	| "error";
 
-interface GameEventsState {
+export interface GameEventsState {
 	events: GameEvent[];
-	status: ConnectionStatus;
+	status: GameEventsStatus;
 	error: string | null;
 }
-
-const asRecord = (value: unknown): Record<string, unknown> | null =>
-	value !== null && typeof value === "object"
-		? (value as Record<string, unknown>)
-		: null;
-
-const parseGameEvent = (
-	value: unknown,
-	eventType?: string,
-	eventId?: string,
-): GameEvent | null => {
-	const record = asRecord(value);
-	if (!record) return null;
-	const payload = asRecord(record.payload) ?? {};
-	const seqCandidate = record.seq ?? eventId;
-	const seq =
-		typeof seqCandidate === "number" ? seqCandidate : Number(seqCandidate);
-	const type = typeof record.type === "string" ? record.type : eventType;
-	if (!Number.isFinite(seq) || !type) return null;
-	return {
-		...record,
-		seq,
-		type,
-		gameId: typeof record.gameId === "string" ? record.gameId : "",
-		visibility: (asRecord(record.visibility) as GameEvent["visibility"]) ?? {
-			scope: "subscriber",
-		},
-		payload,
-		createdAt:
-			typeof record.createdAt === "string"
-				? record.createdAt
-				: new Date().toISOString(),
-	} as GameEvent;
-};
 
 const mergeEvents = (
 	current: GameEvent[],
@@ -54,13 +28,16 @@ const mergeEvents = (
 ): GameEvent[] => {
 	const bySeq = new Map(current.map((event) => [event.seq, event]));
 	for (const event of incoming) bySeq.set(event.seq, event);
-	return [...bySeq.values()].sort((a, b) => b.seq - a.seq).slice(0, MAX_EVENTS);
+	return [...bySeq.values()]
+		.sort((first, second) => second.seq - first.seq)
+		.slice(0, MAX_EVENTS);
 };
 
 export const useGameEvents = (
 	gameId: string | null,
 	token: string | null,
 ): GameEventsState => {
+	const api = useMemo(() => createGameEventsApi(token ?? ""), [token]);
 	const [state, setState] = useState<GameEventsState>({
 		events: [],
 		status: "idle",
@@ -69,11 +46,16 @@ export const useGameEvents = (
 	const sinceRef = useRef(0);
 
 	useEffect(() => {
-		if (!gameId || !token) {
-			setState({ events: [], status: "idle", error: null });
-			return;
-		}
+		sinceRef.current = 0;
+		setState({
+			events: [],
+			status: gameId && token ? "connecting" : "idle",
+			error: null,
+		});
+		if (!gameId || !token) return;
+
 		let active = true;
+		let connecting = false;
 		let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 		let pollTimer: ReturnType<typeof setInterval> | null = null;
 		const controller = new AbortController();
@@ -90,69 +72,71 @@ export const useGameEvents = (
 			}));
 		};
 
+		const loadHistory = async (): Promise<void> => {
+			const events = await api.getHistory(
+				gameId,
+				{ sinceSeq: sinceRef.current, limit: 100 },
+				controller.signal,
+			);
+			addEvents(events);
+		};
+
 		const poll = async (): Promise<void> => {
 			try {
-				const response = await fetch(
-					`${BASE_URL}/api/games/${encodeURIComponent(gameId)}/events?since_seq=${sinceRef.current}&limit=100`,
-					{
-						headers: { Authorization: `Bearer ${token}` },
-						signal: controller.signal,
-					},
-				);
-				if (!response.ok) throw new Error(`HTTP ${response.status}`);
-				const root = asRecord(await response.json());
-				const data = asRecord(root?.data);
-				const events = Array.isArray(data?.events)
-					? data.events.flatMap((event) => parseGameEvent(event) ?? [])
-					: [];
-				addEvents(events);
+				await loadHistory();
 				if (active)
 					setState((current) => ({
 						...current,
 						status: "polling",
 						error: null,
 					}));
-			} catch (error) {
-				if (active && !controller.signal.aborted)
-					setState((current) => ({
-						...current,
-						status: "error",
-						error:
-							error instanceof Error
-								? error.message
-								: "دریافت رویدادها ناموفق بود.",
-					}));
+			} catch (requestError) {
+				if (!active || controller.signal.aborted) return;
+				setState((current) => ({
+					...current,
+					status: "error",
+					error: parseRuntimeApiError(
+						requestError,
+						"دریافت رویدادها ناموفق بود.",
+					).message,
+				}));
 			}
 		};
 
 		const startPolling = (): void => {
 			if (pollTimer) return;
 			void poll();
-			pollTimer = setInterval(() => void poll(), 6000);
+			pollTimer = setInterval(() => void poll(), POLL_MS);
+		};
+
+		const stopPolling = (): void => {
+			if (!pollTimer) return;
+			clearInterval(pollTimer);
+			pollTimer = null;
+		};
+
+		const scheduleReconnect = (connect: () => Promise<void>): void => {
+			if (!active || reconnectTimer) return;
+			reconnectTimer = setTimeout(() => {
+				reconnectTimer = null;
+				void connect();
+			}, RECONNECT_MS);
 		};
 
 		const connect = async (): Promise<void> => {
-			if (!active) return;
-			setState((current) => ({
-				...current,
-				status: "connecting",
-				error: null,
-			}));
+			if (!active || connecting) return;
+			connecting = true;
+			setState((current) => ({ ...current, status: "connecting" }));
 			try {
-				const response = await fetch(
-					`${BASE_URL}/api/games/${encodeURIComponent(gameId)}/events/stream?since=${sinceRef.current}`,
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-							Accept: "text/event-stream",
-						},
-						signal: controller.signal,
-					},
+				await loadHistory();
+				const response = await api.openStream(
+					gameId,
+					sinceRef.current,
+					controller.signal,
 				);
-				if (!response.ok || !response.body)
-					throw new Error(`SSE HTTP ${response.status}`);
-				if (active)
-					setState((current) => ({ ...current, status: "live", error: null }));
+				if (!response.body) throw new Error("پاسخ جریان رویداد خالی است.");
+				stopPolling();
+				setState((current) => ({ ...current, status: "live", error: null }));
 				const reader = response.body.getReader();
 				const decoder = new TextDecoder();
 				let buffer = "";
@@ -160,40 +144,28 @@ export const useGameEvents = (
 					const { done, value } = await reader.read();
 					if (done) break;
 					buffer += decoder.decode(value, { stream: true });
-					const blocks = buffer.split("\n\n");
-					buffer = blocks.pop() ?? "";
-					for (const block of blocks) {
-						let eventType = "message";
-						let eventId = "";
-						const dataLines: string[] = [];
-						for (const line of block.split("\n")) {
-							if (line.startsWith("event:")) eventType = line.slice(6).trim();
-							else if (line.startsWith("id:")) eventId = line.slice(3).trim();
-							else if (line.startsWith("data:"))
-								dataLines.push(line.slice(5).trim());
-						}
-						if (eventType === "keepalive" || dataLines.length === 0) continue;
-						try {
-							const event = parseGameEvent(
-								JSON.parse(dataLines.join("\n")) as unknown,
-								eventType,
-								eventId,
-							);
-							if (event) addEvents([event]);
-						} catch {
-							// Ignore malformed individual events and keep the stream alive.
-						}
-					}
+					const parsed = parseSseBuffer(buffer);
+					buffer = parsed.remainder;
+					addEvents(parsed.events);
 				}
-				if (active) reconnectTimer = setTimeout(() => void connect(), 3000);
-			} catch (error) {
+				if (active) {
+					startPolling();
+					scheduleReconnect(connect);
+				}
+			} catch (requestError) {
 				if (!active || controller.signal.aborted) return;
 				setState((current) => ({
 					...current,
 					status: "polling",
-					error: error instanceof Error ? error.message : null,
+					error: parseRuntimeApiError(
+						requestError,
+						"اتصال زنده قطع شد؛ بازیابی دوره‌ای فعال است.",
+					).message,
 				}));
 				startPolling();
+				scheduleReconnect(connect);
+			} finally {
+				connecting = false;
 			}
 		};
 
@@ -204,7 +176,7 @@ export const useGameEvents = (
 			if (reconnectTimer) clearTimeout(reconnectTimer);
 			if (pollTimer) clearInterval(pollTimer);
 		};
-	}, [gameId, token]);
+	}, [api, gameId, token]);
 
 	return state;
 };

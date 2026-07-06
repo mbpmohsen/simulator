@@ -40,9 +40,9 @@
       "starting_credits": 100,
       "role": {
         "type": "GOVERNMENT",
-        "allowed_action_types": [],
+        "allowed_action_types": ["government"],
         "type_fa": "دولت",
-        "allowed_action_types_fa": []
+        "allowed_action_types_fa": ["دولتی"]
       },
       "players": [
         {
@@ -99,9 +99,9 @@
       "starting_credits": 100,
       "role": {
         "type": "GOVERNMENT",
-        "allowed_action_types": [],
+        "allowed_action_types": ["government"],
         "type_fa": "دولت",
-        "allowed_action_types_fa": []
+        "allowed_action_types_fa": ["دولتی"]
       },
       "players": [
         {

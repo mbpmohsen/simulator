@@ -27,6 +27,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	Activity,
 	AlertTriangle,
+	BookOpen,
 	Boxes,
 	CheckCircle2,
 	ChevronLeft,
@@ -37,6 +38,7 @@ import {
 	Layers3,
 	LoaderCircle,
 	LogOut,
+	Play,
 	RefreshCw,
 	Search,
 	ShieldCheck,
@@ -53,6 +55,8 @@ import {
 	listAdminUsers,
 	loadDefaultGamePlan,
 	loadPublishedGamePlan,
+	startAdminGame,
+	storeActiveGameId,
 	storeGamePlanDraft,
 	submitDefaultGamePlan,
 	validateGamePlanOnServer,
@@ -453,6 +457,8 @@ export default function AdminGamePlanPage() {
 		Array<GamePlanValidationError & { group?: string }>
 	>([]);
 	const [serverValidated, setServerValidated] = useState(false);
+	const [configuredGameId, setConfiguredGameId] = useState<string | null>(null);
+	const [startingGame, setStartingGame] = useState(false);
 	const [users, setUsers] = useState<AdminUserSummary[]>([]);
 	const [usersLoading, setUsersLoading] = useState(true);
 	const [usersLoaded, setUsersLoaded] = useState(false);
@@ -627,6 +633,8 @@ export default function AdminGamePlanPage() {
 		setBusy("publish");
 		try {
 			const response = await submitDefaultGamePlan(plan);
+			storeActiveGameId(response.gameId);
+			setConfiguredGameId(response.gameId);
 			setSource("published");
 			setNotice({
 				tone: "success",
@@ -639,6 +647,25 @@ export default function AdminGamePlanPage() {
 			});
 		} finally {
 			setBusy(null);
+		}
+	};
+
+	const startPublishedGame = async (): Promise<void> => {
+		if (!configuredGameId) return;
+		setStartingGame(true);
+		try {
+			const response = await startAdminGame(configuredGameId);
+			setNotice({
+				tone: "success",
+				text: response.detail || `بازی ${configuredGameId} شروع شد.`,
+			});
+		} catch (error) {
+			setNotice({
+				tone: "error",
+				text: parseApiError(error, "شروع بازی ممکن نشد.").message,
+			});
+		} finally {
+			setStartingGame(false);
 		}
 	};
 
@@ -701,6 +728,26 @@ export default function AdminGamePlanPage() {
 							</div>
 						</div>
 						<div className="flex flex-wrap items-center gap-2">
+							<Button
+								asChild
+								variant="outline"
+								size="sm"
+								className="border-white/10 bg-white/5"
+							>
+								<Link href="/docs">
+									<BookOpen className="size-4" /> راهنمای بازی
+								</Link>
+							</Button>
+							<Button
+								asChild
+								variant="outline"
+								size="sm"
+								className="border-white/10 bg-white/5"
+							>
+								<Link href="/admin/current-flow">
+									<GitBranch className="size-4" /> نقشه فعلی
+								</Link>
+							</Button>
 							<Badge className="border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-emerald-200">
 								<ShieldCheck className="size-3.5" /> نشست مدیر فعال
 							</Badge>
@@ -739,6 +786,35 @@ export default function AdminGamePlanPage() {
 						</motion.div>
 					)}
 				</AnimatePresence>
+
+				{configuredGameId && (
+					<div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+						<Badge className="bg-emerald-500/15 text-emerald-100">
+							بازی {configuredGameId}
+						</Badge>
+						<Button
+							onClick={() => void startPublishedGame()}
+							disabled={startingGame}
+							className="bg-emerald-400 text-slate-950 hover:bg-emerald-300"
+						>
+							{startingGame ? (
+								<LoaderCircle className="size-4 animate-spin" />
+							) : (
+								<Play className="size-4" />
+							)}{" "}
+							شروع بازی
+						</Button>
+						<Button asChild variant="outline">
+							<Link href="/admin/current-flow">مشاهده نقشه پیکربندی فعلی</Link>
+						</Button>
+						<Button asChild variant="outline">
+							<Link href="/monitoring">مانیتورینگ</Link>
+						</Button>
+						<Button asChild variant="outline">
+							<Link href="/analytics">آنالیتیکس</Link>
+						</Button>
+					</div>
+				)}
 
 				<div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
 					<motion.aside

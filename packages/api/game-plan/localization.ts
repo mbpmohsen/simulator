@@ -13,6 +13,8 @@ export const getLocalized = (
 	faValue: string | null | undefined,
 ): string => faValue?.trim() || value?.trim() || "—";
 
+export const localizeText = getLocalized;
+
 const ROLE_FA: Record<TeamRoleType | "ADMIN", string> = {
 	ATTACKER: "مهاجم",
 	DEFENCER: "مدافع",

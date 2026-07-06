@@ -419,6 +419,85 @@ export interface ScenarioStep {
 	on_failure?: ImpactEffect[];
 }
 
+export interface GovernmentCatalogGoal {
+	id: string;
+	title: string;
+	title_fa?: string | null;
+	description?: string | null;
+	description_fa?: string | null;
+	side_id?: number;
+}
+
+export interface GovernmentCatalogStep {
+	id: string;
+	scenario_id: string;
+	order?: number | null;
+	action_code: string;
+	required: boolean;
+}
+
+export interface GovernmentCatalogScenario {
+	id: string;
+	sub_subject_id: string;
+	title: string;
+	title_fa?: string | null;
+	scenario_type: ScenarioType;
+	execution_mode: ExecutionMode;
+	allowed_team_roles?: Exclude<TeamRoleType, "GOVERNMENT">[];
+	steps: GovernmentCatalogStep[];
+}
+
+export interface GovernmentCatalogSubSubject {
+	id: string;
+	subject_id: string;
+	title: string;
+	title_fa?: string | null;
+	progress_share: number;
+	scenarios: GovernmentCatalogScenario[];
+}
+
+export interface GovernmentCatalogSubject {
+	id: string;
+	goal_id: string;
+	title: string;
+	title_fa?: string | null;
+	description?: string | null;
+	description_fa?: string | null;
+	subject_type: SubjectType;
+	target_team_id: number;
+	owner_side_id: number;
+	criticality?: number | null;
+	sub_subjects: GovernmentCatalogSubSubject[];
+}
+
+export interface GovernmentCatalogTeam {
+	id: number;
+	name: string;
+	name_fa?: string | null;
+	display_name?: string | null;
+	display_name_fa?: string | null;
+	side_id: number;
+	role?: { type: TeamRoleType };
+}
+
+export interface GovernmentCatalogAction {
+	code: string;
+	name: string;
+	name_fa?: string | null;
+	description?: string | null;
+	description_fa?: string | null;
+	type: ActionType;
+}
+
+export interface GovernmentCatalogResponse {
+	side_id: number;
+	government_team_id?: number;
+	goals: GovernmentCatalogGoal[];
+	subjects: GovernmentCatalogSubject[];
+	teams: GovernmentCatalogTeam[];
+	bannable_actions: GovernmentCatalogAction[];
+}
+
 export interface ImpactRule {
 	id: string;
 	trigger: {
@@ -856,6 +935,12 @@ export interface GovernmentOrderIssuedPayload {
 	message: string;
 }
 
+export interface TurnAnalyticsRecordedPayload {
+	turn: number;
+	report: TurnAnalyticsDetailData;
+	message?: string;
+}
+
 export interface ScenarioStepResolvedEvent
 	extends Omit<BaseGameEvent, "type" | "payload"> {
 	type: "SCENARIO_STEP_RESOLVED";
@@ -868,9 +953,16 @@ export interface GovernmentOrderIssuedEvent
 	payload: GovernmentOrderIssuedPayload;
 }
 
+export interface TurnAnalyticsRecordedEvent
+	extends Omit<BaseGameEvent, "type" | "payload"> {
+	type: "TURN_ANALYTICS_RECORDED";
+	payload: TurnAnalyticsRecordedPayload;
+}
+
 export type GameEvent =
 	| ScenarioStepResolvedEvent
 	| GovernmentOrderIssuedEvent
+	| TurnAnalyticsRecordedEvent
 	| BaseGameEvent;
 
 export interface EventReplayData {

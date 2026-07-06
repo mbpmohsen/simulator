@@ -38,7 +38,10 @@ export default function RootLayout({
             <body
                 className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className} font-sans antialiased`}
             >
-                <Toaster />
+                <Toaster
+                    style={{ fontFamily: `${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className}`}}
+                    className={`${fontSans.variable} ${fontMono.variable} ${fontVazir.variable} ${vazir.className} font-sans antialiased`}
+                />
                 {/*<AnimatedBattleBackground />*/}
                 <Providers>{children}</Providers>
             </body>

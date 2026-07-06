@@ -2,8 +2,18 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { ConfigureAllRequestV2 } from "../game-server/types";
 import { parseApiError } from "./api-error";
-import { canSendCommunication } from "./communication";
-import { buildGamePlanGraph } from "./graph";
+import {
+	type CommunicationMessage,
+	canSendCommunication,
+	isCommunicationVisibleToViewer,
+	isSimulationCommunication,
+} from "./communication";
+import {
+	buildGamePlanGraph,
+	buildGraphWarnings,
+	filterGamePlanGraphNodes,
+	resolvePublishedGamePlanGraph,
+} from "./graph";
 import { formatLockReasonFa, getLocalized } from "./localization";
 import {
 	canSelectScenario,
@@ -171,7 +181,13 @@ describe("client-side validation", () => {
 
 	it("accepts the supplied default civic-infrastructure plan after explicit mapping", () => {
 		const raw = JSON.parse(
-			readFileSync("apps/admin/public/data/default-game-plan.json", "utf8"),
+			readFileSync(
+				new URL(
+					"../../../apps/admin/public/data/default-game-plan.json",
+					import.meta.url,
+				),
+				"utf8",
+			),
 		) as unknown;
 		const result = validateDefaultGamePlanClientSide(
 			normalizeDefaultGamePlan(raw),
@@ -205,14 +221,116 @@ describe("client-side validation", () => {
 });
 
 describe("graph and runtime rules", () => {
-	it("generates the hierarchy and action execution edge", () => {
+	it("generates Goal → Subject → Sub-subject → Scenario → Step → Action edges", () => {
 		const graph = buildGamePlanGraph(createPlan());
 		expect(graph.nodes.some((node) => node.id === "goal:GOAL")).toBe(true);
 		expect(
-			graph.edges.some(
-				(edge) => edge.type === "executes" && edge.target === "action:ACT",
-			),
-		).toBe(true);
+			graph.edges.map(({ source, target }) => `${source}->${target}`),
+		).toEqual(
+			expect.arrayContaining([
+				"goal:GOAL->subject:SUB",
+				"subject:SUB->subSubject:SS",
+				"subSubject:SS->scenario:SCN",
+				"scenario:SCN->step:STEP",
+				"step:STEP->action:ACT",
+			]),
+		);
+	});
+
+	it("generates dependency and attack-to-defense counter edges", () => {
+		const plan = createPlan();
+		plan.actions.push({
+			code: "DEF",
+			name: "Defense",
+			type: "defense",
+			base_stats: { cost: 1, success_probability: 60 },
+		});
+		plan.scenario_steps.push({
+			id: "STEP_2",
+			scenario_id: "SCN",
+			order: 2,
+			action_code: "DEF",
+			required: true,
+			depends_on: ["STEP"],
+		});
+		plan.action_counters = [
+			{
+				attack_code: "ACT",
+				countered_by: [{ defense_code: "DEF", effectiveness: 80 }],
+			},
+		];
+		const graph = buildGamePlanGraph(plan);
+		expect(graph.edges).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					type: "depends_on",
+					source: "step:STEP",
+					target: "step:STEP_2",
+				}),
+				expect.objectContaining({
+					type: "counters",
+					source: "action:ACT",
+					target: "action:DEF",
+				}),
+			]),
+		);
+	});
+
+	it("detects missing actions and invalid sub-subject share totals", () => {
+		const plan = createPlan();
+		if (plan.scenario_steps[0]) plan.scenario_steps[0].action_code = "MISSING";
+		if (plan.sub_subjects[0]) plan.sub_subjects[0].progress_share = 70;
+		const warningCodes = buildGraphWarnings(plan).map(({ code }) => code);
+		expect(warningCodes).toEqual(
+			expect.arrayContaining([
+				"MISSING_STEP_ACTION",
+				"SUB_SUBJECT_SHARE_NOT_100",
+			]),
+		);
+	});
+
+	it("searches graph nodes by Persian title and stable ID", () => {
+		const plan = createPlan();
+		if (plan.subjects[0]) plan.subjects[0].title_fa = "سامانه آب شهری";
+		const graph = buildGamePlanGraph(plan);
+		expect(filterGamePlanGraphNodes(graph, "آب شهری")[0]?.entityId).toBe("SUB");
+		expect(filterGamePlanGraphNodes(graph, "sub")[0]?.entityId).toBe("SUB");
+	});
+
+	it("uses the published server graph before requesting the plan", async () => {
+		let planRequests = 0;
+		const result = await resolvePublishedGamePlanGraph({
+			loadGraph: async () => ({
+				nodes: [
+					{
+						id: "goal:GOAL",
+						type: "goal",
+						data: { entity_id: "GOAL", label_fa: "هدف" },
+					},
+				],
+				edges: [],
+			}),
+			loadPlan: async () => {
+				planRequests += 1;
+				return createPlan();
+			},
+		});
+		expect(result.source).toBe("server");
+		expect(result.graph?.nodes[0]?.type).toBe("goalNode");
+		expect(planRequests).toBe(0);
+	});
+
+	it("falls back to the published plan when the graph endpoint is unavailable", async () => {
+		const result = await resolvePublishedGamePlanGraph({
+			loadGraph: async () => {
+				throw new Error("404");
+			},
+			loadPlan: async () => createPlan(),
+		});
+		expect(result.source).toBe("plan");
+		expect(result.graph?.nodes.some(({ id }) => id === "subject:SUB")).toBe(
+			true,
+		);
 	});
 
 	it("gates selection and voting to their phases", () => {
@@ -245,6 +363,48 @@ describe("graph and runtime rules", () => {
 			false,
 		);
 		expect(canSendCommunication("GOVERNMENT", "THREAT_SIMULATION")).toBe(true);
+		expect(canSendCommunication("GOVERNMENT", "PUBLIC_ANNOUNCEMENT")).toBe(
+			false,
+		);
+		expect(
+			canSendCommunication("GOVERNMENT", "PUBLIC_ANNOUNCEMENT", {
+				allowPublicAnnouncements: true,
+			}),
+		).toBe(true);
+		expect(isSimulationCommunication("FAKE_NEWS_SIMULATION")).toBe(true);
+	});
+
+	it("filters team communication before it reaches a player inbox", () => {
+		const message: CommunicationMessage = {
+			id: "message-1",
+			game_id: "game-1",
+			turn: 2,
+			type: "GOVERNMENT_TO_OWN_TEAM",
+			sender_user_id: 99,
+			sender_team_id: 900,
+			sender_side_id: 10,
+			sender_role: "GOVERNMENT",
+			audience: { type: "team", id: 101 },
+			body: "پیام دولت",
+			created_at: "2026-07-05T00:00:00.000Z",
+			status: "sent",
+		};
+		expect(
+			isCommunicationVisibleToViewer(message, {
+				userId: 1,
+				teamId: 101,
+				sideId: 10,
+				role: "ATTACKER",
+			}),
+		).toBe(true);
+		expect(
+			isCommunicationVisibleToViewer(message, {
+				userId: 2,
+				teamId: 102,
+				sideId: 10,
+				role: "DEFENCER",
+			}),
+		).toBe(false);
 	});
 });
 
@@ -280,5 +440,59 @@ describe("errors and lock reasons", () => {
 
 	it("formats known lock reasons in Persian", () => {
 		expect(formatLockReasonFa("SUBJECT_NOT_ASSIGNED")).toContain("تخصیص");
+	});
+});
+
+describe("v2 documentation and current-flow route contracts", () => {
+	it("renders the main Persian guide sections from the shared docs content", () => {
+		const page = readFileSync(
+			new URL("../../../apps/web/app/docs/page.tsx", import.meta.url),
+			"utf8",
+		);
+		const content = readFileSync(
+			new URL("../../../apps/web/lib/gameDocsContent.ts", import.meta.url),
+			"utf8",
+		);
+		expect(page).toContain("GAME_DOCS_SECTIONS");
+		expect(page).toContain("data-doc-section");
+		for (const title of [
+			"این شبیه‌ساز چیست؟",
+			"مدل هدف، موضوع و سناریو",
+			"نوبت‌ها و فازهای بازی",
+			"چرا بعضی گام‌ها قفل هستند؟",
+			"نمونه جریان: سامانه آب شهری",
+		]) {
+			expect(content).toContain(title);
+		}
+	});
+
+	it("contains the required Persian glossary labels", () => {
+		const content = readFileSync(
+			new URL("../../../apps/web/lib/gameDocsContent.ts", import.meta.url),
+			"utf8",
+		);
+		for (const term of [
+			"Goal → هدف",
+			"Subject → موضوع",
+			"Sub-subject → زیرموضوع",
+			"Scenario → سناریو / مسیر",
+			"Step → گام",
+		]) {
+			expect(content).toContain(term);
+		}
+	});
+
+	it("keeps current-flow read-only and isolated from builder draft state", () => {
+		const page = readFileSync(
+			new URL(
+				"../../../apps/admin/src/app/admin/current-flow/page.tsx",
+				import.meta.url,
+			),
+			"utf8",
+		);
+		expect(page).toContain("nodesDraggable={false}");
+		expect(page).toContain("nodesConnectable={false}");
+		expect(page).not.toContain("storeGamePlanDraft");
+		expect(page).not.toContain("setPlan(");
 	});
 });

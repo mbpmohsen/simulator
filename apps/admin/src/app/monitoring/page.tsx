@@ -28,15 +28,18 @@ import {
 	Ban,
 	BarChart3,
 	Bell,
+	BookOpen,
 	CheckCircle2,
 	Eye,
 	FileClock,
 	Filter,
 	Gauge,
+	GitBranch,
 	History,
 	LayoutDashboard,
 	Lock,
 	LogOut,
+	Pause,
 	Play,
 	Radio,
 	RefreshCw,
@@ -537,7 +540,7 @@ export default function AdminMonitoringPage() {
 	}, [api, autoRefresh, refreshAll]);
 
 	useEffect(() => {
-		if (!adminToken || !gameId || !autoRefresh) {
+		if (!api || !gameId || !autoRefresh) {
 			setStreamConnected(false);
 			return;
 		}
@@ -579,19 +582,14 @@ export default function AdminMonitoringPage() {
 			if (cancelled) return;
 			try {
 				abortController = new AbortController();
-				const params = new URLSearchParams();
-				if (lastSeqRef.current > 0)
-					params.set("since", String(lastSeqRef.current));
-				const streamUrl = `${BASE_URL}/api/games/${encodeURIComponent(gameId)}/events/stream?${params.toString()}`;
-				const response = await fetch(streamUrl, {
-					method: "GET",
-					headers: {
-						Authorization: `Bearer ${adminToken}`,
-						Accept: "text/event-stream",
-						"Cache-Control": "no-cache",
+				const response = await api.openEventsStream(
+					gameId,
+					lastSeqRef.current > 0 ? { since: lastSeqRef.current } : undefined,
+					{
+						headers: { "Cache-Control": "no-cache" },
+						signal: abortController.signal,
 					},
-					signal: abortController.signal,
-				});
+				);
 
 				if (!response.ok || !response.body) {
 					throw new Error(`SSE stream failed with ${response.status}`);
@@ -660,7 +658,7 @@ export default function AdminMonitoringPage() {
 			if (reconnectTimer) clearTimeout(reconnectTimer);
 			abortController?.abort();
 		};
-	}, [adminToken, autoRefresh, gameId]);
+	}, [api, autoRefresh, gameId]);
 
 	const loginAdmin = async () => {
 		setAuthError(null);
@@ -792,9 +790,28 @@ export default function AdminMonitoringPage() {
 							variant="outline"
 							className="border-slate-600 bg-slate-950/30 text-slate-100"
 						>
-							<Link href="/configuration">
+							<Link href="/admin/game-plan">
 								<SlidersHorizontal className="h-4 w-4" />
 								پیکربندی
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="outline"
+							className="border-violet-600 bg-violet-950/30 text-violet-100"
+						>
+							<Link href="/admin/current-flow">
+								<GitBranch className="h-4 w-4" />
+								نقشه فعلی
+							</Link>
+						</Button>
+						<Button
+							asChild
+							variant="outline"
+							className="border-slate-600 bg-slate-950/30 text-slate-100"
+						>
+							<Link href="/docs">
+								<BookOpen className="h-4 w-4" /> راهنما
 							</Link>
 						</Button>
 						<Button
@@ -1266,6 +1283,36 @@ export default function AdminMonitoringPage() {
 								>
 									<Play className="h-4 w-4" />
 									شروع بازی
+								</Button>
+								<Button
+									disabled={!api || !gameId}
+									variant="outline"
+									className="border-amber-500/60 text-amber-100 hover:bg-amber-950/30"
+									onClick={() => {
+										if (!api || !gameId) return;
+										void runControl(
+											() => api.pauseGame(gameId),
+											"بازی متوقف شد.",
+										);
+									}}
+								>
+									<Pause className="h-4 w-4" />
+									توقف موقت
+								</Button>
+								<Button
+									disabled={!api || !gameId}
+									variant="outline"
+									className="border-emerald-500/60 text-emerald-100 hover:bg-emerald-950/30"
+									onClick={() => {
+										if (!api || !gameId) return;
+										void runControl(
+											() => api.resumeGame(gameId),
+											"بازی از سر گرفته شد.",
+										);
+									}}
+								>
+									<Play className="h-4 w-4" />
+									ادامه بازی
 								</Button>
 								<Button
 									disabled={!api || !gameId}

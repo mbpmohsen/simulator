@@ -13,6 +13,7 @@ import {
 
 export const ADMIN_TOKEN_STORAGE_KEY = "simulator-admin-token";
 export const GAME_PLAN_SESSION_KEY = "simulator-v2-game-plan-draft";
+export const ACTIVE_GAME_ID_STORAGE_KEY = "simulator-active-game-id";
 
 const BASE_URL =
 	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
@@ -110,6 +111,19 @@ export const validateGamePlanOnServer = (
 export const submitDefaultGamePlan = (
 	plan: ConfigureAllRequestV2,
 ): Promise<ConfigureAllResponse> => createAdminApi().configureAll(plan);
+
+export const startAdminGame = (gameId: string) =>
+	createAdminApi().startGame(gameId);
+
+export const storeActiveGameId = (gameId: string): void => {
+	if (typeof window === "undefined") return;
+	window.localStorage.setItem(ACTIVE_GAME_ID_STORAGE_KEY, gameId);
+};
+
+export const getActiveGameId = (): string | null => {
+	if (typeof window === "undefined") return null;
+	return window.localStorage.getItem(ACTIVE_GAME_ID_STORAGE_KEY);
+};
 
 export const loadPublishedGamePlan = (): Promise<ConfigureAllRequestV2> =>
 	createAdminApi().getGamePlan();

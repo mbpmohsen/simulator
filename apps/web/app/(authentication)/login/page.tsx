@@ -35,7 +35,7 @@ const motionVariants = {
 
 export default function LoginPage() {
 	const router = useRouter();
-	const [mode, setMode] = useState<AuthMode>("signup");
+	const [mode, setMode] = useState<AuthMode>("login");
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");

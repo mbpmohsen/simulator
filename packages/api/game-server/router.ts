@@ -23,6 +23,7 @@ import type {
 	EventReplayQuery,
 	EventReplayResponse,
 	EventStatusResponse,
+	EventStreamQuery,
 	GamePlanGraphResponse,
 	GamePlanValidationResponse,
 	ListUsersQuery,
@@ -44,6 +45,7 @@ export interface GameServerApiConfig {
 	headers?: Record<string, string>;
 	timeout?: number;
 	axiosConfig?: AxiosRequestConfig;
+	streamFetch?: typeof fetch;
 }
 
 export interface GameServerApi {
@@ -77,6 +79,14 @@ export interface GameServerApi {
 		gameId: string,
 		config?: AxiosRequestConfig,
 	): Promise<DetailResponse>;
+	pauseGame(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<DetailResponse>;
+	resumeGame(
+		gameId: string,
+		config?: AxiosRequestConfig,
+	): Promise<DetailResponse>;
 	resetGame(
 		gameId: string,
 		config?: AxiosRequestConfig,
@@ -94,6 +104,11 @@ export interface GameServerApi {
 		query?: EventReplayQuery,
 		config?: AxiosRequestConfig,
 	): Promise<EventReplayResponse>;
+	openEventsStream(
+		gameId: string,
+		query?: EventStreamQuery,
+		init?: RequestInit,
+	): Promise<Response>;
 	getEventsStatus(
 		gameId: string,
 		config?: AxiosRequestConfig,
@@ -250,6 +265,24 @@ export const createGameServerApi = (
 			return data;
 		},
 
+		async pauseGame(gameId, requestConfig) {
+			const { data } = await http.post<DetailResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/pause`,
+				undefined,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async resumeGame(gameId, requestConfig) {
+			const { data } = await http.post<DetailResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/resume`,
+				undefined,
+				requestConfig,
+			);
+			return data;
+		},
+
 		async resetGame(gameId, requestConfig) {
 			const { data } = await http.post<DetailResponse>(
 				`/api/games/${encodeURIComponent(gameId)}/reset`,
@@ -292,6 +325,31 @@ export const createGameServerApi = (
 				},
 			);
 			return data;
+		},
+
+		async openEventsStream(gameId, query, init) {
+			const params = new URLSearchParams();
+			if (query?.since !== undefined) params.set("since", String(query.since));
+			if (query?.types) params.set("types", query.types);
+			const suffix = params.size > 0 ? `?${params.toString()}` : "";
+			const baseURL = config.baseURL.replace(/\/$/, "");
+			const url = `${baseURL}/api/games/${encodeURIComponent(gameId)}/events/stream${suffix}`;
+			const headers = new Headers();
+			if (config.adminToken) {
+				headers.set("Authorization", `Bearer ${config.adminToken}`);
+			}
+			for (const [name, value] of Object.entries(config.headers ?? {})) {
+				headers.set(name, value);
+			}
+			new Headers(init?.headers).forEach((value, name) => {
+				headers.set(name, value);
+			});
+			if (!headers.has("Accept")) headers.set("Accept", "text/event-stream");
+			return (config.streamFetch ?? fetch)(url, {
+				...init,
+				method: "GET",
+				headers,
+			});
 		},
 
 		async getEventsStatus(gameId, requestConfig) {

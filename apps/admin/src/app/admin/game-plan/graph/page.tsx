@@ -5,7 +5,10 @@ import type {
 	GamePlanGraphEdgeType,
 	GamePlanGraphNode,
 } from "@workspace/trpc";
-import { buildGamePlanGraph } from "@workspace/trpc";
+import {
+	buildGamePlanGraph,
+	normalizeServerGamePlanGraph,
+} from "@workspace/trpc";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
@@ -74,6 +77,7 @@ const NODE_TONE: Record<GamePlanGraphNode["type"], string> = {
 	scenarioNode: "border-amber-400/50 bg-amber-950/95 text-amber-50",
 	stepNode: "border-emerald-400/45 bg-emerald-950/95 text-emerald-50",
 	actionNode: "border-rose-400/45 bg-rose-950/95 text-rose-50",
+	counterNode: "border-blue-400/45 bg-blue-950/95 text-blue-50",
 	effectNode: "border-fuchsia-400/40 bg-fuchsia-950/95 text-fuchsia-50",
 	governmentNode: "border-yellow-300/60 bg-yellow-950/95 text-yellow-50",
 	marketItemNode: "border-indigo-400/40 bg-indigo-950/95 text-indigo-50",
@@ -86,6 +90,7 @@ const NODE_LABEL: Record<GamePlanGraphNode["type"], string> = {
 	scenarioNode: "سناریو",
 	stepNode: "گام",
 	actionNode: "کنش",
+	counterNode: "ضدکنش",
 	effectNode: "اثر",
 	governmentNode: "دولت",
 	marketItemNode: "بازار سیاه",
@@ -98,6 +103,7 @@ const NODE_ICON = {
 	scenarioNode: Route,
 	stepNode: Footprints,
 	actionNode: Zap,
+	counterNode: ShieldCheck,
 	effectNode: Sparkles,
 	governmentNode: ShieldCheck,
 	marketItemNode: Box,
@@ -195,6 +201,7 @@ const rankOf = (type: GamePlanGraphNode["type"]): number => {
 		case "stepNode":
 			return 4;
 		case "actionNode":
+		case "counterNode":
 			return 5;
 		default:
 			return 6;
@@ -403,79 +410,6 @@ const mapGraph = (
 	};
 };
 
-const serverGraphToLocal = (
-	input: Awaited<ReturnType<typeof loadServerGamePlanGraph>>,
-): GamePlanGraph | null => {
-	const allowedNodeTypes = new Set<GamePlanGraphNode["type"]>([
-		"goalNode",
-		"subjectNode",
-		"subSubjectNode",
-		"scenarioNode",
-		"stepNode",
-		"actionNode",
-		"effectNode",
-		"governmentNode",
-		"marketItemNode",
-	]);
-	const allowedEdgeTypes = new Set<GamePlanGraphEdgeType>([
-		"owns",
-		"decomposes_to",
-		"contains",
-		"executes",
-		"depends_on",
-		"counters",
-		"affects",
-		"unlocks",
-		"disables",
-		"reveals",
-	]);
-	const nodes = input.nodes.flatMap((raw, index) => {
-		const id = typeof raw.id === "string" ? raw.id : null;
-		if (!id) return [];
-		const data =
-			raw.data && typeof raw.data === "object"
-				? (raw.data as Record<string, unknown>)
-				: raw;
-		const kind =
-			typeof raw.type === "string" &&
-			allowedNodeTypes.has(raw.type as GamePlanGraphNode["type"])
-				? (raw.type as GamePlanGraphNode["type"])
-				: "subjectNode";
-		return [
-			{
-				id,
-				entityId: typeof data.entityId === "string" ? data.entityId : id,
-				type: kind,
-				label: typeof data.label === "string" ? data.label : id,
-				subtitle: typeof data.subtitle === "string" ? data.subtitle : undefined,
-				x: (index % 6) * 320,
-				y: Math.floor(index / 6) * 130,
-			},
-		];
-	});
-	if (nodes.length === 0) return null;
-	const nodeIds = new Set(nodes.map((node) => node.id));
-	const edges = input.edges.flatMap((raw, index) => {
-		if (typeof raw.source !== "string" || typeof raw.target !== "string")
-			return [];
-		const type =
-			typeof raw.type === "string" &&
-			allowedEdgeTypes.has(raw.type as GamePlanGraphEdgeType)
-				? (raw.type as GamePlanGraphEdgeType)
-				: "contains";
-		return [
-			{
-				id: typeof raw.id === "string" ? raw.id : `server-edge-${index}`,
-				source: raw.source,
-				target: raw.target,
-				type,
-				broken: !nodeIds.has(raw.source) || !nodeIds.has(raw.target),
-			},
-		];
-	});
-	return { nodes, edges };
-};
-
 export default function AdminGamePlanGraphPage() {
 	const [graph, setGraph] = useState<GamePlanGraph | null>(null);
 	const [source, setSource] = useState("پیش‌نویس محلی");
@@ -488,7 +422,9 @@ export default function AdminGamePlanGraphPage() {
 		let active = true;
 		void (async () => {
 			try {
-				const serverGraph = serverGraphToLocal(await loadServerGamePlanGraph());
+				const serverGraph = normalizeServerGamePlanGraph(
+					await loadServerGamePlanGraph(),
+				);
 				if (active && serverGraph) {
 					setGraph(serverGraph);
 					setSource("گراف منتشرشده سرور");

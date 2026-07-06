@@ -1,6 +1,8 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
+import { normalizeGovernmentCatalog } from "../game-plan/government-catalog.ts";
 import type {
 	GoalSelectResponse,
+	GovernmentCatalogResponse,
 	GovernmentOrder,
 	GovernmentOrderResultResponse,
 	GovernmentOverviewResponse,
@@ -69,6 +71,9 @@ export interface GameClientApi {
 		goalId: string,
 		config?: AxiosRequestConfig,
 	): Promise<GoalSelectResponse>;
+	getGovernmentCatalog(
+		config?: AxiosRequestConfig,
+	): Promise<GovernmentCatalogResponse>;
 	getGovernmentOverview(
 		config?: AxiosRequestConfig,
 	): Promise<GovernmentOverviewResponse>;
@@ -217,6 +222,14 @@ export const createGameClientApi = (
 				requestConfig,
 			);
 			return data;
+		},
+
+		async getGovernmentCatalog(requestConfig) {
+			const { data } = await http.get<unknown>(
+				"/government/catalog",
+				requestConfig,
+			);
+			return normalizeGovernmentCatalog(data);
 		},
 
 		async getGovernmentOverview(requestConfig) {
