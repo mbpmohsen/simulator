@@ -14,6 +14,8 @@ import {
 	getGovernmentCatalogSubjectLabel,
 	getGovernmentCatalogTeamLabel,
 	getGovernmentOrderTargetTeams,
+	isGameFinished,
+	isTerminalGameEvent,
 	matchesGovernmentCatalogSearch,
 	validateGovernmentOrderAgainstCatalog,
 	validateGovernmentOrderPayload,
@@ -58,6 +60,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
+import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { GovernmentCatalogPanel } from "@/components/v2/government/GovernmentCatalogPanel";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
 import { useGameEvents } from "@/hooks/useGameEvents";
@@ -190,7 +193,10 @@ export default function GovernmentDashboardPage() {
 	const [actionSearch, setActionSearch] = useState("");
 	const [nodeSearch, setNodeSearch] = useState("");
 	const [busy, setBusy] = useState<string | null>(null);
-	const events = useGameEvents(gameId, token);
+	const gameState = runtime.context?.gameState ?? null;
+	const stateFinished = isGameFinished(gameState?.game);
+	const events = useGameEvents(gameId, token, !stateFinished);
+	const terminalEventReceived = events.events.some(isTerminalGameEvent);
 	const runtimeTeams = runtime.context?.teams ?? [];
 	const orderTargetTeams = useMemo(
 		() => (catalog ? getGovernmentOrderTargetTeams(catalog) : []),
@@ -520,6 +526,18 @@ export default function GovernmentDashboardPage() {
 					</CardContent>
 				</Card>
 			</main>
+		);
+	}
+
+	if (gameState && (stateFinished || terminalEventReceived)) {
+		return (
+			<GameFinishedResult
+				state={gameState}
+				terminalEventReceived={terminalEventReceived}
+				finalizing={!stateFinished}
+				refreshing={runtime.loading}
+				onRefresh={() => void runtime.refresh()}
+			/>
 		);
 	}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { GameEvent } from "@workspace/trpc";
+import { type GameEvent, isTerminalGameEvent } from "@workspace/trpc";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import { createGameEventsApi, parseSseBuffer } from "@/lib/gameEventsApi";
@@ -14,6 +14,7 @@ export type GameEventsStatus =
 	| "connecting"
 	| "live"
 	| "polling"
+	| "ended"
 	| "error";
 
 export interface GameEventsState {
@@ -36,6 +37,7 @@ const mergeEvents = (
 export const useGameEvents = (
 	gameId: string | null,
 	token: string | null,
+	enabled = true,
 ): GameEventsState => {
 	const api = useMemo(() => createGameEventsApi(token ?? ""), [token]);
 	const [state, setState] = useState<GameEventsState>({
@@ -49,19 +51,21 @@ export const useGameEvents = (
 		sinceRef.current = 0;
 		setState({
 			events: [],
-			status: gameId && token ? "connecting" : "idle",
+			status: gameId && token ? (enabled ? "connecting" : "ended") : "idle",
 			error: null,
 		});
-		if (!gameId || !token) return;
+		if (!gameId || !token || !enabled) return;
 
 		let active = true;
 		let connecting = false;
+		let terminal = false;
 		let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 		let pollTimer: ReturnType<typeof setInterval> | null = null;
 		const controller = new AbortController();
 
 		const addEvents = (events: GameEvent[]): void => {
 			if (!active || events.length === 0) return;
+			terminal = terminal || events.some(isTerminalGameEvent);
 			sinceRef.current = Math.max(
 				sinceRef.current,
 				...events.map((event) => event.seq),
@@ -69,7 +73,14 @@ export const useGameEvents = (
 			setState((current) => ({
 				...current,
 				events: mergeEvents(current.events, events),
+				status: terminal ? "ended" : current.status,
+				error: terminal ? null : current.error,
 			}));
+		};
+
+		const loadStatus = async (): Promise<void> => {
+			const status = await api.getStatus(gameId, controller.signal);
+			if (status.currentSeq < sinceRef.current) sinceRef.current = 0;
 		};
 
 		const loadHistory = async (): Promise<void> => {
@@ -84,6 +95,11 @@ export const useGameEvents = (
 		const poll = async (): Promise<void> => {
 			try {
 				await loadHistory();
+				if (terminal) {
+					stopPolling();
+					setState((current) => ({ ...current, status: "ended", error: null }));
+					return;
+				}
 				if (active)
 					setState((current) => ({
 						...current,
@@ -128,7 +144,12 @@ export const useGameEvents = (
 			connecting = true;
 			setState((current) => ({ ...current, status: "connecting" }));
 			try {
+				await loadStatus();
 				await loadHistory();
+				if (terminal) {
+					setState((current) => ({ ...current, status: "ended", error: null }));
+					return;
+				}
 				const response = await api.openStream(
 					gameId,
 					sinceRef.current,
@@ -147,8 +168,12 @@ export const useGameEvents = (
 					const parsed = parseSseBuffer(buffer);
 					buffer = parsed.remainder;
 					addEvents(parsed.events);
+					if (terminal) {
+						await reader.cancel();
+						break;
+					}
 				}
-				if (active) {
+				if (active && !terminal) {
 					startPolling();
 					scheduleReconnect(connect);
 				}
@@ -176,7 +201,7 @@ export const useGameEvents = (
 			if (reconnectTimer) clearTimeout(reconnectTimer);
 			if (pollTimer) clearInterval(pollTimer);
 		};
-	}, [api, gameId, token]);
+	}, [api, enabled, gameId, token]);
 
 	return state;
 };

@@ -2,6 +2,7 @@ import type {
 	ActionSchema,
 	GameClientApi,
 	GamePhase,
+	GameStateData,
 	TeamRoleType,
 	TeamSchema,
 } from "@workspace/trpc";
@@ -16,6 +17,7 @@ export interface RuntimeApiContext {
 	role: TeamRoleType | null;
 	teams: TeamSchema[];
 	actions: ActionSchema[];
+	gameState: GameStateData;
 }
 
 const isTeamRole = (value: unknown): value is TeamRoleType =>
@@ -44,5 +46,6 @@ export const loadRuntimeApiContext = async (
 		role: isTeamRole(team?.role) ? team.role : null,
 		teams: response.data.teams,
 		actions: response.data.actions,
+		gameState: response.data,
 	};
 };

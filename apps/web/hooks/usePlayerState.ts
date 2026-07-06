@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlayerStateResponse } from "@workspace/trpc";
+import { isGameFinished, type PlayerStateResponse } from "@workspace/trpc";
 import { useCallback, useEffect, useState } from "react";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import type { PlayerRuntimeApi } from "@/lib/playerRuntimeApi";
@@ -17,12 +17,18 @@ export const usePlayerState = (api: PlayerRuntimeApi, enabled: boolean) => {
 		setLoading(true);
 		setError(null);
 		try {
-			const [nextState, nextContext] = await Promise.all([
+			const [stateResult, contextResult] = await Promise.allSettled([
 				api.getState(),
-				api.getRuntimeContext().catch(() => null),
+				api.getRuntimeContext(),
 			]);
-			setState(nextState);
-			setContext(nextContext);
+			const nextContext =
+				contextResult.status === "fulfilled" ? contextResult.value : null;
+			if (nextContext) setContext(nextContext);
+			if (stateResult.status === "fulfilled") {
+				setState(stateResult.value);
+			} else if (!isGameFinished(nextContext?.gameState.game)) {
+				throw stateResult.reason;
+			}
 		} catch (requestError) {
 			setError(
 				parseRuntimeApiError(requestError, "دریافت وضعیت بازیکن ممکن نشد.")

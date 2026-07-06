@@ -24,6 +24,7 @@ const statusLabel: Record<GameEventsStatus, string> = {
 	connecting: "در حال اتصال",
 	live: "زنده",
 	polling: "بازیابی دوره‌ای",
+	ended: "پایان بازی",
 	error: "خطای اتصال",
 };
 
@@ -47,11 +48,13 @@ export function GameEventFeed({
 						className={
 							status === "live"
 								? "bg-emerald-500/15 text-emerald-200"
-								: status === "polling"
-									? "bg-amber-500/15 text-amber-200"
-									: status === "error"
-										? "bg-rose-500/15 text-rose-200"
-										: "bg-white/5 text-slate-400"
+								: status === "ended"
+									? "bg-violet-500/15 text-violet-200"
+									: status === "polling"
+										? "bg-amber-500/15 text-amber-200"
+										: status === "error"
+											? "bg-rose-500/15 text-rose-200"
+											: "bg-white/5 text-slate-400"
 						}
 					>
 						<Radio

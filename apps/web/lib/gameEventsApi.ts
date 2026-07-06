@@ -1,4 +1,5 @@
 import type {
+	EventStatusData,
 	GameEvent,
 	GovernmentOrderIssuedEvent,
 	ScenarioStepResolvedEvent,
@@ -95,6 +96,7 @@ export interface EventHistoryQuery {
 }
 
 export interface GameEventsApi {
+	getStatus(gameId: string, signal: AbortSignal): Promise<EventStatusData>;
 	getHistory(
 		gameId: string,
 		query: EventHistoryQuery,
@@ -110,6 +112,29 @@ export interface GameEventsApi {
 export const createGameEventsApi = (token: string): GameEventsApi => {
 	const headers = { Authorization: `Bearer ${token}` };
 	return {
+		async getStatus(gameId, signal) {
+			const response = await fetch(
+				`${BASE_URL}/api/games/${encodeURIComponent(gameId)}/events/status`,
+				{ headers, signal },
+			);
+			if (!response.ok) {
+				throw await createRuntimeHttpError(
+					response,
+					"دریافت وضعیت رویدادها ناموفق بود.",
+				);
+			}
+			const root = asRecord(await response.json());
+			const data = asRecord(root?.data);
+			return {
+				gameId: typeof data?.gameId === "string" ? data.gameId : gameId,
+				currentSeq: Number(data?.currentSeq ?? 0),
+				eventCount: Number(data?.eventCount ?? 0),
+				streamEndpoint:
+					typeof data?.streamEndpoint === "string" ? data.streamEndpoint : "",
+				replayEndpoint:
+					typeof data?.replayEndpoint === "string" ? data.replayEndpoint : "",
+			};
+		},
 		async getHistory(gameId, query, signal) {
 			const params = new URLSearchParams({
 				since_seq: String(query.sinceSeq),

@@ -186,7 +186,7 @@ Use one of these strategies:
 
 2. Replay then stream:
    - call `/api/games/{gameId}/events/status`
-   - call `/api/games/{gameId}/events?since_seq=<last_seq>`
+   - call `/api/games/{gameId}/events`
    - apply replayed events in order
    - reopen the SSE stream
 

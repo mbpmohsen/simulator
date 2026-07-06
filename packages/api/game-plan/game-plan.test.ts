@@ -189,10 +189,15 @@ describe("client-side validation", () => {
 				"utf8",
 			),
 		) as unknown;
-		const result = validateDefaultGamePlanClientSide(
-			normalizeDefaultGamePlan(raw),
-		);
+		const normalized = normalizeDefaultGamePlan(raw);
+		const result = validateDefaultGamePlanClientSide(normalized);
 		expect(result.errors).toEqual([]);
+		expect(normalized.teams[0]?.role).toMatchObject({
+			type: "GOVERNMENT",
+			allowed_action_types: ["government"],
+			type_fa: "دولت",
+			allowed_action_types_fa: ["دولتی"],
+		});
 	});
 
 	it("requires subject shares to total 100", () => {

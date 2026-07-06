@@ -4106,8 +4106,6 @@ export interface operations {
     get_events_api_games__game_id__events_get: {
         parameters: {
             query?: {
-                /** @description Get events after this seq */
-                since_seq?: number | null;
                 /** @description Get events up to this seq */
                 until_seq?: number | null;
                 /** @description Comma-separated event types */
@@ -4311,8 +4309,6 @@ export interface operations {
     admin_get_all_events_api_games__game_id__events_admin_all_get: {
         parameters: {
             query?: {
-                /** @description Get events after this seq */
-                since_seq?: number;
                 limit?: number;
             };
             header?: never;

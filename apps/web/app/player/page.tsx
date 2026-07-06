@@ -6,7 +6,12 @@ import type {
 	OrderView,
 	StepView,
 } from "@workspace/trpc";
-import { canSelectScenario, canVoteStep } from "@workspace/trpc";
+import {
+	canSelectScenario,
+	canVoteStep,
+	isGameFinished,
+	isTerminalGameEvent,
+} from "@workspace/trpc";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -41,6 +46,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
+import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
@@ -117,15 +123,16 @@ export default function PlayerDashboardPage() {
 	const phase: GamePhase = isGamePhase(runtime.state?.current_phase)
 		? runtime.state.current_phase
 		: (runtime.context?.currentPhase ?? "GOVERNMENT_SELECTION");
-
-    console.log("phase", phase)
 	const ordersResource = usePlayerOrders(
 		api,
 		runtime.state?.current_turn,
 		Boolean(token && runtime.state),
 	);
 	const gameId = runtime.context?.gameId ?? null;
-	const events = useGameEvents(gameId, token);
+	const gameState = runtime.context?.gameState ?? null;
+	const stateFinished = isGameFinished(gameState?.game);
+	const events = useGameEvents(gameId, token, !stateFinished);
+	const terminalEventReceived = events.events.some(isTerminalGameEvent);
 	useIncomingOrderNotifications({
 		events: events.events,
 		status: events.status,
@@ -272,6 +279,18 @@ export default function PlayerDashboardPage() {
 		);
 	}
 
+	if (gameState && (stateFinished || terminalEventReceived)) {
+		return (
+			<GameFinishedResult
+				state={gameState}
+				terminalEventReceived={terminalEventReceived}
+				finalizing={!stateFinished}
+				refreshing={runtime.loading}
+				onRefresh={() => void runtime.refresh()}
+			/>
+		);
+	}
+
 	return (
 		<main className="relative min-h-screen overflow-hidden bg-[#070b17] text-slate-100 [background-image:radial-gradient(circle_at_10%_0%,rgba(8,145,178,.16),transparent_25%),radial-gradient(circle_at_85%_10%,rgba(124,58,237,.12),transparent_22%)]">
 			<motion.div
@@ -340,7 +359,7 @@ export default function PlayerDashboardPage() {
 							{[
 								{
 									label: "نوبت جاری",
-									value: `${runtime.state?.current_turn ?? "—"} / ${runtime.state?.total_turn ?? "—"}`,
+									value: `${runtime.state?.current_turn ?? "—"}}`,
 									icon: Clock3,
 									className: "border-cyan-400/20 bg-cyan-500/10",
 								},

@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getIncomingGovernmentOrders } from "@/hooks/useIncomingOrderNotifications";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
-import { parseSseBuffer } from "@/lib/gameEventsApi";
+import { createGameEventsApi, parseSseBuffer } from "@/lib/gameEventsApi";
 import { buildGovernmentOrder } from "@/lib/governmentRuntimeApi";
 import {
 	formatActionOptionFa,
@@ -99,6 +99,38 @@ describe("runtime phase guards and order payloads", () => {
 });
 
 describe("lock rendering data and SSE parsing", () => {
+	it("checks the documented event status endpoint before replay", async () => {
+		const requests: string[] = [];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (input: string | URL | Request) => {
+				requests.push(String(input));
+				return new Response(
+					JSON.stringify({
+						data: {
+							gameId: "game / 1",
+							currentSeq: 42,
+							eventCount: 42,
+							streamEndpoint: "/stream",
+							replayEndpoint: "/events",
+						},
+					}),
+					{ status: 200, headers: { "Content-Type": "application/json" } },
+				);
+			}),
+		);
+		try {
+			const status = await createGameEventsApi("token").getStatus(
+				"game / 1",
+				new AbortController().signal,
+			);
+			expect(status.currentSeq).toBe(42);
+			expect(requests).toEqual(["/api/games/game%20%2F%201/events/status"]);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it("selects only unseen Government orders addressed to the current team", () => {
 		const base = {
 			gameId: "game-1",

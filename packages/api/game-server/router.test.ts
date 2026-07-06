@@ -1,16 +1,97 @@
 import { type AxiosAdapter, AxiosHeaders } from "axios";
 import { describe, expect, it } from "vitest";
 import { createGameServerApi } from "./router";
-import type { TurnAnalyticsRecordedEvent } from "./types";
+import type {
+	ConfigureAllRequestV2,
+	TurnAnalyticsRecordedEvent,
+} from "./types";
 
 interface CapturedRequest {
 	method?: string;
 	url?: string;
 	params?: unknown;
 	responseType?: string;
+	data?: unknown;
 }
 
 describe("GameServerApi admin lifecycle contract", () => {
+	it("sends localized allowed action types to validate and configure_all", async () => {
+		const requests: CapturedRequest[] = [];
+		const adapter: AxiosAdapter = async (request) => {
+			requests.push({
+				method: request.method,
+				url: request.url,
+				data:
+					typeof request.data === "string"
+						? (JSON.parse(request.data) as unknown)
+						: request.data,
+			});
+			return {
+				data: request.url?.endsWith("/validate")
+					? { valid: true, errors: [] }
+					: { detail: "ok", gameId: "game-1" },
+				status: 200,
+				statusText: "OK",
+				headers: new AxiosHeaders(),
+				config: request,
+			};
+		};
+		const api = createGameServerApi({
+			baseURL: "https://simulator.test",
+			adminToken: "admin-token",
+			axiosConfig: { adapter },
+		});
+		const payload = {
+			version: "2.0",
+			game_config: { num_turns: 1, point_threshold: 1 },
+			teams: [
+				{
+					id: 1100000101,
+					name: "Red Government",
+					side_id: 1100000001,
+					role: {
+						type: "GOVERNMENT",
+						allowed_action_types: ["government"],
+						type_fa: "دولت",
+						allowed_action_types_fa: ["دولتی"],
+					},
+					players: [{ userId: 9000000002 }],
+				},
+			],
+			actions: [],
+			goals: [],
+			subjects: [],
+			sub_subjects: [],
+			scenarios: [],
+			scenario_steps: [],
+			impact_rules: [],
+			visibility_config: {
+				events: {},
+				cross_side_result: { enabled: true, grantees: [] },
+			},
+		} satisfies ConfigureAllRequestV2;
+
+		await api.validateGamePlan(payload);
+		await api.configureAll(payload);
+
+		expect(requests.map(({ url }) => url)).toEqual([
+			"/admin/game_plan/validate",
+			"/admin/configure_all",
+		]);
+		for (const request of requests) {
+			expect(request.data).toMatchObject({
+				teams: [
+					{
+						role: {
+							allowed_action_types: ["government"],
+							allowed_action_types_fa: ["دولتی"],
+						},
+					},
+				],
+			});
+		}
+	});
+
 	it("uses game-scoped lifecycle, history, and stable analytics paths", async () => {
 		const requests: CapturedRequest[] = [];
 		const adapter: AxiosAdapter = async (request) => {
@@ -44,11 +125,10 @@ describe("GameServerApi admin lifecycle contract", () => {
 		await api.getReadiness("game / 1");
 		await api.getEventsStatus("game / 1");
 		await api.getEvents("game / 1", {
-			since_seq: 20,
 			limit: 50,
 			types: "TURN_STARTED,TURN_ENDED",
 		});
-		await api.getEventsAdminAll("game / 1", { since_seq: 10, limit: 100 });
+		await api.getEventsAdminAll("game / 1", { limit: 100 });
 		await api.getAdminGameCatalog();
 		await api.listTurnAnalytics("game / 1", { since_turn: 2, limit: 20 });
 		await api.getTurnAnalytics("game / 1", 3);
@@ -70,7 +150,6 @@ describe("GameServerApi admin lifecycle contract", () => {
 			"/api/games/game%20%2F%201/admin/plots/turn%203.png",
 		]);
 		expect(requests[7]?.params).toEqual({
-			since_seq: 20,
 			limit: 50,
 			types: "TURN_STARTED,TURN_ENDED",
 		});

@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
-import { normalizeGovernmentCatalog } from "../game-plan/government-catalog.ts";
+import { normalizeGovernmentCatalog } from "../game-plan/government-catalog";
 import type {
 	GoalSelectResponse,
 	GovernmentCatalogResponse,

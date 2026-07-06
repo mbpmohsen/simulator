@@ -1,3 +1,4 @@
+export * from "./game-client/conclusion";
 export * from "./game-client/router";
 export type * from "./game-client/types";
 export * from "./game-plan/api-error";

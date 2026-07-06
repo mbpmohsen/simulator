@@ -70,6 +70,7 @@ export interface TeamPlayerRequest {
 export type PlayerConfig = TeamPlayerRequest;
 
 export type TeamRoleType = "ATTACKER" | "DEFENCER" | "BOTH" | "GOVERNMENT";
+export type AllowedActionType = "attack" | "defense" | "government";
 
 export interface TeamRoleRequest {
 	type: string;
@@ -85,7 +86,7 @@ export type TeamRole = Omit<
 	"type" | "allowed_action_types"
 > & {
 	type: TeamRoleType;
-	allowed_action_types?: ActionType[];
+	allowed_action_types?: AllowedActionType[];
 };
 
 export interface TeamRequest {

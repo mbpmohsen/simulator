@@ -1,6 +1,9 @@
 "use client";
 
-import type { GovernmentOverviewResponse } from "@workspace/trpc";
+import {
+	type GovernmentOverviewResponse,
+	isGameFinished,
+} from "@workspace/trpc";
 import { useCallback, useEffect, useState } from "react";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import type { GovernmentRuntimeApi } from "@/lib/governmentRuntimeApi";
@@ -22,12 +25,18 @@ export const useGovernmentOverview = (
 		setLoading(true);
 		setError(null);
 		try {
-			const [nextOverview, nextContext] = await Promise.all([
+			const [overviewResult, contextResult] = await Promise.allSettled([
 				api.getOverview(),
-				api.getRuntimeContext().catch(() => null),
+				api.getRuntimeContext(),
 			]);
-			setOverview(nextOverview);
-			setContext(nextContext);
+			const nextContext =
+				contextResult.status === "fulfilled" ? contextResult.value : null;
+			if (nextContext) setContext(nextContext);
+			if (overviewResult.status === "fulfilled") {
+				setOverview(overviewResult.value);
+			} else if (!isGameFinished(nextContext?.gameState.game)) {
+				throw overviewResult.reason;
+			}
 		} catch (requestError) {
 			setError(
 				parseRuntimeApiError(requestError, "دریافت نمای فرماندهی ممکن نشد.")
