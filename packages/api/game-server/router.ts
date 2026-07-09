@@ -10,6 +10,8 @@ import type {
 	AdminGameStateResponse,
 	AdminLoginRequest,
 	AdminUsersResponse,
+	AiAssistantConfigRequest,
+	AiAssistantConfigResponse,
 	ConfigureAllRequest,
 	ConfigureAllRequestV2,
 	ConfigureAllResponse,
@@ -61,6 +63,13 @@ export interface GameServerApi {
 		payload: AdminLoginRequest,
 		config?: AxiosRequestConfig,
 	): Promise<AdminAuthResponse>;
+	setAiAssistantConfig(
+		payload: AiAssistantConfigRequest,
+		config?: AxiosRequestConfig,
+	): Promise<AiAssistantConfigResponse>;
+	getAiAssistantConfig(
+		config?: AxiosRequestConfig,
+	): Promise<AiAssistantConfigResponse>;
 	configureAll(
 		payload: ConfigureAllRequest | ConfigureAllRequestV2,
 		config?: AxiosRequestConfig,
@@ -209,6 +218,23 @@ export const createGameServerApi = (
 			const { data } = await http.post<AdminAuthResponse>(
 				"/auth/admin/login",
 				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async setAiAssistantConfig(payload, requestConfig) {
+			const { data } = await http.put<AiAssistantConfigResponse>(
+				"/admin/ai/config",
+				payload,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getAiAssistantConfig(requestConfig) {
+			const { data } = await http.get<AiAssistantConfigResponse>(
+				"/admin/ai/config",
 				requestConfig,
 			);
 			return data;

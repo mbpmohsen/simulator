@@ -21,6 +21,44 @@ export interface DetailResponse {
 	detail: string;
 }
 
+export interface AiAssistantLevelConfig {
+	[key: string]: ServerJsonValue | undefined;
+	level: number;
+	cost: number;
+	name?: string | null;
+	name_fa?: string | null;
+	description?: string | null;
+	description_fa?: string | null;
+}
+
+export interface AiAssistantConfigRequest {
+	levels: AiAssistantLevelConfig[];
+}
+
+export interface AiAssistantConfigResponse {
+	game_id: string;
+	levels: AiAssistantLevelConfig[];
+}
+
+export interface PlayerAiLevelResponse {
+	team_id: number;
+	current_level: number;
+	next_level: number | null;
+	next_cost: number | null;
+	can_afford: boolean;
+	already_purchased_this_turn: boolean;
+	credits: number;
+}
+
+export interface PlayerAiPurchaseResponse {
+	ok: boolean;
+	team_id: number;
+	level: number;
+	cost: number;
+	credits_after: number;
+	turn: number;
+}
+
 export interface SignupRequest {
 	username: string;
 	password: string;
@@ -435,6 +473,8 @@ export interface GovernmentCatalogStep {
 	order?: number | null;
 	action_code: string;
 	required: boolean;
+	on_success?: ImpactEffect[];
+	on_failure?: ImpactEffect[];
 }
 
 export interface GovernmentCatalogScenario {
@@ -445,6 +485,10 @@ export interface GovernmentCatalogScenario {
 	scenario_type: ScenarioType;
 	execution_mode: ExecutionMode;
 	allowed_team_roles?: Exclude<TeamRoleType, "GOVERNMENT">[];
+	base_reward_points?: number | null;
+	base_credit_cost?: number | null;
+	risk_level?: string | null;
+	risk_level_fa?: string | null;
 	steps: GovernmentCatalogStep[];
 }
 
@@ -488,6 +532,8 @@ export interface GovernmentCatalogAction {
 	description?: string | null;
 	description_fa?: string | null;
 	type: ActionType;
+	base_stats?: Partial<ActionBaseStatsRequest> | null;
+	effects?: Record<string, unknown>;
 }
 
 export interface GovernmentCatalogResponse {

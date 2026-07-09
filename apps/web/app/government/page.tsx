@@ -51,7 +51,6 @@ import {
 	Megaphone,
 	RefreshCw,
 	ScrollText,
-	ShieldCheck,
 	Target,
 	Users,
 } from "lucide-react";
@@ -163,6 +162,9 @@ const orderPayloadSummaryFa = (order: OrderView): string => {
 
 const PUBLIC_ANNOUNCEMENTS_ALLOWED =
 	process.env.NEXT_PUBLIC_COMMUNICATION_ALLOW_PUBLIC_ANNOUNCEMENTS === "true";
+
+const eventTypeHas = (type: string, terms: string[]): boolean =>
+	terms.some((term) => type.includes(term));
 
 export default function GovernmentDashboardPage() {
 	const { token, user } = useAuthStore();
@@ -496,17 +498,63 @@ export default function GovernmentDashboardPage() {
 	};
 
 	const latestEventSeq = events.events[0]?.seq ?? 0;
+	const latestEventType = events.events[0]?.type ?? "";
 	const selectedTeamId = selectedTeam?.team_id ?? null;
 	const refreshOverview = runtime.refresh;
 	const refreshOrders = ordersResource.refresh;
 	useEffect(() => {
 		if (latestEventSeq === 0) return;
-		void refreshOverview();
-		void refreshOrders();
-		if (selectedTeamId) {
+		if (
+			eventTypeHas(latestEventType, [
+				"TURN",
+				"PHASE",
+				"GAME",
+				"GOVERNMENT_ORDER",
+				"GOVERNMENT_SELECTION",
+				"GOVERNMENT_INTERVENTION",
+				"GOVERNMENT_ALERT",
+				"SCENARIO",
+				"STEP",
+				"CREDITS",
+				"POINTS",
+				"TEAM_STATE_CHANGED",
+				"TEAM_READY",
+				"ALL_TEAMS_READY",
+				"VOTE",
+				"VOTING",
+				"CALCULATION",
+			])
+		) {
+			void refreshOverview();
+		}
+		if (eventTypeHas(latestEventType, ["GOVERNMENT_ORDER", "TURN"])) {
+			void refreshOrders();
+		}
+		if (
+			selectedTeamId &&
+			eventTypeHas(latestEventType, [
+				"GOVERNMENT_ORDER",
+				"TURN",
+				"SCENARIO",
+				"STEP",
+				"CREDITS",
+				"POINTS",
+				"TEAM_ACTION",
+				"TEAM_TARGET",
+				"TEAM_MAJORITY",
+				"TEAM_STATE_CHANGED",
+			])
+		) {
 			void api.getTeamProgress(selectedTeamId).then(setSelectedTeam);
 		}
-	}, [api, latestEventSeq, refreshOrders, refreshOverview, selectedTeamId]);
+	}, [
+		api,
+		latestEventSeq,
+		latestEventType,
+		refreshOrders,
+		refreshOverview,
+		selectedTeamId,
+	]);
 
 	if (!token) {
 		return (
@@ -1166,14 +1214,6 @@ export default function GovernmentDashboardPage() {
 									}))}
 									relatedScenarioId={null}
 								/>
-								<Card className="border-cyan-400/10 bg-cyan-500/5 text-slate-100">
-									<CardContent className="p-5 text-sm leading-7 text-slate-400">
-										<ShieldCheck className="mb-3 size-6 text-cyan-300" />
-										این نما فقط داده‌های مجاز API دولت و رویدادهای فیلترشده برای
-										نقش شما را نمایش می‌دهد؛ هیچ پیشنهاد یا توصیه خودکار تولید
-										نمی‌شود.
-									</CardContent>
-								</Card>
 							</aside>
 						</section>
 					</div>

@@ -1,5 +1,7 @@
 import type {
 	AdminUserSummary,
+	AiAssistantConfigRequest,
+	AiAssistantConfigResponse,
 	ConfigureAllRequestV2,
 	ConfigureAllResponse,
 	GamePlanGraphResponse,
@@ -111,6 +113,14 @@ export const validateGamePlanOnServer = (
 export const submitDefaultGamePlan = (
 	plan: ConfigureAllRequestV2,
 ): Promise<ConfigureAllResponse> => createAdminApi().configureAll(plan);
+
+export const loadAiAssistantConfig = (): Promise<AiAssistantConfigResponse> =>
+	createAdminApi().getAiAssistantConfig();
+
+export const saveAiAssistantConfig = (
+	levels: AiAssistantConfigRequest["levels"],
+): Promise<AiAssistantConfigResponse> =>
+	createAdminApi().setAiAssistantConfig({ levels });
 
 export const startAdminGame = (gameId: string) =>
 	createAdminApi().startGame(gameId);

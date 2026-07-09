@@ -9,6 +9,8 @@ import type {
 	GovernmentTeamProgress,
 	LockReasonsResponse,
 	OrderView,
+	PlayerAiLevelResponse,
+	PlayerAiPurchaseResponse,
 	PlayerStateResponse,
 	ScenarioView,
 	SelectScenarioResponse,
@@ -94,6 +96,10 @@ export interface GameClientApi {
 		nodeId: string,
 		config?: AxiosRequestConfig,
 	): Promise<LockReasonsResponse>;
+	getPlayerAiLevel(config?: AxiosRequestConfig): Promise<PlayerAiLevelResponse>;
+	purchasePlayerAiLevel(
+		config?: AxiosRequestConfig,
+	): Promise<PlayerAiPurchaseResponse>;
 }
 
 const createHttpClient = (config: GameClientApiConfig): AxiosInstance => {
@@ -268,6 +274,23 @@ export const createGameClientApi = (
 		async getGovernmentLockReasons(teamId, nodeId, requestConfig) {
 			const { data } = await http.get<LockReasonsResponse>(
 				`/government/teams/${encodeURIComponent(teamId)}/nodes/${encodeURIComponent(nodeId)}/lock-reasons`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getPlayerAiLevel(requestConfig) {
+			const { data } = await http.get<PlayerAiLevelResponse>(
+				"/client/player/ai/level",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async purchasePlayerAiLevel(requestConfig) {
+			const { data } = await http.post<PlayerAiPurchaseResponse>(
+				"/client/player/ai/purchase",
+				undefined,
 				requestConfig,
 			);
 			return data;

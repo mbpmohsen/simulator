@@ -108,6 +108,14 @@ const LOCK_REASON_FA: Record<string, string> = {
 	VOTING_PHASE_CLOSED: "رأی‌دادن فقط در فاز رأی‌گیری امکان‌پذیر است.",
 	STEP_LOCKED: "این گام در حال حاضر قفل است.",
 	SCENARIO_ROLE_NOT_ALLOWED: "نقش تیم اجازه انتخاب این سناریو را نمی‌دهد.",
+	AI_CONFIG_NOT_SET: "دستیار هوش مصنوعی برای این بازی فعال نشده است.",
+	AI_DUPLICATE_LEVEL: "سطح تکراری است.",
+	AI_LEVELS_NOT_CONTIGUOUS: "سطح‌ها باید از ۱ شروع شوند و پشت‌سرهم باشند.",
+	AI_NEGATIVE_COST: "هزینه نمی‌تواند منفی باشد.",
+	NOT_TEAM_LEADER: "فقط رهبر تیم می‌تواند دستیار را ارتقا دهد.",
+	AI_ALREADY_PURCHASED_THIS_TURN: "در این نوبت قبلاً ارتقا خریداری شده است.",
+	AI_MAX_LEVEL_REACHED: "دستیار به بالاترین سطح رسیده است.",
+	AI_INSUFFICIENT_CREDIT: "اعتبار تیم برای خرید این سطح کافی نیست.",
 };
 
 export const formatLockReasonFa = (code: string, fallback?: string): string =>

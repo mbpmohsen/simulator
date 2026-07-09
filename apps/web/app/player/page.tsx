@@ -2,9 +2,14 @@
 
 import type {
 	GamePhase,
+	GovernmentCatalogAction,
+	GovernmentCatalogSubject,
 	GovernmentOrderType,
 	OrderView,
+	PlayerSchema,
+	ScenarioView,
 	StepView,
+	SubjectView,
 } from "@workspace/trpc";
 import {
 	canSelectScenario,
@@ -44,10 +49,14 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AiAssistantUpgradePanel } from "@/components/v2/ai/AiAssistantUpgradePanel";
+import { SubjectAiButton } from "@/components/v2/ai/SubjectAiButton";
+import { SubjectAiInsightDialog } from "@/components/v2/ai/SubjectAiInsightDialog";
 import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
+import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
 import { useLockReasons } from "@/hooks/useLockReasons";
@@ -55,6 +64,7 @@ import { usePlayerOrders } from "@/hooks/usePlayerOrders";
 import { usePlayerScenarios } from "@/hooks/usePlayerScenarios";
 import { usePlayerState } from "@/hooks/usePlayerState";
 import { usePlayerSubjects } from "@/hooks/usePlayerSubjects";
+import { usePurchaseAiAssistantLevel } from "@/hooks/usePurchaseAiAssistantLevel";
 import { useScenarioSteps } from "@/hooks/useScenarioSteps";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import { createCommunicationService } from "@/lib/communicationService";
@@ -69,6 +79,7 @@ import {
 	isGamePhase,
 	translateSubjectStatusFa,
 } from "@/lib/runtimeTranslationsFa";
+import type { SubjectRuntimeProgress } from "@/lib/subjectAiInsightGenerator";
 import { useAuthStore } from "@/store/auth.store";
 
 const statusTone: Record<StepView["status"], string> = {
@@ -93,6 +104,107 @@ const orderDetailFa = (order: OrderView): string => {
 const forcedOrder = (type: GovernmentOrderType, forced: boolean): boolean =>
 	forced || type === "FORCE_SUBJECT" || type === "DISABLE_TEAM";
 
+const formatNumberFa = (value: number): string => value.toLocaleString("fa-IR");
+
+const readPlayerTeamId = (player: PlayerSchema): number | null => {
+	const rawTeamId = player.teamId ?? player.team_id;
+	return typeof rawTeamId === "number" && Number.isFinite(rawTeamId)
+		? rawTeamId
+		: null;
+};
+
+const readPlayerLeaderFlag = (player: PlayerSchema): boolean =>
+	player.isLeader === true || player.is_leader === true;
+
+const actionTypeFromCode = (code: string): "attack" | "defense" =>
+	code.toUpperCase().startsWith("DEF_") ? "defense" : "attack";
+
+const buildPlayerActionsByCode = (
+	steps: StepView[],
+): Record<string, GovernmentCatalogAction> =>
+	Object.fromEntries(
+		steps.map((step) => [
+			step.action_code,
+			{
+				code: step.action_code,
+				name: step.action_name ?? step.action_code,
+				name_fa: step.action_name_fa,
+				type: actionTypeFromCode(step.action_code),
+				base_stats: {
+					...(typeof step.cost === "number" ? { cost: step.cost } : {}),
+					...(typeof step.probability === "number"
+						? { success_probability: step.probability }
+						: {}),
+				},
+			},
+		]),
+	);
+
+const buildPlayerAiSubject = ({
+	subject,
+	teamId,
+	sideId,
+	selectedSubSubjectId,
+	scenarios,
+	selectedScenarioId,
+	steps,
+}: {
+	subject: SubjectView;
+	teamId: number;
+	sideId: number;
+	selectedSubSubjectId: string | null;
+	scenarios: ScenarioView[];
+	selectedScenarioId: string | null;
+	steps: StepView[];
+}): GovernmentCatalogSubject => ({
+	id: subject.id,
+	goal_id: "player-assigned",
+	title: subject.title,
+	title_fa: subject.title_fa,
+	subject_type: subject.subject_type,
+	target_team_id: teamId,
+	owner_side_id: sideId,
+	sub_subjects: subject.sub_subjects.map((subSubject) => ({
+		id: subSubject.id,
+		subject_id: subject.id,
+		title: subSubject.title,
+		title_fa: subSubject.title_fa,
+		progress_share: subSubject.progress_share,
+		scenarios:
+			subSubject.id === selectedSubSubjectId
+				? scenarios.map((scenario) => ({
+						id: scenario.id,
+						sub_subject_id: subSubject.id,
+						title: scenario.title,
+						title_fa: scenario.title_fa,
+						scenario_type: scenario.scenario_type,
+						execution_mode: scenario.execution_mode,
+						steps:
+							scenario.id === selectedScenarioId
+								? steps.map((step) => ({
+										id: step.id,
+										scenario_id: scenario.id,
+										order: step.order,
+										action_code: step.action_code,
+										required: step.required,
+									}))
+								: [],
+					}))
+				: [],
+	})),
+});
+
+const eventTypeHas = (type: string, terms: string[]): boolean =>
+	terms.some((term) => type.includes(term));
+
+type AiInsightSnapshot = {
+	subject: GovernmentCatalogSubject;
+	runtimeProgress: SubjectRuntimeProgress;
+	actionsByCode: Record<string, GovernmentCatalogAction>;
+	currentTurn: number | null;
+	currentPhase: GamePhase;
+};
+
 export default function PlayerDashboardPage() {
 	const { token, user } = useAuthStore();
 	const api = useMemo(() => createPlayerRuntimeApi(token ?? ""), [token]);
@@ -111,6 +223,8 @@ export default function PlayerDashboardPage() {
 	const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(
 		null,
 	);
+	const [aiInsightSnapshot, setAiInsightSnapshot] =
+		useState<AiInsightSnapshot | null>(null);
 	const [actionBusy, setActionBusy] = useState<string | null>(null);
 	const subjects =
 		subjectsResource.subjects.length > 0
@@ -128,8 +242,76 @@ export default function PlayerDashboardPage() {
 		runtime.state?.current_turn,
 		Boolean(token && runtime.state),
 	);
+	const aiLevelResource = useAiAssistantLevel({
+		token,
+		context: "player",
+		enabled: Boolean(token),
+	});
+	const purchaseAiLevelResource = usePurchaseAiAssistantLevel({
+		token,
+		context: "player",
+	});
 	const gameId = runtime.context?.gameId ?? null;
 	const gameState = runtime.context?.gameState ?? null;
+	const playerAiLevel =
+		aiLevelResource.status === "ready"
+			? aiLevelResource.level.current_level
+			: 0;
+	const playerAiDisabledMessage =
+		aiLevelResource.status === "unconfigured" ||
+		aiLevelResource.status === "error"
+			? aiLevelResource.message
+			: playerAiLevel <= 0
+				? "AI هنوز خریداری نشده است."
+				: null;
+	const isTeamLeader = useMemo(() => {
+		if (!gameState || !user || !runtime.state) return false;
+		const currentPlayer = gameState.players.find(
+			(player) => player.id === user.id,
+		);
+		return Boolean(
+			currentPlayer &&
+				readPlayerTeamId(currentPlayer) === runtime.state.team_id &&
+				readPlayerLeaderFlag(currentPlayer),
+		);
+	}, [gameState, runtime.state, user]);
+	const openAiInsight = useCallback(
+		(subject: SubjectView) => {
+			setAiInsightSnapshot({
+				subject: buildPlayerAiSubject({
+					subject,
+					teamId: runtime.state?.team_id ?? runtime.context?.teamId ?? 0,
+					sideId: runtime.context?.sideId ?? 0,
+					selectedSubSubjectId,
+					scenarios: scenariosResource.scenarios,
+					selectedScenarioId,
+					steps: stepsResource.steps,
+				}),
+				runtimeProgress: {
+					progress_percent: subject.progress_percent,
+					status: subject.status,
+					sub_subjects: subject.sub_subjects,
+				},
+				actionsByCode: buildPlayerActionsByCode(stepsResource.steps),
+				currentTurn: runtime.state?.current_turn ?? null,
+				currentPhase: phase,
+			});
+		},
+		[
+			phase,
+			runtime.context?.sideId,
+			runtime.context?.teamId,
+			runtime.state?.current_turn,
+			runtime.state?.team_id,
+			scenariosResource.scenarios,
+			selectedScenarioId,
+			selectedSubSubjectId,
+			stepsResource.steps,
+		],
+	);
+	const closeAiInsight = useCallback((open: boolean) => {
+		if (!open) setAiInsightSnapshot(null);
+	}, []);
 	const stateFinished = isGameFinished(gameState?.game);
 	const events = useGameEvents(gameId, token, !stateFinished);
 	const terminalEventReceived = events.events.some(isTerminalGameEvent);
@@ -204,19 +386,47 @@ export default function PlayerDashboardPage() {
 	}, [runtime.state?.active_scenario_id]);
 
 	const latestEventSeq = events.events[0]?.seq ?? 0;
+	const latestEventType = events.events[0]?.type ?? "";
 	const refreshRuntime = runtime.refresh;
 	const refreshSubjects = subjectsResource.refresh;
 	const refreshOrders = ordersResource.refresh;
 	const refreshSteps = stepsResource.refresh;
+	const refreshAi = aiLevelResource.refresh;
 
 	useEffect(() => {
 		if (latestEventSeq === 0) return;
-		void refreshRuntime();
-		void refreshSubjects();
-		void refreshOrders();
-		if (selectedScenarioId) void refreshSteps();
+		if (
+			eventTypeHas(latestEventType, [
+				"TURN",
+				"PHASE",
+				"GAME",
+				"ORDER",
+				"SCENARIO",
+				"STEP",
+				"AI",
+			])
+		) {
+			void refreshRuntime();
+		}
+		if (eventTypeHas(latestEventType, ["ORDER", "SCENARIO", "STEP", "TURN"])) {
+			void refreshSubjects();
+		}
+		if (eventTypeHas(latestEventType, ["ORDER", "TURN"])) {
+			void refreshOrders();
+		}
+		if (
+			selectedScenarioId &&
+			eventTypeHas(latestEventType, ["STEP", "SCENARIO", "PHASE", "TURN"])
+		) {
+			void refreshSteps();
+		}
+		if (eventTypeHas(latestEventType, ["AI", "TURN"])) {
+			void refreshAi();
+		}
 	}, [
 		latestEventSeq,
+		latestEventType,
+		refreshAi,
 		refreshOrders,
 		refreshRuntime,
 		refreshSteps,
@@ -258,6 +468,21 @@ export default function PlayerDashboardPage() {
 			toast.error(parsed.message);
 		} finally {
 			setActionBusy(null);
+		}
+	};
+
+	const purchaseAiLevel = async () => {
+		try {
+			const response = await purchaseAiLevelResource.purchase();
+			toast.success(`سطح ${formatNumberFa(response.level)} AI خریداری شد.`);
+			await Promise.all([aiLevelResource.refresh(), runtime.refresh()]);
+		} catch (requestError) {
+			toast.error(
+				requestError instanceof Error
+					? requestError.message
+					: "خرید ارتقا AI ناموفق بود.",
+			);
+			await Promise.allSettled([aiLevelResource.refresh(), runtime.refresh()]);
 		}
 	};
 
@@ -540,9 +765,18 @@ export default function PlayerDashboardPage() {
 								{selectedSubject && (
 									<Card className="border-white/10 bg-slate-950/55 text-slate-100">
 										<CardHeader>
-											<CardTitle className="flex items-center gap-2 text-base">
-												<GitBranch className="size-5 text-violet-300" /> انتخاب
-												سناریو
+											<CardTitle className="flex items-center justify-between gap-2 text-base">
+												<span className="flex items-center gap-2">
+													<GitBranch className="size-5 text-violet-300" />{" "}
+													انتخاب سناریو
+												</span>
+												<SubjectAiButton
+													aiLevel={playerAiLevel}
+													loading={aiLevelResource.loading}
+													disabledMessage={playerAiDisabledMessage}
+													onClick={() => openAiInsight(selectedSubject)}
+													variant="text"
+												/>
 											</CardTitle>
 										</CardHeader>
 										<CardContent>
@@ -586,6 +820,12 @@ export default function PlayerDashboardPage() {
 															<Badge variant="secondary">
 																{formatExecutionModeFa(scenario.execution_mode)}
 															</Badge>
+															<SubjectAiButton
+																aiLevel={playerAiLevel}
+																loading={aiLevelResource.loading}
+																disabledMessage={playerAiDisabledMessage}
+																onClick={() => openAiInsight(selectedSubject)}
+															/>
 														</div>
 														<Button
 															onClick={() => void selectScenario(scenario.id)}
@@ -706,6 +946,29 @@ export default function PlayerDashboardPage() {
 							</div>
 
 							<aside className="space-y-5">
+								<AiAssistantUpgradePanel
+									level={
+										aiLevelResource.status === "ready"
+											? aiLevelResource.level
+											: null
+									}
+									loading={aiLevelResource.loading}
+									purchasing={purchaseAiLevelResource.purchasing}
+									error={
+										purchaseAiLevelResource.error ??
+										(aiLevelResource.status === "error"
+											? aiLevelResource.message
+											: null)
+									}
+									unavailableMessage={
+										aiLevelResource.status === "unconfigured"
+											? aiLevelResource.message
+											: null
+									}
+									isLeader={isTeamLeader}
+									onPurchase={() => void purchaseAiLevel()}
+									onRefresh={() => void aiLevelResource.refresh()}
+								/>
 								<GameEventFeed
 									events={events.events}
 									status={events.status}
@@ -730,6 +993,17 @@ export default function PlayerDashboardPage() {
 					</div>
 				)}
 			</div>
+
+			<SubjectAiInsightDialog
+				open={aiInsightSnapshot !== null}
+				onOpenChange={closeAiInsight}
+				aiLevel={playerAiLevel}
+				subject={aiInsightSnapshot?.subject ?? null}
+				runtimeProgress={aiInsightSnapshot?.runtimeProgress}
+				actionsByCode={aiInsightSnapshot?.actionsByCode ?? {}}
+				currentTurn={aiInsightSnapshot?.currentTurn ?? null}
+				currentPhase={aiInsightSnapshot?.currentPhase ?? phase}
+			/>
 
 			<LockReasonsDialog
 				open={locks.reasons !== null}

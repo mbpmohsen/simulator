@@ -156,6 +156,55 @@ describe("GameServerApi admin lifecycle contract", () => {
 		expect(requests[12]?.responseType).toBe("blob");
 	});
 
+	it("sets and reads the AI Assistant ladder through the admin config endpoints", async () => {
+		const requests: CapturedRequest[] = [];
+		const adapter: AxiosAdapter = async (request) => {
+			requests.push({
+				method: request.method,
+				url: request.url,
+				data:
+					typeof request.data === "string"
+						? (JSON.parse(request.data) as unknown)
+						: request.data,
+			});
+			return {
+				data: {
+					game_id: "game-1",
+					levels: [
+						{
+							level: 1,
+							cost: 50,
+							name: "Basic",
+							name_fa: "پایه",
+						},
+					],
+				},
+				status: 200,
+				statusText: "OK",
+				headers: new AxiosHeaders(),
+				config: request,
+			};
+		};
+		const api = createGameServerApi({
+			baseURL: "https://simulator.test",
+			adminToken: "admin-token",
+			axiosConfig: { adapter },
+		});
+
+		await api.setAiAssistantConfig({
+			levels: [{ level: 1, cost: 50, name: "Basic", name_fa: "پایه" }],
+		});
+		await api.getAiAssistantConfig();
+
+		expect(requests.map(({ method, url }) => ({ method, url }))).toEqual([
+			{ method: "put", url: "/admin/ai/config" },
+			{ method: "get", url: "/admin/ai/config" },
+		]);
+		expect(requests[0]?.data).toMatchObject({
+			levels: [{ level: 1, cost: 50, name_fa: "پایه" }],
+		});
+	});
+
 	it("opens the authenticated SSE stream with resume and type filters", async () => {
 		const calls: Array<{ url: string; init?: RequestInit }> = [];
 		const streamFetch: typeof fetch = async (input, init) => {

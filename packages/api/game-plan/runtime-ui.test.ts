@@ -42,6 +42,19 @@ describe("runtime API errors and Persian translations", () => {
 		expect(parsed.status).toBe(409);
 		expect(parsed.reasons).toHaveLength(2);
 		expect(parsed.message).toContain("قفل");
+		expect(
+			parseRuntimeApiError({
+				response: {
+					status: 409,
+					data: {
+						detail: {
+							code: "AI_ALREADY_PURCHASED_THIS_TURN",
+							detail: "already bought",
+						},
+					},
+				},
+			}).message,
+		).toContain("ارتقا");
 	});
 
 	it("centralizes event and lock-reason Persian labels", () => {

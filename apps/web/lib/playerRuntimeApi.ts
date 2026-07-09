@@ -2,6 +2,8 @@ import type {
 	GameClientApi,
 	LockReasonsResponse,
 	OrderView,
+	PlayerAiLevelResponse,
+	PlayerAiPurchaseResponse,
 	PlayerStateResponse,
 	ScenarioView,
 	SelectScenarioResponse,
@@ -26,6 +28,8 @@ export interface PlayerRuntimeApi {
 	selectScenario(scenarioId: string): Promise<SelectScenarioResponse>;
 	voteStep(stepId: string): Promise<VoteStepResponse>;
 	getOrders(turn?: number): Promise<OrderView[]>;
+	getAiLevel(): Promise<PlayerAiLevelResponse>;
+	purchaseAiLevel(): Promise<PlayerAiPurchaseResponse>;
 	getRuntimeContext(): Promise<RuntimeApiContext>;
 }
 
@@ -43,6 +47,8 @@ export const createPlayerRuntimeApi = (token: string): PlayerRuntimeApi => {
 		selectScenario: (scenarioId) => client.selectPlayerScenario(scenarioId),
 		voteStep: (stepId) => client.votePlayerStep(stepId),
 		getOrders: (turn) => client.getPlayerOrders(turn),
+		getAiLevel: () => client.getPlayerAiLevel(),
+		purchaseAiLevel: () => client.purchasePlayerAiLevel(),
 		getRuntimeContext: () => loadRuntimeApiContext(client),
 	};
 };

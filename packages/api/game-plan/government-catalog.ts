@@ -9,6 +9,7 @@ import type {
 	GovernmentCatalogTeam,
 	GovernmentOrder,
 	GovernmentOrderType,
+	ImpactEffect,
 	TeamRoleType,
 } from "../game-server/types";
 
@@ -127,6 +128,61 @@ const optionalNumberField = (
 	return Number.isFinite(value) ? value : undefined;
 };
 
+const optionalBaseStatsField = (
+	record: UnknownRecord,
+): GovernmentCatalogAction["base_stats"] => {
+	const statsRecord = asRecord(firstValue(record, ["base_stats", "baseStats"]));
+	const source = statsRecord ?? record;
+	const normalizeStat = (
+		value: number | null | undefined,
+	): number | undefined => (typeof value === "number" ? value : undefined);
+	const cost = normalizeStat(optionalNumberField(source, ["cost"]));
+	const successProbability = normalizeStat(
+		optionalNumberField(source, [
+			"success_probability",
+			"successProbability",
+			"probability",
+		]),
+	);
+	const pointsOnSuccess = normalizeStat(
+		optionalNumberField(source, ["points_on_success", "pointsOnSuccess"]),
+	);
+	const cooldownTurns = normalizeStat(
+		optionalNumberField(source, ["cooldown_turns", "cooldownTurns"]),
+	);
+	if (
+		cost === undefined &&
+		successProbability === undefined &&
+		pointsOnSuccess === undefined &&
+		cooldownTurns === undefined
+	) {
+		return undefined;
+	}
+	return {
+		...(statsRecord ?? {}),
+		...(cost === undefined ? {} : { cost }),
+		...(successProbability === undefined
+			? {}
+			: { success_probability: successProbability }),
+		...(pointsOnSuccess === undefined
+			? {}
+			: { points_on_success: pointsOnSuccess }),
+		...(cooldownTurns === undefined ? {} : { cooldown_turns: cooldownTurns }),
+	};
+};
+
+const impactEffectsField = (
+	record: UnknownRecord,
+	keys: readonly string[],
+): ImpactEffect[] | undefined => {
+	const effects = arrayField(record, keys)
+		.map(asRecord)
+		.filter((effect): effect is UnknownRecord => effect !== null)
+		.filter((effect) => typeof effect.type === "string")
+		.map((effect) => effect as unknown as ImpactEffect);
+	return effects.length > 0 ? effects : undefined;
+};
+
 const booleanField = (
 	record: UnknownRecord,
 	keys: readonly string[],
@@ -214,6 +270,8 @@ export const normalizeGovernmentCatalogStep = (
 		order: optionalNumberField(record, ["order"]),
 		action_code: actionCode,
 		required: booleanField(record, ["required"], true),
+		on_success: impactEffectsField(record, ["on_success", "onSuccess"]),
+		on_failure: impactEffectsField(record, ["on_failure", "onFailure"]),
 	};
 };
 
@@ -248,6 +306,19 @@ export const normalizeGovernmentCatalogScenario = (
 		scenario_type: scenarioType,
 		execution_mode: executionMode,
 		allowed_team_roles: allowedRoles.length > 0 ? allowedRoles : undefined,
+		base_reward_points: optionalNumberField(record, [
+			"base_reward_points",
+			"baseRewardPoints",
+		]),
+		base_credit_cost: optionalNumberField(record, [
+			"base_credit_cost",
+			"baseCreditCost",
+		]),
+		risk_level: optionalStringField(record, ["risk_level", "riskLevel"]),
+		risk_level_fa: optionalStringField(record, [
+			"risk_level_fa",
+			"riskLevelFa",
+		]),
 		steps: arrayField(record, ["steps", "scenario_steps", "scenarioSteps"])
 			.map(normalizeGovernmentCatalogStep)
 			.filter((step): step is GovernmentCatalogStep => step !== null),
@@ -374,6 +445,8 @@ export const normalizeGovernmentCatalogAction = (
 			"descriptionFa",
 		]),
 		type,
+		base_stats: optionalBaseStatsField(record),
+		effects: asRecord(firstValue(record, ["effects"])) ?? undefined,
 	};
 };
 

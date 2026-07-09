@@ -28,6 +28,7 @@ import {
 	Activity,
 	AlertTriangle,
 	BookOpen,
+	Bot,
 	Boxes,
 	CheckCircle2,
 	ChevronLeft,
@@ -53,6 +54,7 @@ import { useAdminAuth } from "@/components/AdminAuthGate";
 import TeamMemberAssignment from "@/components/TeamMemberAssignment";
 import {
 	listAdminUsers,
+	loadAiAssistantConfig,
 	loadDefaultGamePlan,
 	loadPublishedGamePlan,
 	startAdminGame,
@@ -458,6 +460,7 @@ export default function AdminGamePlanPage() {
 	>([]);
 	const [serverValidated, setServerValidated] = useState(false);
 	const [configuredGameId, setConfiguredGameId] = useState<string | null>(null);
+	const [aiConfigReminder, setAiConfigReminder] = useState<string | null>(null);
 	const [startingGame, setStartingGame] = useState(false);
 	const [users, setUsers] = useState<AdminUserSummary[]>([]);
 	const [usersLoading, setUsersLoading] = useState(true);
@@ -640,6 +643,22 @@ export default function AdminGamePlanPage() {
 				tone: "success",
 				text: `بازی با شناسه ${response.gameId} منتشر شد.`,
 			});
+			try {
+				await loadAiAssistantConfig();
+				setAiConfigReminder(null);
+			} catch (error) {
+				const parsed = parseApiError(
+					error,
+					"دریافت تنظیمات دستیار هوش مصنوعی ممکن نشد.",
+				);
+				if (parsed.status === 404 || parsed.code === "AI_CONFIG_NOT_SET") {
+					setAiConfigReminder(
+						"configure_all با موفقیت انجام شد، اما تنظیمات دستیار هوش مصنوعی هنوز ثبت نشده است. پیش از شروع بازی، سطح‌ها و هزینه‌های دستیار را تنظیم کنید.",
+					);
+				} else {
+					setAiConfigReminder(parsed.message);
+				}
+			}
 		} catch (error) {
 			setNotice({
 				tone: "error",
@@ -748,6 +767,16 @@ export default function AdminGamePlanPage() {
 									<GitBranch className="size-4" /> نقشه فعلی
 								</Link>
 							</Button>
+							<Button
+								asChild
+								variant="outline"
+								size="sm"
+								className="border-white/10 bg-white/5"
+							>
+								<Link href="/admin/ai">
+									<Bot className="size-4" /> دستیار هوشمند
+								</Link>
+							</Button>
 							<Badge className="border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-emerald-200">
 								<ShieldCheck className="size-3.5" /> نشست مدیر فعال
 							</Badge>
@@ -787,6 +816,21 @@ export default function AdminGamePlanPage() {
 					)}
 				</AnimatePresence>
 
+				{aiConfigReminder && (
+					<div className="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4 text-sm leading-7 text-amber-100 lg:flex-row lg:items-center lg:justify-between">
+						<div className="flex items-start gap-3">
+							<AlertTriangle className="mt-1 size-5 shrink-0" />
+							<span>{aiConfigReminder}</span>
+						</div>
+						<Button
+							asChild
+							className="bg-amber-300 font-bold text-slate-950 hover:bg-amber-200"
+						>
+							<Link href="/admin/ai">تنظیم دستیار هوش مصنوعی</Link>
+						</Button>
+					</div>
+				)}
+
 				{configuredGameId && (
 					<div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
 						<Badge className="bg-emerald-500/15 text-emerald-100">
@@ -812,6 +856,9 @@ export default function AdminGamePlanPage() {
 						</Button>
 						<Button asChild variant="outline">
 							<Link href="/analytics">آنالیتیکس</Link>
+						</Button>
+						<Button asChild variant="outline">
+							<Link href="/admin/ai">دستیار هوشمند</Link>
 						</Button>
 					</div>
 				)}
@@ -1224,7 +1271,7 @@ export default function AdminGamePlanPage() {
 														) : (
 															<CloudUpload className="size-4" />
 														)}{" "}
-														انتشار با configure_all
+														انتشار
 													</Button>
 												</div>
 											</div>
