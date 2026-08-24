@@ -48,6 +48,7 @@ import {
 	Landmark,
 	LoaderCircle,
 	LockKeyhole,
+	LogOut,
 	Megaphone,
 	RefreshCw,
 	ScrollText,
@@ -167,7 +168,7 @@ const eventTypeHas = (type: string, terms: string[]): boolean =>
 	terms.some((term) => type.includes(term));
 
 export default function GovernmentDashboardPage() {
-	const { token, user } = useAuthStore();
+	const { token, user, clearAuth } = useAuthStore();
 	const api = useMemo(() => createGovernmentRuntimeApi(token ?? ""), [token]);
 	const runtime = useGovernmentOverview(api, Boolean(token));
 	const gameId = runtime.context?.gameId ?? null;
@@ -344,6 +345,10 @@ export default function GovernmentDashboardPage() {
 		[api, targetTeamId],
 	);
 	const locks = useLockReasons(loadGovernmentLockReasons);
+	const exitGovernment = useCallback(() => {
+		clearAuth();
+		toast.success("از پنل دولت خارج شدید.");
+	}, [clearAuth]);
 
 	const communicationService = useMemo(
 		() =>
@@ -585,6 +590,7 @@ export default function GovernmentDashboardPage() {
 				finalizing={!stateFinished}
 				refreshing={runtime.loading}
 				onRefresh={() => void runtime.refresh()}
+				onExit={exitGovernment}
 			/>
 		);
 	}
@@ -638,6 +644,14 @@ export default function GovernmentDashboardPage() {
 									className={`size-4 ${runtime.loading || catalogResource.isLoading ? "animate-spin" : ""}`}
 								/>{" "}
 								به‌روزرسانی کاتالوگ
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={exitGovernment}
+								className="border-white/10 bg-white/5 text-slate-300 hover:border-rose-400/20 hover:bg-rose-500/10 hover:text-rose-200"
+							>
+								<LogOut className="size-4" /> خروج
 							</Button>
 						</div>
 					</div>

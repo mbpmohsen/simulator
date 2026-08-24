@@ -39,6 +39,7 @@ import {
 	GitBranch,
 	LoaderCircle,
 	LockKeyhole,
+	LogOut,
 	RefreshCw,
 	ScrollText,
 	ShieldAlert,
@@ -206,7 +207,7 @@ type AiInsightSnapshot = {
 };
 
 export default function PlayerDashboardPage() {
-	const { token, user } = useAuthStore();
+	const { token, user, clearAuth } = useAuthStore();
 	const api = useMemo(() => createPlayerRuntimeApi(token ?? ""), [token]);
 	const runtime = usePlayerState(api, Boolean(token));
 	const subjectsResource = usePlayerSubjects(
@@ -325,6 +326,10 @@ export default function PlayerDashboardPage() {
 		[api],
 	);
 	const locks = useLockReasons(loadPlayerLockReasons);
+	const exitPlayer = useCallback(() => {
+		clearAuth();
+		toast.success("از پنل بازیکن خارج شدید.");
+	}, [clearAuth]);
 
 	const communicationService = useMemo(
 		() =>
@@ -512,6 +517,7 @@ export default function PlayerDashboardPage() {
 				finalizing={!stateFinished}
 				refreshing={runtime.loading}
 				onRefresh={() => void runtime.refresh()}
+				onExit={exitPlayer}
 			/>
 		);
 	}
@@ -557,6 +563,14 @@ export default function PlayerDashboardPage() {
 									className={`size-4 ${runtime.loading ? "animate-spin" : ""}`}
 								/>{" "}
 								همگام‌سازی
+							</Button>
+							<Button
+								type="button"
+								onClick={exitPlayer}
+								variant="outline"
+								className="border-white/10 bg-white/5 text-slate-300 hover:border-rose-400/20 hover:bg-rose-500/10 hover:text-rose-200"
+							>
+								<LogOut className="size-4" /> خروج
 							</Button>
 						</div>
 					</div>

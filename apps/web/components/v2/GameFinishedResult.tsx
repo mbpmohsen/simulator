@@ -9,6 +9,7 @@ import {
 	Coins,
 	Handshake,
 	LoaderCircle,
+	LogOut,
 	Medal,
 	RefreshCw,
 	Shield,
@@ -26,6 +27,7 @@ export interface GameFinishedResultProps {
 	finalizing?: boolean;
 	refreshing?: boolean;
 	onRefresh: () => void;
+	onExit?: () => void;
 }
 
 const numberFa = (value: number): string => value.toLocaleString("fa-IR");
@@ -36,6 +38,7 @@ export function GameFinishedResult({
 	finalizing = false,
 	refreshing = false,
 	onRefresh,
+	onExit,
 }: GameFinishedResultProps) {
 	const conclusion = useMemo(() => buildGameConclusion(state), [state]);
 	const announced = useRef(false);
@@ -103,20 +106,33 @@ export function GameFinishedResult({
 							</p>
 						</div>
 					</div>
-					<Button
-						type="button"
-						variant="outline"
-						onClick={onRefresh}
-						disabled={refreshing}
-						className="border-white/15 bg-white/5"
-					>
-						{refreshing ? (
-							<LoaderCircle className="size-4 animate-spin" />
-						) : (
-							<RefreshCw className="size-4" />
-						)}
-						دریافت دوباره نتیجه
-					</Button>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onRefresh}
+							disabled={refreshing}
+							className="border-white/15 bg-white/5"
+						>
+							{refreshing ? (
+								<LoaderCircle className="size-4 animate-spin" />
+							) : (
+								<RefreshCw className="size-4" />
+							)}
+							دریافت دوباره نتیجه
+						</Button>
+						{onExit ? (
+							<Button
+								type="button"
+								variant="outline"
+								onClick={onExit}
+								className="border-white/15 bg-white/5 text-slate-300 hover:border-rose-400/25 hover:bg-rose-500/10 hover:text-rose-200"
+							>
+								<LogOut className="size-4" />
+								خروج
+							</Button>
+						) : null}
+					</div>
 				</header>
 
 				{finalizing && (
