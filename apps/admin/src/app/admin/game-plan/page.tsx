@@ -341,8 +341,8 @@ function CollectionEditor({
 	};
 
 	return (
-		<div className="grid min-h-[580px] gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-			<Card className="border-white/10 bg-slate-950/55 text-slate-100">
+		<div className="grid min-h-[580px] min-w-0 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+			<Card className="min-w-0 overflow-hidden border-white/10 bg-slate-950/55 text-slate-100">
 				<CardHeader className="space-y-4">
 					<div className="flex items-center justify-between">
 						<CardTitle>{COLLECTION_LABEL[collectionKey]}ها</CardTitle>
@@ -366,37 +366,40 @@ function CollectionEditor({
 						افزودن {COLLECTION_LABEL[collectionKey]}
 					</Button>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="min-w-0">
 					<ScrollArea className="h-[430px] pl-2">
-						<div className="space-y-2">
+						<div className="min-w-0 space-y-2">
 							{filtered.map(({ item, index }) => (
 								<button
 									key={`${entityKey(item, index)}-${index}`}
 									type="button"
 									onClick={() => setSelectedIndex(index)}
-									className={`w-full rounded-xl border p-3 text-right transition ${selectedIndex === index ? "border-cyan-400/50 bg-cyan-400/10" : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"}`}
+									className={`block w-full overflow-hidden min-w-0 rounded-xl border p-3 text-right transition ${selectedIndex === index ? "border-cyan-400/50 bg-cyan-400/10" : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"}`}
 								>
 									<div className="line-clamp-1 text-sm font-bold">
 										{entityTitle(item, index)}
 									</div>
-									<div
-										dir="ltr"
-										className="mt-1 truncate text-left font-mono text-[10px] text-slate-500"
-									>
-										{entityKey(item, index)}
-									</div>
+                                    <div
+                                        title={entityKey(item, index)}
+                                        dir="ltr"
+                                        className="mt-1 min-w-0 max-w-full truncate text-left font-mono text-[10px] text-slate-500"
+                                    >
+                                        {entityKey(item, index).length > 20
+                                            ? `${entityKey(item, index).slice(0, 20)}...`
+                                            : entityKey(item, index)}
+                                    </div>
 								</button>
 							))}
 						</div>
 					</ScrollArea>
 				</CardContent>
 			</Card>
-			<Card className="border-white/10 bg-slate-950/55 text-slate-100">
+			<Card className="min-w-0 overflow-hidden border-white/10 bg-slate-950/55 text-slate-100">
 				<CardHeader>
 					<div className="flex items-start justify-between gap-4">
-						<div>
+						<div className="min-w-0">
 							<div className="text-xs text-cyan-300">ویرایش پیشرفته</div>
-							<CardTitle className="mt-1">
+							<CardTitle className="mt-1 break-words">
 								{selected
 									? entityTitle(selected, selectedIndex)
 									: "موردی انتخاب نشده"}
