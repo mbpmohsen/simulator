@@ -38,14 +38,12 @@ import {
 	Gauge,
 	GitBranch,
 	LoaderCircle,
-	LockKeyhole,
 	LogOut,
 	RefreshCw,
 	ScrollText,
 	ShieldAlert,
 	Swords,
 	Target,
-	Vote,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -57,6 +55,7 @@ import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
+import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena";
 import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
@@ -75,20 +74,12 @@ import {
 	formatOrderTypeFa,
 	formatPhaseFa,
 	formatScenarioTypeFa,
-	formatStepStatusFa,
 	getLocalized,
 	isGamePhase,
 	translateSubjectStatusFa,
 } from "@/lib/runtimeTranslationsFa";
 import type { SubjectRuntimeProgress } from "@/lib/subjectAiInsightGenerator";
 import { useAuthStore } from "@/store/auth.store";
-
-const statusTone: Record<StepView["status"], string> = {
-	available: "border-cyan-400/30 bg-cyan-500/10 text-cyan-100",
-	completed: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100",
-	failed: "border-rose-400/30 bg-rose-500/10 text-rose-100",
-	locked: "border-slate-500/20 bg-slate-500/10 text-slate-300",
-};
 
 const orderDetailFa = (order: OrderView): string => {
 	const payload = order.payload;
@@ -276,6 +267,12 @@ export default function PlayerDashboardPage() {
 				readPlayerLeaderFlag(currentPlayer),
 		);
 	}, [gameState, runtime.state, user]);
+	const teamMembers = useMemo(() => {
+		if (!gameState || !runtime.state) return [];
+		return gameState.players.filter(
+			(player) => readPlayerTeamId(player) === runtime.state?.team_id,
+		);
+	}, [gameState, runtime.state]);
 	const openAiInsight = useCallback(
 		(subject: SubjectView) => {
 			setAiInsightSnapshot({
@@ -408,6 +405,7 @@ export default function PlayerDashboardPage() {
 				"ORDER",
 				"SCENARIO",
 				"STEP",
+				"VOTE",
 				"AI",
 			])
 		) {
@@ -421,7 +419,13 @@ export default function PlayerDashboardPage() {
 		}
 		if (
 			selectedScenarioId &&
-			eventTypeHas(latestEventType, ["STEP", "SCENARIO", "PHASE", "TURN"])
+			eventTypeHas(latestEventType, [
+				"STEP",
+				"SCENARIO",
+				"PHASE",
+				"TURN",
+				"VOTE",
+			])
 		) {
 			void refreshSteps();
 		}
@@ -458,19 +462,21 @@ export default function PlayerDashboardPage() {
 		}
 	};
 
-	const voteStep = async (stepId: string) => {
-		if (!canVoteStep(phase)) return;
+	const voteStep = async (stepId: string): Promise<boolean> => {
+		if (!canVoteStep(phase)) return false;
 		setActionBusy(`step-${stepId}`);
 		try {
 			await api.voteStep(stepId);
 			toast.success("رأی شما برای این گام ثبت شد.");
 			await Promise.all([stepsResource.refresh(), runtime.refresh()]);
+			return true;
 		} catch (requestError) {
 			const parsed = parseRuntimeApiError(requestError, "ثبت رأی ناموفق بود.");
 			if (parsed.reasons.length > 0) {
 				await locks.inspect(stepId);
 			}
 			toast.error(parsed.message);
+			return false;
 		} finally {
 			setActionBusy(null);
 		}
@@ -870,92 +876,20 @@ export default function PlayerDashboardPage() {
 								)}
 
 								{selectedScenarioId && (
-									<Card className="border-white/10 bg-slate-950/55 text-slate-100">
-										<CardHeader>
-											<CardTitle className="flex items-center gap-2 text-base">
-												<Vote className="size-5 text-emerald-300" /> گام‌های
-												سناریو
-											</CardTitle>
-										</CardHeader>
-										<CardContent className="space-y-3">
-											{stepsResource.error && (
-												<p className="text-sm text-rose-300">
-													{stepsResource.error}
-												</p>
-											)}
-											{stepsResource.steps.map((step) => (
-												<div
-													key={step.id}
-													className={`relative rounded-2xl border p-4 ${statusTone[step.status]}`}
-												>
-													<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-														<div className="flex items-start gap-3">
-															<div className="grid size-10 shrink-0 place-items-center rounded-xl bg-black/20 font-black">
-																{step.order ?? "•"}
-															</div>
-															<div>
-																<div className="flex flex-wrap items-center gap-2">
-																	<h3 className="font-black">
-																		{getLocalized(
-																			step.action_name ?? step.action_code,
-																			step.action_name_fa,
-																		)}
-																	</h3>
-																	<Badge variant="secondary">
-																		{formatStepStatusFa(step.status)}
-																	</Badge>
-																	{step.required && (
-																		<Badge className="bg-rose-500/15 text-rose-200">
-																			الزامی
-																		</Badge>
-																	)}
-																</div>
-																<div
-																	dir="ltr"
-																	className="mt-1 text-left font-mono text-[10px] opacity-60"
-																>
-																	{step.action_code}
-																</div>
-															</div>
-														</div>
-														<div className="flex gap-2">
-															{(!step.available ||
-																step.status === "locked") && (
-																<Button
-																	variant="outline"
-																	onClick={() => void locks.inspect(step.id)}
-																	disabled={actionBusy !== null}
-																>
-																	<LockKeyhole className="size-4" /> همه دلیل‌ها
-																</Button>
-															)}
-															<Button
-																onClick={() => void voteStep(step.id)}
-																disabled={
-																	!canVoteStep(phase) ||
-																	!step.available ||
-																	actionBusy !== null
-																}
-																className="bg-emerald-400 text-slate-950 hover:bg-emerald-300"
-															>
-																{actionBusy === `step-${step.id}` ? (
-																	<LoaderCircle className="size-4 animate-spin" />
-																) : (
-																	<Vote className="size-4" />
-																)}{" "}
-																ثبت رأی
-															</Button>
-														</div>
-													</div>
-												</div>
-											))}
-											{!canVoteStep(phase) && (
-												<p className="text-xs text-amber-300">
-													ثبت رأی فقط در فاز «رأی‌گیری» فعال است.
-												</p>
-											)}
-										</CardContent>
-									</Card>
+									<ScenarioVotingArena
+										steps={stepsResource.steps}
+										phase={phase}
+										currentTurn={runtime.state?.current_turn ?? null}
+										gameId={gameId}
+										scenarioId={selectedScenarioId}
+										currentUserId={user?.id ?? null}
+										teamMembers={teamMembers}
+										actionBusy={actionBusy}
+										loading={stepsResource.loading}
+										error={stepsResource.error}
+										onVote={voteStep}
+										onInspectLocks={locks.inspect}
+									/>
 								)}
 							</div>
 
