@@ -7,6 +7,7 @@ import type {
 } from "@workspace/trpc";
 import {
 	getLocalized,
+	normalizeDefaultGamePlan,
 	parseApiError,
 	validateDefaultGamePlanClientSide,
 	validateTeamMemberAssignments,
@@ -49,13 +50,15 @@ import {
 	WandSparkles,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "@/components/AdminAuthGate";
 import TeamMemberAssignment from "@/components/TeamMemberAssignment";
 import {
 	listAdminUsers,
 	loadAiAssistantConfig,
 	loadDefaultGamePlan,
+	loadDemoGamePlan,
 	loadPublishedGamePlan,
 	startAdminGame,
 	storeActiveGameId,
@@ -90,7 +93,7 @@ type CollectionKey =
 	| "black_market"
 	| "impact_rules";
 
-type SourceMode = "none" | "default" | "published" | "custom";
+type SourceMode = "none" | "default" | "demo" | "published" | "custom";
 
 const TAB_ITEMS: Array<{ key: TabKey; label: string }> = [
 	{ key: "overview", label: "نمای کلی" },
@@ -225,6 +228,7 @@ const entityTitle = (item: Record<string, unknown>, index: number): string => {
 const sourceLabel: Record<SourceMode, string> = {
 	none: "انتخاب نشده",
 	default: "سناریوی پیش‌فرض",
+	demo: "سناریوی دمو",
 	published: "نسخه منتشرشده",
 	custom: "پیش‌نویس ویرایش‌شده",
 };
@@ -448,6 +452,7 @@ function CollectionEditor({
 
 export default function AdminGamePlanPage() {
 	const { logout } = useAdminAuth();
+	const importInputRef = useRef<HTMLInputElement | null>(null);
 	const [activeTab, setActiveTab] = useState<TabKey>("overview");
 	const [plan, setPlan] = useState<ConfigureAllRequestV2 | null>(null);
 	const [source, setSource] = useState<SourceMode>("none");
@@ -567,6 +572,63 @@ export default function AdminGamePlanPage() {
 			setNotice({
 				tone: "error",
 				text: parseApiError(error, "بارگذاری سناریوی پیش‌فرض ممکن نشد.").message,
+			});
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	const loadDemo = async () => {
+		setBusy("load");
+		setNotice(null);
+		try {
+			const next = await loadDemoGamePlan();
+			setPlan(next);
+			setSource("demo");
+			const client = validateLocally(next);
+			setValidationErrors(client.errors);
+			setNotice({
+				tone: client.valid ? "success" : "error",
+				text: client.valid
+					? "سناریوی دمو بارگذاری شد و اعتبارسنجی محلی را با موفقیت گذراند."
+					: `${client.errors.length} خطای محلی در سناریوی دمو پیدا شد.`,
+			});
+		} catch (error) {
+			setNotice({
+				tone: "error",
+				text: parseApiError(error, "بارگذاری سناریوی دمو ممکن نشد.").message,
+			});
+		} finally {
+			setBusy(null);
+		}
+	};
+
+	const importGamePlanJson = async (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (!file) return;
+		setBusy("load");
+		setNotice(null);
+		try {
+			const next = normalizeDefaultGamePlan(JSON.parse(await file.text()));
+			setPlan(next);
+			setSource("custom");
+			const client = validateLocally(next);
+			setValidationErrors(client.errors);
+			setServerValidated(false);
+			setNotice({
+				tone: client.valid ? "success" : "error",
+				text: client.valid
+					? `فایل ${file.name} بارگذاری شد و اعتبارسنجی محلی را با موفقیت گذراند.`
+					: `${client.errors.length} خطای محلی در فایل ${file.name} پیدا شد.`,
+			});
+		} catch (error) {
+			setNotice({
+				tone: "error",
+				text: parseApiError(
+					error,
+					"فایل JSON معتبر نیست یا با قرارداد برنامه بازی سازگار نیست.",
+				).message,
 			});
 		} finally {
 			setBusy(null);
@@ -739,7 +801,7 @@ export default function AdminGamePlanPage() {
 							</div>
 							<div>
 								<div className="mb-1 flex items-center gap-2 text-xs text-cyan-300">
-									<Activity className="size-3.5" /> مرکز طراحی عملیات v2
+									<Activity className="size-3.5" /> مرکز طراحی عملیات
 								</div>
 								<h1 className="text-2xl font-black tracking-tight lg:text-3xl">
 									سازنده برنامه بازی موضوع‌محور
@@ -965,6 +1027,18 @@ export default function AdminGamePlanPage() {
 											</div>
 											<div className="flex flex-wrap gap-3">
 												<Button
+													onClick={loadDemo}
+													disabled={busy !== null}
+													className="h-12 bg-emerald-400 px-5 text-slate-950 hover:bg-emerald-300"
+												>
+													{busy === "load" ? (
+														<LoaderCircle className="size-4 animate-spin" />
+													) : (
+														<Sparkles className="size-4" />
+													)}{" "}
+													استفاده از سناریوی دمو
+												</Button>
+												<Button
 													onClick={loadDefault}
 													disabled={busy !== null}
 													className="h-12 bg-cyan-400 px-5 text-slate-950 hover:bg-cyan-300"
@@ -975,6 +1049,21 @@ export default function AdminGamePlanPage() {
 														<WandSparkles className="size-4" />
 													)}{" "}
 													استفاده از سناریوی پیش‌فرض
+												</Button>
+												<input
+													ref={importInputRef}
+													type="file"
+													accept="application/json,.json"
+													className="hidden"
+													onChange={importGamePlanJson}
+												/>
+												<Button
+													onClick={() => importInputRef.current?.click()}
+													disabled={busy !== null}
+													variant="outline"
+													className="h-12 border-white/10 bg-white/5 text-slate-100"
+												>
+													<CloudUpload className="size-4" /> وارد کردن JSON
 												</Button>
 												<Button
 													onClick={loadPublished}

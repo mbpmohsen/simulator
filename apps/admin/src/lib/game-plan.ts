@@ -103,6 +103,14 @@ export const loadDefaultGamePlan = async (): Promise<ConfigureAllRequestV2> => {
 	return normalizeDefaultGamePlan(await response.json());
 };
 
+export const loadDemoGamePlan = async (): Promise<ConfigureAllRequestV2> => {
+	const response = await fetch("/data/demo-game-plan.json", {
+		cache: "no-store",
+	});
+	if (!response.ok) throw new Error("دریافت سناریوی دمو ممکن نشد.");
+	return normalizeDefaultGamePlan(await response.json());
+};
+
 export { validateDefaultGamePlanClientSide };
 
 export const validateGamePlanOnServer = (
