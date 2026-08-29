@@ -58,6 +58,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import EquilibriumComparison from "@/components/EquilibriumComparison";
 
 const BASE_URL =
 	process.env.NEXT_PUBLIC_CLIENT_URL ?? "https://game.darkube.ir";
@@ -1665,6 +1666,8 @@ export default function AdminAnalyticsPage() {
 								)}
 							</CardContent>
 						</Card>
+
+						<EquilibriumComparison api={api} gameId={selectedGameId} />
 
 						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
 							<CardHeader>

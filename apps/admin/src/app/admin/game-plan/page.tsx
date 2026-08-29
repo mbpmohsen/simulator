@@ -39,6 +39,7 @@ import {
 	GitBranch,
 	Layers3,
 	LoaderCircle,
+	Lock,
 	LogOut,
 	Play,
 	RefreshCw,
@@ -53,6 +54,8 @@ import Link from "next/link";
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "@/components/AdminAuthGate";
+import AiAssistantLevels from "@/components/AiAssistantLevels";
+import EquilibriumPanel from "@/components/EquilibriumPanel";
 import TeamMemberAssignment from "@/components/TeamMemberAssignment";
 import {
 	listAdminUsers,
@@ -76,12 +79,14 @@ type TabKey =
 	| "scenarios"
 	| "scenario_steps"
 	| "actions"
+	| "equilibrium"
 	| "black_market"
 	| "government"
 	| "impact_rules"
 	| "visibility_config"
 	| "graph"
-	| "publish";
+	| "publish"
+	| "ai";
 
 type CollectionKey =
 	| "goals"
@@ -104,12 +109,14 @@ const TAB_ITEMS: Array<{ key: TabKey; label: string }> = [
 	{ key: "scenarios", label: "سناریوها" },
 	{ key: "scenario_steps", label: "گام‌ها" },
 	{ key: "actions", label: "کنش‌ها" },
+	{ key: "equilibrium", label: "تعادل بازی" },
 	{ key: "black_market", label: "بازار سیاه" },
 	{ key: "government", label: "دولت‌ها" },
 	{ key: "impact_rules", label: "قوانین اثرگذاری" },
 	{ key: "visibility_config", label: "نمایش رویدادها" },
 	{ key: "graph", label: "گراف بازی" },
 	{ key: "publish", label: "اعتبارسنجی و انتشار" },
+	{ key: "ai", label: "دستیار هوشمند" },
 ];
 
 const COLLECTION_LABEL: Record<CollectionKey, string> = {
@@ -888,10 +895,10 @@ export default function AdminGamePlanPage() {
 							<span>{aiConfigReminder}</span>
 						</div>
 						<Button
-							asChild
+							onClick={() => setActiveTab("ai")}
 							className="bg-amber-300 font-bold text-slate-950 hover:bg-amber-200"
 						>
-							<Link href="/admin/ai">تنظیم دستیار هوش مصنوعی</Link>
+							تنظیم دستیار هوش مصنوعی
 						</Button>
 					</div>
 				)}
@@ -939,21 +946,42 @@ export default function AdminGamePlanPage() {
 							بخش‌های برنامه بازی
 						</div>
 						<nav className="space-y-1">
-							{TAB_ITEMS.map((tab, index) => (
-								<motion.button
-									type="button"
-									key={tab.key}
-									onClick={() => setActiveTab(tab.key)}
-									whileHover={{ x: -3 }}
-									whileTap={{ scale: 0.98 }}
-									className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition ${activeTab === tab.key ? "bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20" : "text-slate-400 hover:bg-white/5 hover:text-slate-100"}`}
-								>
-									<span>
-										{index + 1}. {tab.label}
-									</span>
-									<ChevronLeft className="size-4 opacity-60" />
-								</motion.button>
-							))}
+							{TAB_ITEMS.map((tab, index) => {
+								// The AI ladder is stored per published game, so it cannot be
+								// edited before configure_all has produced a gameId.
+								const locked = tab.key === "ai" && !configuredGameId;
+								return (
+									<motion.button
+										type="button"
+										key={tab.key}
+										disabled={locked}
+										title={
+											locked
+												? "ابتدا برنامه را منتشر کنید تا شناسه بازی ساخته شود."
+												: undefined
+										}
+										onClick={() => setActiveTab(tab.key)}
+										whileHover={locked ? undefined : { x: -3 }}
+										whileTap={locked ? undefined : { scale: 0.98 }}
+										className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition ${
+											locked
+												? "cursor-not-allowed text-slate-600"
+												: activeTab === tab.key
+													? "bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20"
+													: "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+										}`}
+									>
+										<span>
+											{index + 1}. {tab.label}
+										</span>
+										{locked ? (
+											<Lock className="size-3.5 opacity-60" />
+										) : (
+											<ChevronLeft className="size-4 opacity-60" />
+										)}
+									</motion.button>
+								);
+							})}
 						</nav>
 					</motion.aside>
 
@@ -1152,6 +1180,17 @@ export default function AdminGamePlanPage() {
 									error={usersError}
 									onReload={() => void refreshUsers()}
 									onChange={setEditablePlan}
+								/>
+							)}
+
+							{activeTab === "equilibrium" && plan && (
+								<EquilibriumPanel plan={plan} />
+							)}
+
+							{activeTab === "ai" && (
+								<AiAssistantLevels
+									embedded
+									expectedGameId={configuredGameId}
 								/>
 							)}
 

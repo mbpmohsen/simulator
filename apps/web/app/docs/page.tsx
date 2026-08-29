@@ -28,6 +28,7 @@ import {
 	ChartNoAxesCombined,
 	ChevronLeft,
 	CircleHelp,
+	Dices,
 	ClipboardList,
 	Eye,
 	FileCheck2,
@@ -89,6 +90,7 @@ const SECTION_ICONS: Record<string, LucideIcon> = {
 	intro: Sparkles,
 	"old-vs-new": GitBranch,
 	"core-model": Network,
+	"game-theory": Dices,
 	roles: ShieldCheck,
 	phases: Trophy,
 	"player-guide": Gamepad2,
@@ -401,6 +403,22 @@ function DocsSectionView({ section }: { section: GameDocsSection }) {
 						</div>
 					))}
 				</div>
+			)}
+
+			{section.steps && (
+				<ol className="mt-6 space-y-2">
+					{section.steps.map((step, index) => (
+						<li
+							key={step}
+							className="flex items-start gap-3 rounded-lg border border-white/10 bg-zinc-900/40 p-4 text-sm leading-7 text-zinc-300"
+						>
+							<span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border border-cyan-300/25 bg-cyan-500/10 text-xs font-bold text-cyan-200">
+								{(index + 1).toLocaleString("fa-IR")}
+							</span>
+							<span>{step}</span>
+						</li>
+					))}
+				</ol>
 			)}
 
 			<SectionBody sectionId={section.id} />

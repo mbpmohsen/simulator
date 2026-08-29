@@ -44,7 +44,7 @@ export function SubjectAiButton({
 			<Icon className={`size-4 ${loading ? "animate-spin" : ""}`} />
 			{variant === "text" && (
 				<span className="hidden sm:inline">
-					{locked ? "AI قفل است" : "تحلیل AI"}
+					{locked ? "تحلیل هوشمند قفل است" : "تحلیل هوشمند"}
 				</span>
 			)}
 			{variant === "icon" && <Bot className="sr-only" />}

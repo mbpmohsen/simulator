@@ -55,6 +55,7 @@ import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
+import PlayerMoveInsight from "@/components/v2/player/PlayerMoveInsight";
 import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena";
 import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
@@ -455,7 +456,7 @@ export default function PlayerDashboardPage() {
 			await runtime.refresh();
 		} catch (requestError) {
 			toast.error(
-				parseRuntimeApiError(requestError, "انتخاب سناریو ناموفق بود.").message,
+				parseRuntimeApiError(requestError, "انتخاب مسیر ناموفق بود.").message,
 			);
 		} finally {
 			setActionBusy(null);
@@ -604,7 +605,7 @@ export default function PlayerDashboardPage() {
 							{[
 								{
 									label: "نوبت جاری",
-									value: `${runtime.state?.current_turn ?? "—"}}`,
+									value: `${runtime.state?.current_turn ?? "—"}`,
 									icon: Clock3,
 									className: "border-cyan-400/20 bg-cyan-500/10",
 								},
@@ -632,7 +633,7 @@ export default function PlayerDashboardPage() {
 									className: "border-cyan-400/20 bg-cyan-500/10",
 								},
 								{
-									label: "سناریوی فعال",
+									label: "مسیر فعال",
 									value:
 										scenariosResource.scenarios.find(
 											(item) => item.id === selectedScenarioId,
@@ -717,7 +718,7 @@ export default function PlayerDashboardPage() {
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2 text-base">
 											<Target className="size-5 text-cyan-300" /> موضوع‌های
-											محول‌شده
+											واگذارشده به تیم شما
 										</CardTitle>
 									</CardHeader>
 									<CardContent className="grid gap-3 lg:grid-cols-2">
@@ -788,7 +789,7 @@ export default function PlayerDashboardPage() {
 											<CardTitle className="flex items-center justify-between gap-2 text-base">
 												<span className="flex items-center gap-2">
 													<GitBranch className="size-5 text-violet-300" />{" "}
-													انتخاب سناریو
+													انتخاب مسیر
 												</span>
 												<SubjectAiButton
 													aiLevel={playerAiLevel}
@@ -868,7 +869,7 @@ export default function PlayerDashboardPage() {
 											</div>
 											{!canSelectScenario(phase) && (
 												<p className="mt-3 text-xs text-amber-300">
-													انتخاب سناریو فقط در فاز «انتخاب مسیر» باز است.
+													انتخاب مسیر فقط در فاز «انتخاب مسیر» ممکن است.
 												</p>
 											)}
 										</CardContent>
@@ -894,6 +895,13 @@ export default function PlayerDashboardPage() {
 							</div>
 
 							<aside className="space-y-5">
+								<PlayerMoveInsight
+									events={events.events}
+									steps={stepsResource.steps}
+									myTeamId={
+										runtime.state?.team_id ?? runtime.context?.teamId ?? null
+									}
+								/>
 								<AiAssistantUpgradePanel
 									level={
 										aiLevelResource.status === "ready"

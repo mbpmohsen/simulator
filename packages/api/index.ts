@@ -3,6 +3,7 @@ export * from "./game-client/router";
 export type * from "./game-client/types";
 export * from "./game-plan/api-error";
 export * from "./game-plan/communication";
+export * from "./game-plan/equilibrium";
 export * from "./game-plan/government-catalog";
 export * from "./game-plan/graph";
 export * from "./game-plan/localization";

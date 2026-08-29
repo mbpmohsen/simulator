@@ -1,3420 +1,2626 @@
 {
-	"version": "2.0",
-	"game_config": {
-		"num_turns": 5,
-		"point_threshold": 10,
-		"turn_duration_seconds": 75,
-		"selection_phase_duration": 30,
-		"voting_phase_duration": 25,
-		"voting_config": {
-			"voting_enabled": true,
-			"required_approval": "majority",
-			"leader_veto_enabled": true,
-			"vote_time_limit_seconds": 25,
-			"required_approval_fa": "اکثریت"
-		},
-		"victory_conditions": {
-			"type": "points_or_turns",
-			"points_to_win": 10,
-			"max_turns": 5,
-			"alternative_win_conditions": ["goal_completion", "opponent_bankruptcy"],
-			"type_fa": "امتیاز یا تعداد نوبت",
-			"alternative_win_conditions_fa": ["تکمیل هدف", "ورشکستگی حریف"]
-		}
-	},
-	"teams": [
-		{
-			"id": 1100000101,
-			"side_id": 1100000001,
-			"side_name": "Red",
-			"name": "Red Government",
-			"display_name": "Red Government",
-			"team_type": "GOVERNMENT",
-			"governmentCode": "RED-GOV",
-			"starting_credits": 120,
-			"role": {
-				"type": "GOVERNMENT",
-				"allowed_action_types": ["government"],
-				"type_fa": "دولت",
-				"allowed_action_types_fa": ["دولتی"]
-			},
-			"players": [
-				{
-					"userId": 9000000002,
-					"name": "goOne",
-					"is_leader": true,
-					"name_fa": "گو وان"
-				}
-			],
-			"name_fa": "دولت قرمز",
-			"display_name_fa": "دولت قرمز",
-			"side_name_fa": "قرمز",
-			"team_type_fa": "دولت"
-		},
-		{
-			"id": 1100000102,
-			"side_id": 1100000001,
-			"side_name": "Red",
-			"name": "Red Team",
-			"display_name": "Red Team",
-			"team_type": "PLAYER",
-			"starting_credits": 260,
-			"role": {
-				"type": "ATTACKER",
-				"allowed_action_types": ["attack"],
-				"type_fa": "مهاجم",
-				"allowed_action_types_fa": ["تهاجمی"]
-			},
-			"players": [
-				{
-					"userId": 9000000001,
-					"name": "playerOne",
-					"is_leader": true,
-					"name_fa": "بازیکن یک"
-				}
-			],
-			"name_fa": "تیم قرمز",
-			"display_name_fa": "تیم قرمز",
-			"side_name_fa": "قرمز",
-			"team_type_fa": "بازیکن"
-		},
-		{
-			"id": 2200000101,
-			"side_id": 2200000001,
-			"side_name": "Blue",
-			"name": "Blue Government",
-			"display_name": "Blue Government",
-			"team_type": "GOVERNMENT",
-			"governmentCode": "BLUE-GOV",
-			"starting_credits": 120,
-			"role": {
-				"type": "GOVERNMENT",
-				"allowed_action_types": ["government"],
-				"type_fa": "دولت",
-				"allowed_action_types_fa": ["دولتی"]
-			},
-			"players": [
-				{
-					"userId": 9000000003,
-					"name": "goTwo",
-					"is_leader": true,
-					"name_fa": "گو تو"
-				}
-			],
-			"name_fa": "دولت آبی",
-			"display_name_fa": "دولت آبی",
-			"side_name_fa": "آبی",
-			"team_type_fa": "دولت"
-		},
-		{
-			"id": 2200000102,
-			"side_id": 2200000001,
-			"side_name": "Blue",
-			"name": "Blue Team",
-			"display_name": "Blue Team",
-			"team_type": "PLAYER",
-			"starting_credits": 260,
-			"role": {
-				"type": "DEFENCER",
-				"allowed_action_types": ["defense"],
-				"type_fa": "مدافع",
-				"allowed_action_types_fa": ["دفاعی"]
-			},
-			"players": [
-				{
-					"userId": 9000000000,
-					"name": "playerTwo",
-					"is_leader": true,
-					"name_fa": "بازیکن دو"
-				}
-			],
-			"name_fa": "تیم آبی",
-			"display_name_fa": "تیم آبی",
-			"side_name_fa": "آبی",
-			"team_type_fa": "بازیکن"
-		}
-	],
-	"actions": [
-		{
-			"code": "ATK_MAP_SERVICE_DEPENDENCIES",
-			"name": "Map Service Dependencies",
-			"type": "attack",
-			"description": "Identify which simulated business services depend on each other before choosing pressure points.",
-			"base_stats": {
-				"cost": 8,
-				"success_probability": 72,
-				"points_on_success": 0,
-				"cooldown_turns": 0
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "ترسیم وابستگی خدمات",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "ATK_TEST_ACCESS_PRESSURE",
-			"name": "Access Pressure Probe",
-			"type": "attack",
-			"description": "Apply a safe abstract probe to test whether poor access governance creates game risk.",
-			"base_stats": {
-				"cost": 12,
-				"success_probability": 64,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "آزمون فشار بر دسترسی",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "ATK_STRESS_OPERATOR_WORKFLOW",
-			"name": "Operator Workflow Stress",
-			"type": "attack",
-			"description": "Create simulated decision overload for operators without any real-world technical procedure.",
-			"base_stats": {
-				"cost": 14,
-				"success_probability": 60,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "فشار بر گردش‌کار اپراتور",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "ATK_CONFUSE_TELEMETRY",
-			"name": "Telemetry Confusion",
-			"type": "attack",
-			"description": "Reduce confidence in monitoring signals inside the simulation so defenders must verify before acting.",
-			"base_stats": {
-				"cost": 15,
-				"success_probability": 58,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "ابهام در داده‌های پایش",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "ATK_QUEUE_DISRUPTION",
-			"name": "Service Queue Disruption",
-			"type": "attack",
-			"description": "Model delays in citizen-facing service queues as a strategic game pressure.",
-			"base_stats": {
-				"cost": 18,
-				"success_probability": 55,
-				"points_on_success": 2,
-				"cooldown_turns": 2
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "اختلال در صف خدمت",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "ATK_PRESSURE_PUBLIC_TRUST",
-			"name": "Public Trust Pressure",
-			"type": "attack",
-			"description": "Challenge public communication and leadership confidence inside the tabletop story.",
-			"base_stats": {
-				"cost": 16,
-				"success_probability": 62,
-				"points_on_success": 2,
-				"cooldown_turns": 2
-			},
-			"requirements": {
-				"allowed_team_roles": ["ATTACKER", "BOTH"],
-				"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "abstract-pressure",
-				"color": "red"
-			},
-			"name_fa": "فشار بر اعتماد عمومی",
-			"description_fa": "یک کنش امن و انتزاعی برای نمایش فشار عملیاتی در محیط آموزشی، بدون دستورالعمل اجرایی واقعی.",
-			"type_fa": "تهاجمی"
-		},
-		{
-			"code": "DEF_INVENTORY_CRITICAL_ASSETS",
-			"name": "Inventory Critical Assets",
-			"type": "defense",
-			"description": "Build a shared picture of systems, owners, dependencies, and risk exposure.",
-			"base_stats": {
-				"cost": 8,
-				"success_probability": 78,
-				"points_on_success": 0,
-				"cooldown_turns": 0
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "فهرست‌برداری دارایی‌های حیاتی",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		},
-		{
-			"code": "DEF_HARDEN_IDENTITY_ACCESS",
-			"name": "Harden Identity and Access",
-			"type": "defense",
-			"description": "Strengthen simulated access governance through approved defensive controls.",
-			"base_stats": {
-				"cost": 12,
-				"success_probability": 72,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "مقاوم‌سازی هویت و دسترسی",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		},
-		{
-			"code": "DEF_MONITOR_ANOMALIES",
-			"name": "Monitor and Correlate Anomalies",
-			"type": "defense",
-			"description": "Find weak signals by correlating monitoring, user reports, and service health.",
-			"base_stats": {
-				"cost": 14,
-				"success_probability": 68,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "پایش و همبستگی ناهنجاری‌ها",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		},
-		{
-			"code": "DEF_TRIAGE_INCIDENT",
-			"name": "Triage Incident",
-			"type": "defense",
-			"description": "Prioritize the incident, assign owners, and select the most important containment path.",
-			"base_stats": {
-				"cost": 10,
-				"success_probability": 74,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "اولویت‌بندی رخداد",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		},
-		{
-			"code": "DEF_RESTORE_CONTINUITY",
-			"name": "Restore Service Continuity",
-			"type": "defense",
-			"description": "Recover service capacity with continuity playbooks and verified fallback processes.",
-			"base_stats": {
-				"cost": 18,
-				"success_probability": 66,
-				"points_on_success": 2,
-				"cooldown_turns": 2
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "بازیابی تداوم خدمت",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		},
-		{
-			"code": "DEF_PUBLIC_STATUS_COMMS",
-			"name": "Public Status Communication",
-			"type": "defense",
-			"description": "Explain service status, impact, and recovery progress clearly to stakeholders.",
-			"base_stats": {
-				"cost": 11,
-				"success_probability": 76,
-				"points_on_success": 1,
-				"cooldown_turns": 1
-			},
-			"requirements": {
-				"allowed_team_roles": ["DEFENCER", "BOTH"],
-				"allowed_team_roles_fa": ["مدافع", "هر دو"]
-			},
-			"effects": {},
-			"visual": {
-				"icon": "shield-check",
-				"color": "blue"
-			},
-			"name_fa": "اطلاع‌رسانی وضعیت عمومی",
-			"description_fa": "یک کنش دفاعی آموزشی برای تمرین تصمیم‌گیری، هماهنگی و بازیابی در محیط شبیه‌سازی.",
-			"type_fa": "دفاعی"
-		}
-	],
-	"government": {
-		"enabled": true,
-		"side_governments": [
-			{
-				"side_id": 1100000001,
-				"team_id": 1100000101,
-				"permissions": {
-					"can_ban_actions": true,
-					"can_modify_credits": true,
-					"can_impose_penalties": true,
-					"can_unban_actions": true
-				},
-				"intervention_config": {
-					"interventions_per_game": 4,
-					"intervention_cooldown_turns": 1
-				},
-				"player": {
-					"userId": 9000000002,
-					"governmentCode": "RED-GOV"
-				}
-			},
-			{
-				"side_id": 2200000001,
-				"team_id": 2200000101,
-				"permissions": {
-					"can_ban_actions": true,
-					"can_modify_credits": true,
-					"can_impose_penalties": true,
-					"can_unban_actions": true
-				},
-				"intervention_config": {
-					"interventions_per_game": 4,
-					"intervention_cooldown_turns": 1
-				},
-				"player": {
-					"userId": 9000000003,
-					"governmentCode": "BLUE-GOV"
-				}
-			}
-		],
-		"actions": [
-			{
-				"code": "GOV_RED_CREDIT_DELTA",
-				"side_id": 1100000001,
-				"name": "Red Executive Budget Shift",
-				"intervention_type": "CREDIT_DELTA",
-				"target": 1100000102,
-				"value": 12,
-				"name_fa": "تغییر بودجه مدیریتی قرمز",
-				"intervention_type_fa": "تغییر اعتبار"
-			},
-			{
-				"code": "GOV_RED_ACTION_BAN",
-				"side_id": 1100000001,
-				"name": "Red Restricts Risky Move",
-				"intervention_type": "ACTION_BAN",
-				"target": "ATK_QUEUE_DISRUPTION",
-				"duration_turns": 1,
-				"name_fa": "محدودیت حرکت پرریسک قرمز",
-				"intervention_type_fa": "ممنوع‌سازی کنش"
-			},
-			{
-				"code": "GOV_RED_ACTION_UNBAN",
-				"side_id": 1100000001,
-				"name": "Red Restores Move",
-				"intervention_type": "ACTION_UNBAN",
-				"target": "ATK_QUEUE_DISRUPTION",
-				"name_fa": "بازگردانی حرکت قرمز",
-				"intervention_type_fa": "رفع ممنوعیت کنش"
-			},
-			{
-				"code": "GOV_BLUE_CREDIT_DELTA",
-				"side_id": 2200000001,
-				"name": "Blue Emergency Funding",
-				"intervention_type": "CREDIT_DELTA",
-				"target": 2200000102,
-				"value": 12,
-				"name_fa": "تأمین بودجه اضطراری آبی",
-				"intervention_type_fa": "تغییر اعتبار"
-			},
-			{
-				"code": "GOV_BLUE_ACTION_BAN",
-				"side_id": 2200000001,
-				"name": "Blue Freezes Weak Control",
-				"intervention_type": "ACTION_BAN",
-				"target": "DEF_PUBLIC_STATUS_COMMS",
-				"duration_turns": 1,
-				"name_fa": "توقف کنترل ضعیف آبی",
-				"intervention_type_fa": "ممنوع‌سازی کنش"
-			},
-			{
-				"code": "GOV_BLUE_ACTION_UNBAN",
-				"side_id": 2200000001,
-				"name": "Blue Restores Control",
-				"intervention_type": "ACTION_UNBAN",
-				"target": "DEF_PUBLIC_STATUS_COMMS",
-				"name_fa": "بازگردانی کنترل آبی",
-				"intervention_type_fa": "رفع ممنوعیت کنش"
-			}
-		]
-	},
-	"action_counters": [
-		{
-			"id": "COUNTER_DEMO_DEPENDENCIES",
-			"attack_code": "ATK_MAP_SERVICE_DEPENDENCIES",
-			"countered_by": [
-				{
-					"defense_code": "DEF_INVENTORY_CRITICAL_ASSETS",
-					"effectiveness": 65,
-					"description": "A shared asset map reduces surprise and confusion."
-				}
-			]
-		},
-		{
-			"id": "COUNTER_DEMO_ACCESS",
-			"attack_code": "ATK_TEST_ACCESS_PRESSURE",
-			"countered_by": [
-				{
-					"defense_code": "DEF_HARDEN_IDENTITY_ACCESS",
-					"effectiveness": 70,
-					"description": "Access governance limits simulated pressure."
-				}
-			]
-		},
-		{
-			"id": "COUNTER_DEMO_WORKFLOW",
-			"attack_code": "ATK_STRESS_OPERATOR_WORKFLOW",
-			"countered_by": [
-				{
-					"defense_code": "DEF_TRIAGE_INCIDENT",
-					"effectiveness": 55,
-					"description": "Clear ownership reduces overload."
-				}
-			]
-		},
-		{
-			"id": "COUNTER_DEMO_TELEMETRY",
-			"attack_code": "ATK_CONFUSE_TELEMETRY",
-			"countered_by": [
-				{
-					"defense_code": "DEF_MONITOR_ANOMALIES",
-					"effectiveness": 72,
-					"description": "Correlation restores confidence in signals."
-				}
-			]
-		},
-		{
-			"id": "COUNTER_DEMO_QUEUE",
-			"attack_code": "ATK_QUEUE_DISRUPTION",
-			"countered_by": [
-				{
-					"defense_code": "DEF_RESTORE_CONTINUITY",
-					"effectiveness": 68,
-					"description": "Continuity procedures reduce service delay."
-				}
-			]
-		},
-		{
-			"id": "COUNTER_DEMO_TRUST",
-			"attack_code": "ATK_PRESSURE_PUBLIC_TRUST",
-			"countered_by": [
-				{
-					"defense_code": "DEF_PUBLIC_STATUS_COMMS",
-					"effectiveness": 75,
-					"description": "Transparent communication protects trust."
-				}
-			]
-		}
-	],
-	"black_market": [
-		{
-			"code": "BM_DEMO_EXECUTIVE_BRIEFING",
-			"name": "Executive Briefing Card",
-			"description": "A safe demo modifier that improves one public communication decision.",
-			"item_type": "defense_modifier",
-			"effect_type": "PROBABILITY_MODIFIER",
-			"target": {
-				"action_code": "DEF_PUBLIC_STATUS_COMMS",
-				"action_type": "defense",
-				"action_type_fa": "دفاعی"
-			},
-			"effect": {
-				"value": 10,
-				"description": "Clear executive framing improves trust response."
-			},
-			"duration_turns": 1,
-			"cost": 10,
-			"availability": {
-				"start_turn": 1,
-				"end_turn": 6,
-				"max_purchases": 1
-			},
-			"stackable": false,
-			"visual": {
-				"icon": "market-blue",
-				"color": "navy"
-			},
-			"name_fa": "کارت گزارش مدیریتی",
-			"description_fa": "یک اصلاح‌گر امن دمو که تصمیم اطلاع‌رسانی عمومی را تقویت می‌کند.",
-			"item_type_fa": "اصلاح‌گر دفاعی"
-		},
-		{
-			"code": "BM_DEMO_MONITORING_SURGE",
-			"name": "Monitoring Surge",
-			"description": "A temporary boost for anomaly monitoring in the simulation.",
-			"item_type": "defense_modifier",
-			"effect_type": "PROBABILITY_MODIFIER",
-			"target": {
-				"action_code": "DEF_MONITOR_ANOMALIES",
-				"action_type": "defense",
-				"action_type_fa": "دفاعی"
-			},
-			"effect": {
-				"value": 12,
-				"description": "Extra monitoring effort improves signal quality."
-			},
-			"duration_turns": 2,
-			"cost": 14,
-			"availability": {
-				"start_turn": 1,
-				"end_turn": 6,
-				"max_purchases": 2
-			},
-			"stackable": false,
-			"visual": {
-				"icon": "market-blue",
-				"color": "cyan"
-			},
-			"name_fa": "افزایش توان پایش",
-			"description_fa": "تقویت موقت پایش ناهنجاری‌ها در شبیه‌سازی.",
-			"item_type_fa": "اصلاح‌گر دفاعی"
-		},
-		{
-			"code": "BM_DEMO_CONTINUITY_BUDGET",
-			"name": "Continuity Budget",
-			"description": "A temporary cost reduction for service recovery.",
-			"item_type": "defense_modifier",
-			"effect_type": "cost_decrease",
-			"target": {
-				"action_code": "DEF_RESTORE_CONTINUITY",
-				"action_type": "defense",
-				"action_type_fa": "دفاعی"
-			},
-			"effect": {
-				"value": 6,
-				"description": "Emergency resources make recovery cheaper."
-			},
-			"duration_turns": 2,
-			"cost": 12,
-			"availability": {
-				"start_turn": 2,
-				"end_turn": 6,
-				"max_purchases": 1
-			},
-			"stackable": false,
-			"visual": {
-				"icon": "market-blue",
-				"color": "emerald"
-			},
-			"name_fa": "بودجه تداوم خدمت",
-			"description_fa": "کاهش موقت هزینه برای بازیابی خدمت.",
-			"item_type_fa": "اصلاح‌گر دفاعی"
-		},
-		{
-			"code": "BM_DEMO_PRESSURE_MOMENTUM",
-			"name": "Pressure Momentum",
-			"description": "A safe abstract boost for one red-team pressure action.",
-			"item_type": "attack_modifier",
-			"effect_type": "PROBABILITY_MODIFIER",
-			"target": {
-				"action_code": "ATK_STRESS_OPERATOR_WORKFLOW",
-				"action_type": "attack",
-				"action_type_fa": "تهاجمی"
-			},
-			"effect": {
-				"value": 10,
-				"description": "Red gains momentum in the tabletop pressure story."
-			},
-			"duration_turns": 1,
-			"cost": 12,
-			"availability": {
-				"start_turn": 1,
-				"end_turn": 6,
-				"max_purchases": 1
-			},
-			"stackable": false,
-			"visual": {
-				"icon": "market-red",
-				"color": "crimson"
-			},
-			"name_fa": "شتاب فشار عملیاتی",
-			"description_fa": "تقویت امن و انتزاعی برای یک کنش فشار جبهه قرمز.",
-			"item_type_fa": "اصلاح‌گر تهاجمی"
-		},
-		{
-			"code": "BM_DEMO_SIGNAL_FOG",
-			"name": "Signal Fog",
-			"description": "A temporary visibility pressure token for the simulation.",
-			"item_type": "attack_modifier",
-			"effect_type": "REDUCE_VISIBILITY",
-			"target": {
-				"action_code": "ATK_CONFUSE_TELEMETRY",
-				"action_type": "attack",
-				"action_type_fa": "تهاجمی"
-			},
-			"effect": {
-				"value": 8,
-				"description": "Monitoring confidence is temporarily reduced."
-			},
-			"duration_turns": 1,
-			"cost": 13,
-			"availability": {
-				"start_turn": 2,
-				"end_turn": 6,
-				"max_purchases": 1
-			},
-			"stackable": false,
-			"visual": {
-				"icon": "market-red",
-				"color": "amber"
-			},
-			"name_fa": "ابهام سیگنال",
-			"description_fa": "نشان موقت فشار بر دیدپذیری در شبیه‌سازی.",
-			"item_type_fa": "اصلاح‌گر تهاجمی"
-		}
-	],
-	"goals": [
-		{
-			"id": "GOAL_RED_CREATE_DECISION_PRESSURE",
-			"side_id": 1100000001,
-			"title": "Create Decision Pressure on Essential Services",
-			"description": "Red demonstrates how small cyber-risk decisions can compound into service disruption in a safe tabletop simulation.",
-			"title_fa": "ایجاد فشار تصمیم‌گیری بر خدمات حیاتی",
-			"description_fa": "جبهه قرمز در یک شبیه‌سازی امن نشان می‌دهد تصمیم‌های کوچک مرتبط با ریسک سایبری چگونه می‌توانند به اختلال خدمت تبدیل شوند."
-		},
-		{
-			"id": "GOAL_BLUE_KEEP_SERVICES_TRUSTED",
-			"side_id": 2200000001,
-			"title": "Keep Essential Services Available and Trusted",
-			"description": "Blue practices prevention, detection, response, recovery, and executive communication under pressure.",
-			"title_fa": "حفظ دسترس‌پذیری و اعتماد خدمات حیاتی",
-			"description_fa": "جبهه آبی پیشگیری، تشخیص، پاسخ، بازیابی و ارتباط مدیریتی را زیر فشار تمرین می‌کند."
-		}
-	],
-	"subjects": [
-		{
-			"id": "SUBJ_RED_HOSPITAL_OPERATIONS",
-			"goal_id": "GOAL_RED_CREATE_DECISION_PRESSURE",
-			"title": "Hospital Operations Pressure",
-			"description": "A high-stakes service that immediately shows why cyber decisions affect real operations. Red applies abstract pressure so leaders can see tradeoffs, detection gaps, and cost of delayed action.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 2200000102,
-			"owner_side_id": 1100000001,
-			"criticality": 5,
-			"mitre_mapping": {},
-			"title_fa": "عملیات بیمارستان - فشار عملیاتی",
-			"description_fa": "خدمتی حساس که به‌سرعت نشان می‌دهد تصمیم‌های سایبری چگونه بر عملیات واقعی اثر می‌گذارند. جبهه قرمز فشار انتزاعی ایجاد می‌کند تا مدیران بده‌بستان‌ها، شکاف‌های تشخیص و هزینه تأخیر را ببینند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		},
-		{
-			"id": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-			"goal_id": "GOAL_BLUE_KEEP_SERVICES_TRUSTED",
-			"title": "Hospital Operations Protection",
-			"description": "A high-stakes service that immediately shows why cyber decisions affect real operations. Blue keeps service, trust, and recovery moving while pressure increases.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 1100000102,
-			"owner_side_id": 2200000001,
-			"criticality": 5,
-			"mitre_mapping": {},
-			"title_fa": "عملیات بیمارستان - حفاظت",
-			"description_fa": "خدمتی حساس که به‌سرعت نشان می‌دهد تصمیم‌های سایبری چگونه بر عملیات واقعی اثر می‌گذارند. جبهه آبی هم‌زمان با افزایش فشار، خدمت، اعتماد و بازیابی را حفظ می‌کند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		},
-		{
-			"id": "SUBJ_RED_EMERGENCY_DISPATCH",
-			"goal_id": "GOAL_RED_CREATE_DECISION_PRESSURE",
-			"title": "Emergency Dispatch Pressure",
-			"description": "A time-sensitive service where coordination, monitoring, and public safety meet. Red applies abstract pressure so leaders can see tradeoffs, detection gaps, and cost of delayed action.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 2200000102,
-			"owner_side_id": 1100000001,
-			"criticality": 5,
-			"mitre_mapping": {},
-			"title_fa": "اعزام اضطراری - فشار عملیاتی",
-			"description_fa": "خدمتی زمان‌حساس که هماهنگی، پایش و ایمنی عمومی را کنار هم قرار می‌دهد. جبهه قرمز فشار انتزاعی ایجاد می‌کند تا مدیران بده‌بستان‌ها، شکاف‌های تشخیص و هزینه تأخیر را ببینند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		},
-		{
-			"id": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-			"goal_id": "GOAL_BLUE_KEEP_SERVICES_TRUSTED",
-			"title": "Emergency Dispatch Protection",
-			"description": "A time-sensitive service where coordination, monitoring, and public safety meet. Blue keeps service, trust, and recovery moving while pressure increases.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 1100000102,
-			"owner_side_id": 2200000001,
-			"criticality": 5,
-			"mitre_mapping": {},
-			"title_fa": "اعزام اضطراری - حفاظت",
-			"description_fa": "خدمتی زمان‌حساس که هماهنگی، پایش و ایمنی عمومی را کنار هم قرار می‌دهد. جبهه آبی هم‌زمان با افزایش فشار، خدمت، اعتماد و بازیابی را حفظ می‌کند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		},
-		{
-			"id": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-			"goal_id": "GOAL_RED_CREATE_DECISION_PRESSURE",
-			"title": "Citizen Services Portal Pressure",
-			"description": "A familiar public-facing service that makes identity, availability, and trust easy to understand. Red applies abstract pressure so leaders can see tradeoffs, detection gaps, and cost of delayed action.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 2200000102,
-			"owner_side_id": 1100000001,
-			"criticality": 4,
-			"mitre_mapping": {},
-			"title_fa": "درگاه خدمات شهروندی - فشار عملیاتی",
-			"description_fa": "خدمتی عمومی و آشنا که هویت، دسترس‌پذیری و اعتماد را قابل فهم می‌کند. جبهه قرمز فشار انتزاعی ایجاد می‌کند تا مدیران بده‌بستان‌ها، شکاف‌های تشخیص و هزینه تأخیر را ببینند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		},
-		{
-			"id": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-			"goal_id": "GOAL_BLUE_KEEP_SERVICES_TRUSTED",
-			"title": "Citizen Services Portal Protection",
-			"description": "A familiar public-facing service that makes identity, availability, and trust easy to understand. Blue keeps service, trust, and recovery moving while pressure increases.",
-			"subject_type": "critical_infrastructure",
-			"target_team_id": 1100000102,
-			"owner_side_id": 2200000001,
-			"criticality": 4,
-			"mitre_mapping": {},
-			"title_fa": "درگاه خدمات شهروندی - حفاظت",
-			"description_fa": "خدمتی عمومی و آشنا که هویت، دسترس‌پذیری و اعتماد را قابل فهم می‌کند. جبهه آبی هم‌زمان با افزایش فشار، خدمت، اعتماد و بازیابی را حفظ می‌کند.",
-			"subject_type_fa": "زیرساخت حیاتی"
-		}
-	],
-	"sub_subjects": [
-		{
-			"id": "SS_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-			"subject_id": "SUBJ_RED_HOSPITAL_OPERATIONS",
-			"title": "Dependency Discovery",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "شناخت وابستگی‌ها"
-		},
-		{
-			"id": "SS_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-			"subject_id": "SUBJ_RED_HOSPITAL_OPERATIONS",
-			"title": "Operational Friction",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "اصطکاک عملیاتی"
-		},
-		{
-			"id": "SS_RED_HOSPITAL_OPERATIONS_TRUST",
-			"subject_id": "SUBJ_RED_HOSPITAL_OPERATIONS",
-			"title": "Public Trust Pressure",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "فشار بر اعتماد عمومی"
-		},
-		{
-			"id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-			"subject_id": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-			"title": "Prevention and Hardening",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "پیشگیری و مقاوم‌سازی"
-		},
-		{
-			"id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-			"subject_id": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-			"title": "Detection and Response",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "تشخیص و پاسخ"
-		},
-		{
-			"id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-			"subject_id": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-			"title": "Recovery and Communication",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "بازیابی و اطلاع‌رسانی"
-		},
-		{
-			"id": "SS_RED_EMERGENCY_DISPATCH_DISCOVERY",
-			"subject_id": "SUBJ_RED_EMERGENCY_DISPATCH",
-			"title": "Dependency Discovery",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "شناخت وابستگی‌ها"
-		},
-		{
-			"id": "SS_RED_EMERGENCY_DISPATCH_OPERATIONS",
-			"subject_id": "SUBJ_RED_EMERGENCY_DISPATCH",
-			"title": "Operational Friction",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "اصطکاک عملیاتی"
-		},
-		{
-			"id": "SS_RED_EMERGENCY_DISPATCH_TRUST",
-			"subject_id": "SUBJ_RED_EMERGENCY_DISPATCH",
-			"title": "Public Trust Pressure",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "فشار بر اعتماد عمومی"
-		},
-		{
-			"id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-			"subject_id": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-			"title": "Prevention and Hardening",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "پیشگیری و مقاوم‌سازی"
-		},
-		{
-			"id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-			"subject_id": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-			"title": "Detection and Response",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "تشخیص و پاسخ"
-		},
-		{
-			"id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-			"subject_id": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-			"title": "Recovery and Communication",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "بازیابی و اطلاع‌رسانی"
-		},
-		{
-			"id": "SS_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-			"subject_id": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-			"title": "Dependency Discovery",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "شناخت وابستگی‌ها"
-		},
-		{
-			"id": "SS_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-			"subject_id": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-			"title": "Operational Friction",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "اصطکاک عملیاتی"
-		},
-		{
-			"id": "SS_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-			"subject_id": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-			"title": "Public Trust Pressure",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "فشار بر اعتماد عمومی"
-		},
-		{
-			"id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-			"subject_id": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-			"title": "Prevention and Hardening",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "پیشگیری و مقاوم‌سازی"
-		},
-		{
-			"id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-			"subject_id": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-			"title": "Detection and Response",
-			"progress_share": 35,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "تشخیص و پاسخ"
-		},
-		{
-			"id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-			"subject_id": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-			"title": "Recovery and Communication",
-			"progress_share": 30,
-			"source": {
-				"type": "executive_demo_simulation",
-				"name": "Executive Cyber Learning Demo Pack",
-				"name_fa": "بسته دمو آموزشی سایبری برای مدیران",
-				"type_fa": "شبیه‌سازی دمو"
-			},
-			"completion_rule": {
-				"type": "required_steps_success",
-				"type_fa": "موفقیت در گام‌های الزامی"
-			},
-			"title_fa": "بازیابی و اطلاع‌رسانی"
-		}
-	],
-	"scenarios": [
-		{
-			"id": "SCN_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-			"sub_subject_id": "SS_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-			"title": "Hospital Operations: Dependency Discovery",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "عملیات بیمارستان: شناخت وابستگی‌ها",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-			"sub_subject_id": "SS_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-			"title": "Hospital Operations: Operational Friction",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "high",
-			"title_fa": "عملیات بیمارستان: اصطکاک عملیاتی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_HOSPITAL_OPERATIONS_TRUST",
-			"sub_subject_id": "SS_RED_HOSPITAL_OPERATIONS_TRUST",
-			"title": "Hospital Operations: Public Trust Pressure",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "high",
-			"title_fa": "عملیات بیمارستان: فشار بر اعتماد عمومی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-			"sub_subject_id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-			"title": "Hospital Operations: Prevention and Hardening",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "عملیات بیمارستان: پیشگیری و مقاوم‌سازی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-			"sub_subject_id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-			"title": "Hospital Operations: Detection and Response",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "عملیات بیمارستان: تشخیص و پاسخ",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-			"sub_subject_id": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-			"title": "Hospital Operations: Recovery and Communication",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "low",
-			"title_fa": "عملیات بیمارستان: بازیابی و اطلاع‌رسانی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "کم",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_EMERGENCY_DISPATCH_DISCOVERY",
-			"sub_subject_id": "SS_RED_EMERGENCY_DISPATCH_DISCOVERY",
-			"title": "Emergency Dispatch: Dependency Discovery",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "اعزام اضطراری: شناخت وابستگی‌ها",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_EMERGENCY_DISPATCH_OPERATIONS",
-			"sub_subject_id": "SS_RED_EMERGENCY_DISPATCH_OPERATIONS",
-			"title": "Emergency Dispatch: Operational Friction",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "high",
-			"title_fa": "اعزام اضطراری: اصطکاک عملیاتی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_EMERGENCY_DISPATCH_TRUST",
-			"sub_subject_id": "SS_RED_EMERGENCY_DISPATCH_TRUST",
-			"title": "Emergency Dispatch: Public Trust Pressure",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "high",
-			"title_fa": "اعزام اضطراری: فشار بر اعتماد عمومی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-			"sub_subject_id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-			"title": "Emergency Dispatch: Prevention and Hardening",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "اعزام اضطراری: پیشگیری و مقاوم‌سازی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-			"sub_subject_id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-			"title": "Emergency Dispatch: Detection and Response",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "اعزام اضطراری: تشخیص و پاسخ",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-			"sub_subject_id": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-			"title": "Emergency Dispatch: Recovery and Communication",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "low",
-			"title_fa": "اعزام اضطراری: بازیابی و اطلاع‌رسانی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "کم",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-			"sub_subject_id": "SS_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-			"title": "Citizen Services Portal: Dependency Discovery",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "درگاه خدمات شهروندی: شناخت وابستگی‌ها",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-			"sub_subject_id": "SS_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-			"title": "Citizen Services Portal: Operational Friction",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "high",
-			"title_fa": "درگاه خدمات شهروندی: اصطکاک عملیاتی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-			"sub_subject_id": "SS_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-			"title": "Citizen Services Portal: Public Trust Pressure",
-			"scenario_type": "attack_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["ATTACKER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "high",
-			"title_fa": "درگاه خدمات شهروندی: فشار بر اعتماد عمومی",
-			"scenario_type_fa": "مسیر تهاجمی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "زیاد",
-			"allowed_team_roles_fa": ["مهاجم", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-			"sub_subject_id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-			"title": "Citizen Services Portal: Prevention and Hardening",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "درگاه خدمات شهروندی: پیشگیری و مقاوم‌سازی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-			"sub_subject_id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-			"title": "Citizen Services Portal: Detection and Response",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 2,
-			"base_credit_cost": 14,
-			"risk_level": "medium",
-			"title_fa": "درگاه خدمات شهروندی: تشخیص و پاسخ",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "متوسط",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		},
-		{
-			"id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-			"sub_subject_id": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-			"title": "Citizen Services Portal: Recovery and Communication",
-			"scenario_type": "defense_path",
-			"execution_mode": "ordered",
-			"allowed_team_roles": ["DEFENCER", "BOTH"],
-			"base_reward_points": 3,
-			"base_credit_cost": 16,
-			"risk_level": "low",
-			"title_fa": "درگاه خدمات شهروندی: بازیابی و اطلاع‌رسانی",
-			"scenario_type_fa": "مسیر دفاعی",
-			"execution_mode_fa": "ترتیبی",
-			"risk_level_fa": "کم",
-			"allowed_team_roles_fa": ["مدافع", "هر دو"]
-		}
-	],
-	"scenario_steps": [
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_DISCOVERY_01",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-			"order": 1,
-			"action_code": "ATK_MAP_SERVICE_DEPENDENCIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_MAP_SERVICE_DEPENDENCIES",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_DISCOVERY_02",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-			"order": 2,
-			"action_code": "ATK_TEST_ACCESS_PRESSURE",
-			"required": true,
-			"depends_on": ["STEP_RED_HOSPITAL_OPERATIONS_DISCOVERY_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_HOSPITAL_OPERATIONS_DISCOVERY",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_HOSPITAL_OPERATIONS",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_OPERATIONS_01",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-			"order": 1,
-			"action_code": "ATK_STRESS_OPERATOR_WORKFLOW",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_STRESS_OPERATOR_WORKFLOW",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_OPERATIONS_02",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-			"order": 2,
-			"action_code": "ATK_CONFUSE_TELEMETRY",
-			"required": true,
-			"depends_on": ["STEP_RED_HOSPITAL_OPERATIONS_OPERATIONS_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_HOSPITAL_OPERATIONS_OPERATIONS",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_HOSPITAL_OPERATIONS",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_TRUST_01",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_TRUST",
-			"order": 1,
-			"action_code": "ATK_QUEUE_DISRUPTION",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_QUEUE_DISRUPTION",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_HOSPITAL_OPERATIONS_TRUST_02",
-			"scenario_id": "SCN_RED_HOSPITAL_OPERATIONS_TRUST",
-			"order": 2,
-			"action_code": "ATK_PRESSURE_PUBLIC_TRUST",
-			"required": true,
-			"depends_on": ["STEP_RED_HOSPITAL_OPERATIONS_TRUST_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_HOSPITAL_OPERATIONS_TRUST",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_HOSPITAL_OPERATIONS",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT_01",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-			"order": 1,
-			"action_code": "DEF_INVENTORY_CRITICAL_ASSETS",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_INVENTORY_CRITICAL_ASSETS",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT_02",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-			"order": 2,
-			"action_code": "DEF_HARDEN_IDENTITY_ACCESS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_PREVENT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT_01",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-			"order": 1,
-			"action_code": "DEF_MONITOR_ANOMALIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_MONITOR_ANOMALIES",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT_02",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-			"order": 2,
-			"action_code": "DEF_TRIAGE_INCIDENT",
-			"required": true,
-			"depends_on": ["STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_DETECT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER_01",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-			"order": 1,
-			"action_code": "DEF_RESTORE_CONTINUITY",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_RESTORE_CONTINUITY",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER_02",
-			"scenario_id": "SCN_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-			"order": 2,
-			"action_code": "DEF_PUBLIC_STATUS_COMMS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_HOSPITAL_OPERATIONS_DEFENSE_RECOVER",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_HOSPITAL_OPERATIONS_DEFENSE",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_DISCOVERY_01",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_DISCOVERY",
-			"order": 1,
-			"action_code": "ATK_MAP_SERVICE_DEPENDENCIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_MAP_SERVICE_DEPENDENCIES",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_DISCOVERY_02",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_DISCOVERY",
-			"order": 2,
-			"action_code": "ATK_TEST_ACCESS_PRESSURE",
-			"required": true,
-			"depends_on": ["STEP_RED_EMERGENCY_DISPATCH_DISCOVERY_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_EMERGENCY_DISPATCH_DISCOVERY",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_EMERGENCY_DISPATCH",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_OPERATIONS_01",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_OPERATIONS",
-			"order": 1,
-			"action_code": "ATK_STRESS_OPERATOR_WORKFLOW",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_STRESS_OPERATOR_WORKFLOW",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_OPERATIONS_02",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_OPERATIONS",
-			"order": 2,
-			"action_code": "ATK_CONFUSE_TELEMETRY",
-			"required": true,
-			"depends_on": ["STEP_RED_EMERGENCY_DISPATCH_OPERATIONS_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_EMERGENCY_DISPATCH_OPERATIONS",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_EMERGENCY_DISPATCH",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_TRUST_01",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_TRUST",
-			"order": 1,
-			"action_code": "ATK_QUEUE_DISRUPTION",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_QUEUE_DISRUPTION",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_EMERGENCY_DISPATCH_TRUST_02",
-			"scenario_id": "SCN_RED_EMERGENCY_DISPATCH_TRUST",
-			"order": 2,
-			"action_code": "ATK_PRESSURE_PUBLIC_TRUST",
-			"required": true,
-			"depends_on": ["STEP_RED_EMERGENCY_DISPATCH_TRUST_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_EMERGENCY_DISPATCH_TRUST",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_EMERGENCY_DISPATCH",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT_01",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-			"order": 1,
-			"action_code": "DEF_INVENTORY_CRITICAL_ASSETS",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_INVENTORY_CRITICAL_ASSETS",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT_02",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-			"order": 2,
-			"action_code": "DEF_HARDEN_IDENTITY_ACCESS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_PREVENT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT_01",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-			"order": 1,
-			"action_code": "DEF_MONITOR_ANOMALIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_MONITOR_ANOMALIES",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT_02",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-			"order": 2,
-			"action_code": "DEF_TRIAGE_INCIDENT",
-			"required": true,
-			"depends_on": ["STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_DETECT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER_01",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-			"order": 1,
-			"action_code": "DEF_RESTORE_CONTINUITY",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_RESTORE_CONTINUITY",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER_02",
-			"scenario_id": "SCN_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-			"order": 2,
-			"action_code": "DEF_PUBLIC_STATUS_COMMS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_EMERGENCY_DISPATCH_DEFENSE_RECOVER",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_EMERGENCY_DISPATCH_DEFENSE",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY_01",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-			"order": 1,
-			"action_code": "ATK_MAP_SERVICE_DEPENDENCIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_MAP_SERVICE_DEPENDENCIES",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY_02",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-			"order": 2,
-			"action_code": "ATK_TEST_ACCESS_PRESSURE",
-			"required": true,
-			"depends_on": ["STEP_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_CITIZEN_SERVICES_PORTAL_DISCOVERY",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS_01",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-			"order": 1,
-			"action_code": "ATK_STRESS_OPERATOR_WORKFLOW",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_STRESS_OPERATOR_WORKFLOW",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS_02",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-			"order": 2,
-			"action_code": "ATK_CONFUSE_TELEMETRY",
-			"required": true,
-			"depends_on": ["STEP_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_CITIZEN_SERVICES_PORTAL_OPERATIONS",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_TRUST_01",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-			"order": 1,
-			"action_code": "ATK_QUEUE_DISRUPTION",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "ATK_QUEUE_DISRUPTION",
-					"value": 0,
-					"confidence": "medium"
-				}
-			]
-		},
-		{
-			"id": "STEP_RED_CITIZEN_SERVICES_PORTAL_TRUST_02",
-			"scenario_id": "SCN_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-			"order": 2,
-			"action_code": "ATK_PRESSURE_PUBLIC_TRUST",
-			"required": true,
-			"depends_on": ["STEP_RED_CITIZEN_SERVICES_PORTAL_TRUST_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_RED_CITIZEN_SERVICES_PORTAL_TRUST",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "ATK_PRESSURE_PUBLIC_TRUST",
-					"value": -4
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT_01",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-			"order": 1,
-			"action_code": "DEF_INVENTORY_CRITICAL_ASSETS",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_INVENTORY_CRITICAL_ASSETS",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT_02",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-			"order": 2,
-			"action_code": "DEF_HARDEN_IDENTITY_ACCESS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_PREVENT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_HARDEN_IDENTITY_ACCESS",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT_01",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-			"order": 1,
-			"action_code": "DEF_MONITOR_ANOMALIES",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_MONITOR_ANOMALIES",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT_02",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-			"order": 2,
-			"action_code": "DEF_TRIAGE_INCIDENT",
-			"required": true,
-			"depends_on": ["STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_DETECT",
-					"value": 35
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-					"value": 2
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_TRIAGE_INCIDENT",
-					"value": -3
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER_01",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-			"order": 1,
-			"action_code": "DEF_RESTORE_CONTINUITY",
-			"required": true,
-			"depends_on": [],
-			"on_success": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": 8,
-					"duration_turns": 1
-				}
-			],
-			"on_failure": [
-				{
-					"type": "REVEAL_TO_GOVERNMENT",
-					"target": "DEF_RESTORE_CONTINUITY",
-					"value": 0,
-					"confidence": "low"
-				}
-			]
-		},
-		{
-			"id": "STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER_02",
-			"scenario_id": "SCN_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-			"order": 2,
-			"action_code": "DEF_PUBLIC_STATUS_COMMS",
-			"required": true,
-			"depends_on": ["STEP_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER_01"],
-			"on_success": [
-				{
-					"type": "ADVANCE_PROGRESS",
-					"target": "SS_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE_RECOVER",
-					"value": 30
-				},
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-					"value": 3
-				}
-			],
-			"on_failure": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": -3
-				}
-			]
-		}
-	],
-	"impact_rules": [
-		{
-			"id": "IMPACT_DEMO_TELEMETRY_CONFUSION",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "ATK_CONFUSE_TELEMETRY"
-			},
-			"effects": [
-				{
-					"type": "REDUCE_VISIBILITY",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": 10,
-					"duration_turns": 1
-				}
-			]
-		},
-		{
-			"id": "IMPACT_DEMO_MONITORING_RESTORES_VISIBILITY",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "DEF_MONITOR_ANOMALIES"
-			},
-			"effects": [
-				{
-					"type": "REMOVE_ACTIVE_EFFECT",
-					"target": "ATK_CONFUSE_TELEMETRY",
-					"value": 1
-				}
-			]
-		},
-		{
-			"id": "IMPACT_DEMO_QUEUE_PRESSURE_COST",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "ATK_QUEUE_DISRUPTION"
-			},
-			"effects": [
-				{
-					"type": "CREDIT_DELTA",
-					"target": "SUBJ_RED_CITIZEN_SERVICES_PORTAL",
-					"value": 2
-				}
-			]
-		},
-		{
-			"id": "IMPACT_DEMO_PUBLIC_COMMS_TRUST_GAIN",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "DEF_PUBLIC_STATUS_COMMS"
-			},
-			"effects": [
-				{
-					"type": "POINT_DELTA",
-					"target": "SUBJ_BLUE_CITIZEN_SERVICES_PORTAL_DEFENSE",
-					"value": 1
-				}
-			]
-		},
-		{
-			"id": "IMPACT_DEMO_CONTINUITY_UNLOCKS_CONFIDENCE",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "DEF_RESTORE_CONTINUITY"
-			},
-			"effects": [
-				{
-					"type": "ENABLE_ACTION",
-					"target": "DEF_PUBLIC_STATUS_COMMS",
-					"value": 1
-				}
-			]
-		},
-		{
-			"id": "IMPACT_DEMO_ACCESS_HARDENING_REDUCES_PRESSURE",
-			"trigger": {
-				"event": "SCENARIO_STEP_RESOLVED",
-				"action_code": "DEF_HARDEN_IDENTITY_ACCESS"
-			},
-			"effects": [
-				{
-					"type": "PROBABILITY_MODIFIER",
-					"target": "ATK_TEST_ACCESS_PRESSURE",
-					"value": -8,
-					"duration_turns": 1
-				}
-			]
-		}
-	],
-	"visibility_config": {
-		"events": {
-			"PHASE_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"PHASE_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"PHASE_TIMEOUT": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"VOTING_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"VOTE_CAST": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"VOTE_TALLY_UPDATED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"VOTING_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_MAJORITY_DECIDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_ACTION_SELECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_TARGET_SELECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAMMATE_ACTION_SELECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"VOTE_SUBMITTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"ACTION_UNLOCKED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"ACTION_EXECUTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"EFFECT_APPLIED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GOVERNMENT_SELECTION_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GOVERNMENT_SELECTION_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GOVERNMENT_INTERVENTION": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GOVERNMENT_ALERT": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GOVERNMENT_ORDER_ISSUED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"SCENARIO_STEP_RESOLVED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"ATTACK_DECLARED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"ATTACK_RESOLVED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DEFENSE_RESOLVED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"COMBAT_ROUND_COMPLETED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DAMAGE_APPLIED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TURN_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"TURN_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"TURN_RESULTS": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"CALCULATION_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"CALCULATION_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_ACTION_RESOLVED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TURN_ANALYTICS_RECORDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"POINTS_UPDATED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"CREDITS_UPDATED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"BLACK_MARKET_ITEM_PURCHASED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"BLACK_MARKET_ITEM_ACTIVATED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"BLACK_MARKET_ITEM_EXPIRED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"FACTOR_CREATED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"FACTOR_APPLIED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"FACTOR_EXPIRED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DIRECTIVE_SET": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DIRECTIVE_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DIRECTIVE_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DIRECTIVE_EFFECT_APPLIED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DIRECTIVES_APPLIED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"USER_ASSIGNED_TO_GAME": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"USER_STREAM_CONNECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"USER_STREAM_DISCONNECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"USER_HEARTBEAT": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_READY": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_MEMBER_OFFLINE": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"TEAM_STATE_CHANGED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"ALL_TEAMS_READY": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_CONFIGURED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_STARTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_PAUSED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_RESUMED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_ENDED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_RESET": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"GAME_STATE_SNAPSHOT": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"WINNER_DECLARED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"DRAW_DECLARED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"ERROR": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					}
-				]
-			},
-			"INVALID_ACTION_ATTEMPTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			},
-			"ACTION_REJECTED": {
-				"audiences": [
-					{
-						"type": "role",
-						"role_value": "GOVERNMENT"
-					},
-					{
-						"type": "role",
-						"role_value": "ADMIN"
-					},
-					{
-						"type": "side",
-						"side_id": 1100000001
-					},
-					{
-						"type": "side",
-						"side_id": 2200000001
-					},
-					{
-						"type": "team",
-						"team_id": 1100000102
-					},
-					{
-						"type": "team",
-						"team_id": 2200000102
-					}
-				]
-			}
-		},
-		"cross_side_result": {
-			"enabled": true,
-			"grantees": [
-				{
-					"type": "role",
-					"role_value": "GOVERNMENT",
-					"actor_side_id": 1100000001,
-					"target_side_id": 2200000001
-				},
-				{
-					"type": "role",
-					"role_value": "GOVERNMENT",
-					"actor_side_id": 2200000001,
-					"target_side_id": 1100000001
-				}
-			]
-		}
-	}
+  "version": "2.0",
+  "game_config": {
+    "num_turns": 6,
+    "point_threshold": 5,
+    "turn_duration_seconds": 110,
+    "selection_phase_duration": 40,
+    "voting_phase_duration": 40,
+    "voting_config": {
+      "voting_enabled": true,
+      "required_approval": "majority",
+      "leader_veto_enabled": true,
+      "vote_time_limit_seconds": 40,
+      "required_approval_fa": "اکثریت"
+    },
+    "victory_conditions": {
+      "type": "points_or_turns",
+      "points_to_win": 5,
+      "max_turns": 6,
+      "alternative_win_conditions": [],
+      "type_fa": "امتیاز یا تعداد نوبت",
+      "alternative_win_conditions_fa": []
+    }
+  },
+  "teams": [
+    {
+      "id": 1100000101,
+      "side_id": 1100000001,
+      "side_name": "Red",
+      "name": "Red Government",
+      "display_name": "Red Government",
+      "team_type": "GOVERNMENT",
+      "starting_credits": 120,
+      "role": {
+        "type": "GOVERNMENT",
+        "allowed_action_types": [
+          "government"
+        ],
+        "type_fa": "دولت",
+        "allowed_action_types_fa": [
+          "دولتی"
+        ]
+      },
+      "players": [],
+      "name_fa": "دولت قرمز",
+      "display_name_fa": "دولت قرمز",
+      "side_name_fa": "قرمز",
+      "team_type_fa": "دولت",
+      "governmentCode": "RED-GOV"
+    },
+    {
+      "id": 1100000102,
+      "side_id": 1100000001,
+      "side_name": "Red",
+      "name": "Red Team",
+      "display_name": "Red Team",
+      "team_type": "PLAYER",
+      "starting_credits": 80,
+      "role": {
+        "type": "ATTACKER",
+        "allowed_action_types": [
+          "attack"
+        ],
+        "type_fa": "مهاجم",
+        "allowed_action_types_fa": [
+          "تهاجمی"
+        ]
+      },
+      "players": [],
+      "name_fa": "تیم قرمز",
+      "display_name_fa": "تیم قرمز",
+      "side_name_fa": "قرمز",
+      "team_type_fa": "بازیکن"
+    },
+    {
+      "id": 2200000101,
+      "side_id": 2200000001,
+      "side_name": "Blue",
+      "name": "Blue Government",
+      "display_name": "Blue Government",
+      "team_type": "GOVERNMENT",
+      "starting_credits": 120,
+      "role": {
+        "type": "GOVERNMENT",
+        "allowed_action_types": [
+          "government"
+        ],
+        "type_fa": "دولت",
+        "allowed_action_types_fa": [
+          "دولتی"
+        ]
+      },
+      "players": [],
+      "name_fa": "دولت آبی",
+      "display_name_fa": "دولت آبی",
+      "side_name_fa": "آبی",
+      "team_type_fa": "دولت",
+      "governmentCode": "BLUE-GOV"
+    },
+    {
+      "id": 2200000102,
+      "side_id": 2200000001,
+      "side_name": "Blue",
+      "name": "Blue Team",
+      "display_name": "Blue Team",
+      "team_type": "PLAYER",
+      "starting_credits": 80,
+      "role": {
+        "type": "DEFENCER",
+        "allowed_action_types": [
+          "defense"
+        ],
+        "type_fa": "مدافع",
+        "allowed_action_types_fa": [
+          "دفاعی"
+        ]
+      },
+      "players": [],
+      "name_fa": "تیم آبی",
+      "display_name_fa": "تیم آبی",
+      "side_name_fa": "آبی",
+      "team_type_fa": "بازیکن"
+    }
+  ],
+  "actions": [
+    {
+      "code": "ATK_PROBE_ACCESS",
+      "name": "Probe — Access Pressure",
+      "type": "attack",
+      "description": "A low-risk abstract probe. Works almost every time and gains a little ground.",
+      "base_stats": {
+        "cost": 8,
+        "success_probability": 90,
+        "points_on_success": 1,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          1100000102
+        ],
+        "allowed_team_roles": [
+          "ATTACKER"
+        ],
+        "allowed_team_roles_fa": [
+          "مهاجم"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-pressure",
+        "color": "red"
+      },
+      "name_fa": "کاوش — فشار بر دسترسی",
+      "description_fa": "یک کاوش انتزاعی کم‌ریسک. تقریبا همیشه موفق می‌شود و پیشرفت اندکی می‌دهد.",
+      "type_fa": "تهاجمی"
+    },
+    {
+      "code": "ATK_DISRUPT_WORKFLOW",
+      "name": "Disrupt — Workflow Stress",
+      "type": "attack",
+      "description": "A moderate abstract pressure on operator decision-making. Half the time it lands.",
+      "base_stats": {
+        "cost": 12,
+        "success_probability": 45,
+        "points_on_success": 2,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          1100000102
+        ],
+        "allowed_team_roles": [
+          "ATTACKER"
+        ],
+        "allowed_team_roles_fa": [
+          "مهاجم"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-pressure",
+        "color": "red"
+      },
+      "name_fa": "اختلال — فشار بر گردش کار",
+      "description_fa": "فشار انتزاعی متوسط بر تصمیم‌گیری اپراتورها. حدود نیمی از مواقع موفق می‌شود.",
+      "type_fa": "تهاجمی"
+    },
+    {
+      "code": "ATK_BLACKOUT_SERVICE",
+      "name": "Blackout — Service Outage",
+      "type": "attack",
+      "description": "A high-risk abstract attempt to halt the service outright. Rarely works, decisive when it does.",
+      "base_stats": {
+        "cost": 16,
+        "success_probability": 30,
+        "points_on_success": 3,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          1100000102
+        ],
+        "allowed_team_roles": [
+          "ATTACKER"
+        ],
+        "allowed_team_roles_fa": [
+          "مهاجم"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-pressure",
+        "color": "red"
+      },
+      "name_fa": "قطعی — توقف سرویس",
+      "description_fa": "تلاش انتزاعی پرریسک برای توقف کامل سرویس. به‌ندرت موفق می‌شود اما تعیین‌کننده است.",
+      "type_fa": "تهاجمی"
+    },
+    {
+      "code": "DEF_HARDEN_IDENTITY",
+      "name": "Harden Identity and Access",
+      "type": "defense",
+      "description": "Strengthen access governance. Reliable, and shuts down probing almost completely.",
+      "base_stats": {
+        "cost": 8,
+        "success_probability": 74,
+        "points_on_success": 1,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          2200000102
+        ],
+        "allowed_team_roles": [
+          "DEFENCER"
+        ],
+        "allowed_team_roles_fa": [
+          "مدافع"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-shield",
+        "color": "blue"
+      },
+      "name_fa": "تقویت هویت و دسترسی",
+      "description_fa": "تقویت حاکمیت دسترسی. قابل‌اتکا و تقریبا به‌طور کامل جلوی کاوش را می‌گیرد.",
+      "type_fa": "دفاعی"
+    },
+    {
+      "code": "DEF_CONTAIN_TRIAGE",
+      "name": "Contain and Triage",
+      "type": "defense",
+      "description": "Assign owners and contain the incident. Moderate reach against workflow pressure.",
+      "base_stats": {
+        "cost": 12,
+        "success_probability": 40,
+        "points_on_success": 2,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          2200000102
+        ],
+        "allowed_team_roles": [
+          "DEFENCER"
+        ],
+        "allowed_team_roles_fa": [
+          "مدافع"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-shield",
+        "color": "blue"
+      },
+      "name_fa": "مهار و اولویت‌بندی",
+      "description_fa": "تعیین مسئول و مهار رویداد. اثر متوسط در برابر فشار بر گردش کار.",
+      "type_fa": "دفاعی"
+    },
+    {
+      "code": "DEF_RESTORE_CONTINUITY",
+      "name": "Restore Service Continuity",
+      "type": "defense",
+      "description": "Recover capacity with continuity playbooks. Expensive, and only partly blunts an outage.",
+      "base_stats": {
+        "cost": 16,
+        "success_probability": 28,
+        "points_on_success": 3,
+        "cooldown_turns": 0
+      },
+      "requirements": {
+        "unlocked_by_default": true,
+        "allowed_team_ids": [
+          2200000102
+        ],
+        "allowed_team_roles": [
+          "DEFENCER"
+        ],
+        "allowed_team_roles_fa": [
+          "مدافع"
+        ],
+        "prerequisites": []
+      },
+      "effects": {},
+      "visual": {
+        "icon": "abstract-shield",
+        "color": "blue"
+      },
+      "name_fa": "بازیابی تداوم سرویس",
+      "description_fa": "بازیابی ظرفیت با رویه‌های تداوم. پرهزینه است و قطعی سرویس را تنها تا حدی خنثی می‌کند.",
+      "type_fa": "دفاعی"
+    }
+  ],
+  "government": {
+    "enabled": true,
+    "side_governments": [
+      {
+        "side_id": 1100000001,
+        "team_id": 1100000101,
+        "permissions": {
+          "can_ban_actions": true,
+          "can_modify_credits": true,
+          "can_impose_penalties": false,
+          "can_unban_actions": true
+        },
+        "intervention_config": {
+          "interventions_per_game": 2,
+          "intervention_cooldown_turns": 1
+        },
+        "player": {
+          "userId": 0,
+          "name": null,
+          "governmentCode": "RED-GOV"
+        }
+      },
+      {
+        "side_id": 2200000001,
+        "team_id": 2200000101,
+        "permissions": {
+          "can_ban_actions": true,
+          "can_modify_credits": true,
+          "can_impose_penalties": false,
+          "can_unban_actions": true
+        },
+        "intervention_config": {
+          "interventions_per_game": 2,
+          "intervention_cooldown_turns": 1
+        },
+        "player": {
+          "userId": 0,
+          "name": null,
+          "governmentCode": "BLUE-GOV"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "code": "GOV_BLUE_BAN_BLACKOUT",
+        "side_id": 2200000001,
+        "name": "Blue Bans the Outage Move",
+        "intervention_type": "ACTION_BAN",
+        "target": "ATK_BLACKOUT_SERVICE",
+        "duration_turns": 1,
+        "name_fa": "ممنوع‌سازی حرکت قطعی توسط آبی",
+        "intervention_type_fa": "ممنوع‌سازی کنش"
+      },
+      {
+        "code": "GOV_BLUE_FUNDING",
+        "side_id": 2200000001,
+        "name": "Blue Emergency Funding",
+        "intervention_type": "CREDIT_DELTA",
+        "target": 2200000102,
+        "value": 20,
+        "name_fa": "تأمین بودجه اضطراری آبی",
+        "intervention_type_fa": "تغییر اعتبار"
+      },
+      {
+        "code": "GOV_RED_BAN_RESTORE",
+        "side_id": 1100000001,
+        "name": "Red Bans the Recovery Move",
+        "intervention_type": "ACTION_BAN",
+        "target": "DEF_RESTORE_CONTINUITY",
+        "duration_turns": 1,
+        "name_fa": "ممنوع‌سازی حرکت بازیابی توسط قرمز",
+        "intervention_type_fa": "ممنوع‌سازی کنش"
+      },
+      {
+        "code": "GOV_RED_FUNDING",
+        "side_id": 1100000001,
+        "name": "Red Executive Budget Shift",
+        "intervention_type": "CREDIT_DELTA",
+        "target": 1100000102,
+        "value": 20,
+        "name_fa": "تغییر بودجه مدیریتی قرمز",
+        "intervention_type_fa": "تغییر اعتبار"
+      }
+    ]
+  },
+  "action_counters": [
+    {
+      "id": "COUNTER_PROBE",
+      "attack_code": "ATK_PROBE_ACCESS",
+      "countered_by": [
+        {
+          "defense_code": "DEF_HARDEN_IDENTITY",
+          "effectiveness": 78,
+          "description": "Access governance shuts down routine probing.",
+          "description_fa": "حاکمیت دسترسی جلوی کاوش‌های معمول را می‌گیرد."
+        }
+      ]
+    },
+    {
+      "id": "COUNTER_DISRUPT",
+      "attack_code": "ATK_DISRUPT_WORKFLOW",
+      "countered_by": [
+        {
+          "defense_code": "DEF_CONTAIN_TRIAGE",
+          "effectiveness": 62,
+          "description": "Clear ownership absorbs part of the overload.",
+          "description_fa": "مسئولیت روشن، بخشی از فشار را جذب می‌کند."
+        }
+      ]
+    },
+    {
+      "id": "COUNTER_BLACKOUT",
+      "attack_code": "ATK_BLACKOUT_SERVICE",
+      "countered_by": [
+        {
+          "defense_code": "DEF_RESTORE_CONTINUITY",
+          "effectiveness": 48,
+          "description": "Continuity procedures recover only part of the loss.",
+          "description_fa": "رویه‌های تداوم تنها بخشی از تلفات را جبران می‌کنند."
+        }
+      ]
+    }
+  ],
+  "black_market": [],
+  "goals": [
+    {
+      "id": "GOAL_RED_PRESSURE",
+      "side_id": 1100000001,
+      "title": "Create Decision Pressure on a Critical Service",
+      "description": "Red shows how routine cyber-risk decisions compound into service disruption.",
+      "title_fa": "ایجاد فشار تصمیم‌گیری بر یک خدمت حیاتی",
+      "description_fa": "جبهه قرمز نشان می‌دهد تصمیم‌های روزمره مرتبط با ریسک سایبری چگونه به اختلال سرویس می‌انجامند."
+    },
+    {
+      "id": "GOAL_BLUE_KEEP_TRUSTED",
+      "side_id": 2200000001,
+      "title": "Keep the Service Available and Trusted",
+      "description": "Blue practises prevention, containment and recovery under time pressure.",
+      "title_fa": "حفظ دسترس‌پذیری و اعتماد خدمت",
+      "description_fa": "جبهه آبی پیشگیری، مهار و بازیابی را زیر فشار زمان تمرین می‌کند."
+    }
+  ],
+  "subjects": [
+    {
+      "id": "SUBJ_RED_HOSPITAL",
+      "goal_id": "GOAL_RED_PRESSURE",
+      "title": "Hospital Operations — Pressure",
+      "description": "A service that cannot be down for a day.",
+      "subject_type": "critical_infrastructure",
+      "target_team_id": 2200000102,
+      "owner_side_id": 1100000001,
+      "criticality": 5,
+      "mitre_mapping": {},
+      "title_fa": "عملیات بیمارستان — فشار",
+      "description_fa": "خدمتی که حتی یک روز نمی‌تواند از دسترس خارج شود.",
+      "subject_type_fa": "زیرساخت حیاتی"
+    },
+    {
+      "id": "SUBJ_BLUE_HOSPITAL",
+      "goal_id": "GOAL_BLUE_KEEP_TRUSTED",
+      "title": "Hospital Operations — Protection",
+      "description": "A service that cannot be down for a day.",
+      "subject_type": "critical_infrastructure",
+      "target_team_id": 1100000102,
+      "owner_side_id": 2200000001,
+      "criticality": 5,
+      "mitre_mapping": {},
+      "title_fa": "عملیات بیمارستان — حفاظت",
+      "description_fa": "خدمتی که حتی یک روز نمی‌تواند از دسترس خارج شود.",
+      "subject_type_fa": "زیرساخت حیاتی"
+    }
+  ],
+  "sub_subjects": [
+    {
+      "id": "SS_RED_PROBE",
+      "subject_id": "SUBJ_RED_HOSPITAL",
+      "title": "Probing Line",
+      "progress_share": 34,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط کاوش"
+    },
+    {
+      "id": "SS_RED_DISRUPT",
+      "subject_id": "SUBJ_RED_HOSPITAL",
+      "title": "Disruption Line",
+      "progress_share": 33,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط اختلال"
+    },
+    {
+      "id": "SS_RED_BLACKOUT",
+      "subject_id": "SUBJ_RED_HOSPITAL",
+      "title": "Outage Line",
+      "progress_share": 33,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط قطعی"
+    },
+    {
+      "id": "SS_BLUE_HARDEN",
+      "subject_id": "SUBJ_BLUE_HOSPITAL",
+      "title": "Hardening Line",
+      "progress_share": 34,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط تقویت"
+    },
+    {
+      "id": "SS_BLUE_CONTAIN",
+      "subject_id": "SUBJ_BLUE_HOSPITAL",
+      "title": "Containment Line",
+      "progress_share": 33,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط مهار"
+    },
+    {
+      "id": "SS_BLUE_RESTORE",
+      "subject_id": "SUBJ_BLUE_HOSPITAL",
+      "title": "Recovery Line",
+      "progress_share": 33,
+      "source": {
+        "type": "executive_demo_simulation",
+        "name": "Equilibrium Demo Pack",
+        "name_fa": "بستهٔ دموی تعادل",
+        "type_fa": "شبیه‌سازی دمو"
+      },
+      "completion_rule": {
+        "type": "required_steps_success",
+        "type_fa": "موفقیت در گام‌های الزامی"
+      },
+      "title_fa": "خط بازیابی"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "SCN_RED_PROBE",
+      "sub_subject_id": "SS_RED_PROBE",
+      "title": "Probing Line",
+      "scenario_type": "attack_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "ATTACKER"
+      ],
+      "allowed_team_roles_fa": [
+        "مهاجم"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "low",
+      "risk_level_fa": "کم",
+      "title_fa": "خط کاوش",
+      "scenario_type_fa": "مسیر تهاجمی",
+      "execution_mode_fa": "فهرستی"
+    },
+    {
+      "id": "SCN_RED_DISRUPT",
+      "sub_subject_id": "SS_RED_DISRUPT",
+      "title": "Disruption Line",
+      "scenario_type": "attack_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "ATTACKER"
+      ],
+      "allowed_team_roles_fa": [
+        "مهاجم"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "medium",
+      "risk_level_fa": "متوسط",
+      "title_fa": "خط اختلال",
+      "scenario_type_fa": "مسیر تهاجمی",
+      "execution_mode_fa": "فهرستی"
+    },
+    {
+      "id": "SCN_RED_BLACKOUT",
+      "sub_subject_id": "SS_RED_BLACKOUT",
+      "title": "Outage Line",
+      "scenario_type": "attack_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "ATTACKER"
+      ],
+      "allowed_team_roles_fa": [
+        "مهاجم"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "high",
+      "risk_level_fa": "زیاد",
+      "title_fa": "خط قطعی",
+      "scenario_type_fa": "مسیر تهاجمی",
+      "execution_mode_fa": "فهرستی"
+    },
+    {
+      "id": "SCN_BLUE_HARDEN",
+      "sub_subject_id": "SS_BLUE_HARDEN",
+      "title": "Hardening Line",
+      "scenario_type": "defense_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "DEFENCER"
+      ],
+      "allowed_team_roles_fa": [
+        "مدافع"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "low",
+      "risk_level_fa": "کم",
+      "title_fa": "خط تقویت",
+      "scenario_type_fa": "مسیر دفاعی",
+      "execution_mode_fa": "فهرستی"
+    },
+    {
+      "id": "SCN_BLUE_CONTAIN",
+      "sub_subject_id": "SS_BLUE_CONTAIN",
+      "title": "Containment Line",
+      "scenario_type": "defense_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "DEFENCER"
+      ],
+      "allowed_team_roles_fa": [
+        "مدافع"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "medium",
+      "risk_level_fa": "متوسط",
+      "title_fa": "خط مهار",
+      "scenario_type_fa": "مسیر دفاعی",
+      "execution_mode_fa": "فهرستی"
+    },
+    {
+      "id": "SCN_BLUE_RESTORE",
+      "sub_subject_id": "SS_BLUE_RESTORE",
+      "title": "Recovery Line",
+      "scenario_type": "defense_path",
+      "execution_mode": "checklist",
+      "allowed_team_roles": [
+        "DEFENCER"
+      ],
+      "allowed_team_roles_fa": [
+        "مدافع"
+      ],
+      "base_reward_points": 0,
+      "base_credit_cost": 0,
+      "risk_level": "high",
+      "risk_level_fa": "زیاد",
+      "title_fa": "خط بازیابی",
+      "scenario_type_fa": "مسیر دفاعی",
+      "execution_mode_fa": "فهرستی"
+    }
+  ],
+  "scenario_steps": [
+    {
+      "id": "STEP_RED_PROBE_01",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 1,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_02",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 2,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_03",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 3,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_04",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 4,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_05",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 5,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_06",
+      "scenario_id": "SCN_RED_PROBE",
+      "order": 6,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_PROBE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_01",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 1,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_02",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 2,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_03",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 3,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_04",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 4,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_05",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 5,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_06",
+      "scenario_id": "SCN_RED_DISRUPT",
+      "order": 6,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_DISRUPT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_01",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 1,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_02",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 2,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_03",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 3,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_04",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 4,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_05",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 5,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_06",
+      "scenario_id": "SCN_RED_BLACKOUT",
+      "order": 6,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_BLACKOUT",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_01",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 1,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_02",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 2,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_03",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 3,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_04",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 4,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_05",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 5,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_06",
+      "scenario_id": "SCN_BLUE_HARDEN",
+      "order": 6,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_HARDEN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_01",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 1,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_02",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 2,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_03",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 3,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_04",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 4,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_05",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 5,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_06",
+      "scenario_id": "SCN_BLUE_CONTAIN",
+      "order": 6,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_CONTAIN",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_01",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 1,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_02",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 2,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_03",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 3,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_04",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 4,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_05",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 5,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_06",
+      "scenario_id": "SCN_BLUE_RESTORE",
+      "order": 6,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_RESTORE",
+          "value": 10
+        }
+      ],
+      "on_failure": []
+    }
+  ],
+  "impact_rules": [
+    {
+      "id": "IMPACT_HARDENING_REVEALS_PROBE",
+      "trigger": {
+        "event": "SCENARIO_STEP_RESOLVED",
+        "action_code": "DEF_HARDEN_IDENTITY"
+      },
+      "effects": [
+        {
+          "type": "REVEAL_TO_GOVERNMENT",
+          "target": "ATK_PROBE_ACCESS",
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "visibility_config": {
+    "events": {
+      "PHASE_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "PHASE_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "PHASE_TIMEOUT": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "VOTING_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "VOTE_CAST": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "VOTE_TALLY_UPDATED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "VOTING_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TEAM_MAJORITY_DECIDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TEAM_ACTION_SELECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TEAM_TARGET_SELECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "TEAMMATE_ACTION_SELECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "VOTE_SUBMITTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "ACTION_UNLOCKED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "ACTION_EXECUTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "EFFECT_APPLIED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GOVERNMENT_SELECTION_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GOVERNMENT_SELECTION_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GOVERNMENT_INTERVENTION": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GOVERNMENT_ALERT": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GOVERNMENT_ORDER_ISSUED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "SCENARIO_STEP_RESOLVED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "ATTACK_DECLARED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "ATTACK_RESOLVED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DEFENSE_RESOLVED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "COMBAT_ROUND_COMPLETED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DAMAGE_APPLIED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "TURN_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TURN_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TURN_RESULTS": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "CALCULATION_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "CALCULATION_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "TEAM_ACTION_RESOLVED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TURN_ANALYTICS_RECORDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "POINTS_UPDATED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "CREDITS_UPDATED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "BLACK_MARKET_ITEM_PURCHASED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "BLACK_MARKET_ITEM_ACTIVATED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "BLACK_MARKET_ITEM_EXPIRED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "FACTOR_CREATED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "FACTOR_APPLIED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "FACTOR_EXPIRED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DIRECTIVE_SET": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DIRECTIVE_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DIRECTIVE_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DIRECTIVE_EFFECT_APPLIED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "DIRECTIVES_APPLIED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "USER_ASSIGNED_TO_GAME": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "USER_STREAM_CONNECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "USER_STREAM_DISCONNECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "USER_HEARTBEAT": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "TEAM_READY": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "TEAM_MEMBER_OFFLINE": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "TEAM_STATE_CHANGED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "ALL_TEAMS_READY": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GAME_CONFIGURED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GAME_STARTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GAME_PAUSED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GAME_RESUMED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GAME_ENDED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "GAME_RESET": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "GAME_STATE_SNAPSHOT": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "WINNER_DECLARED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "DRAW_DECLARED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "ERROR": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          }
+        ]
+      },
+      "INVALID_ACTION_ATTEMPTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      },
+      "ACTION_REJECTED": {
+        "audiences": [
+          {
+            "type": "role",
+            "role_value": "GOVERNMENT"
+          },
+          {
+            "type": "role",
+            "role_value": "ADMIN"
+          },
+          {
+            "type": "side",
+            "side_id": 1100000001
+          },
+          {
+            "type": "side",
+            "side_id": 2200000001
+          },
+          {
+            "type": "team",
+            "team_id": 1100000102
+          },
+          {
+            "type": "team",
+            "team_id": 2200000102
+          }
+        ]
+      }
+    },
+    "cross_side_result": {
+      "enabled": true,
+      "grantees": [
+        {
+          "type": "role",
+          "role_value": "GOVERNMENT",
+          "actor_side_id": 1100000001,
+          "target_side_id": 2200000001
+        },
+        {
+          "type": "role",
+          "role_value": "GOVERNMENT",
+          "actor_side_id": 2200000001,
+          "target_side_id": 1100000001
+        }
+      ]
+    }
+  }
 }
