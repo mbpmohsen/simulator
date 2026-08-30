@@ -13,21 +13,51 @@ import { CommunicationHttpError } from "./types";
 
 type CommunicationMessageDocument = CommunicationMessage;
 
-let clientPromise: Promise<MongoClient> | null = null;
-let indexesPromise: Promise<void> | null = null;
+// Cached on globalThis, matching the SQLite backend's pattern. Module-scoped
+// state is re-created on every hot reload in dev and on every re-evaluation of
+// the module, which leaks connections against a connection-limited cluster.
+interface CommunicationMongoGlobals {
+	communicationMongoClient?: Promise<MongoClient> | null;
+	communicationMongoIndexes?: Promise<void> | null;
+}
+
+const mongoGlobals = globalThis as typeof globalThis &
+	CommunicationMongoGlobals;
+
+/**
+ * MONGODB_URI wins when present. Credentials already inside it are left alone;
+ * otherwise MONGODB_USER / MONGODB_PASSWORD are injected, since supplying those
+ * separately is a common deployment convention and silently ignoring them
+ * produces an authentication failure that is hard to trace.
+ */
+const buildConnectionUri = (): string => {
+	const raw =
+		process.env.MONGODB_URI ??
+		`mongodb://${process.env.MONGODB_HOST ?? "mongodb"}:${process.env.MONGODB_PORT ?? "27017"}`;
+	const user = process.env.MONGODB_USER ?? process.env.MONGODB_USERNAME;
+	const password = process.env.MONGODB_PASSWORD;
+	if (!user || !password) return raw;
+	const separator = raw.indexOf("://");
+	if (separator === -1) return raw;
+	const scheme = raw.slice(0, separator);
+	const rest = raw.slice(separator + 3);
+	// An "@" before the first "/" means the URI already carries credentials.
+	const hostPart = rest.split("/")[0] ?? "";
+	if (hostPart.includes("@")) return raw;
+	return `${scheme}://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${rest}`;
+};
 
 const getCollection = async (): Promise<
 	Collection<CommunicationMessageDocument>
 > => {
-	const uri =
-		process.env.MONGODB_URI ??
-		`mongodb://${process.env.MONGODB_HOST ?? "mongodb"}:${process.env.MONGODB_PORT ?? "27017"}`;
-	clientPromise ??= new MongoClient(uri).connect();
+	mongoGlobals.communicationMongoClient ??= new MongoClient(
+		buildConnectionUri(),
+	).connect();
 	let client: MongoClient;
 	try {
-		client = await clientPromise;
+		client = await mongoGlobals.communicationMongoClient;
 	} catch {
-		clientPromise = null;
+		mongoGlobals.communicationMongoClient = null;
 		throw new CommunicationHttpError(
 			503,
 			"COMMUNICATION_STORAGE_UNAVAILABLE",
@@ -37,7 +67,7 @@ const getCollection = async (): Promise<
 	const collection = client
 		.db(process.env.MONGODB_DB_NAME ?? "game_db")
 		.collection<CommunicationMessageDocument>("communication_messages");
-	indexesPromise ??= Promise.all([
+	mongoGlobals.communicationMongoIndexes ??= Promise.all([
 		collection.createIndex({ game_id: 1, created_at: 1, id: 1 }),
 		collection.createIndex({
 			game_id: 1,
@@ -48,9 +78,9 @@ const getCollection = async (): Promise<
 		collection.createIndex({ id: 1 }, { unique: true }),
 	]).then(() => undefined);
 	try {
-		await indexesPromise;
+		await mongoGlobals.communicationMongoIndexes;
 	} catch {
-		indexesPromise = null;
+		mongoGlobals.communicationMongoIndexes = null;
 		throw new CommunicationHttpError(
 			503,
 			"COMMUNICATION_STORAGE_UNAVAILABLE",

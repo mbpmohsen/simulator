@@ -41,7 +41,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 				"بدنه درخواست پیام معتبر نیست.",
 			);
 		}
-		const message = await getCommunicationMessageService().create(actor, body);
+		const service = await getCommunicationMessageService();
+		const message = await service.create(actor, body);
 		return NextResponse.json(message, {
 			status: 201,
 			headers: noStoreHeaders,
@@ -67,7 +68,8 @@ export async function GET(request: Request): Promise<NextResponse> {
 		const limit = Number.isFinite(requestedLimit)
 			? Math.min(200, Math.max(1, Math.trunc(requestedLimit)))
 			: 100;
-		const messages = await getCommunicationMessageService().list(actor, {
+		const service = await getCommunicationMessageService();
+		const messages = await service.list(actor, {
 			gameId,
 			roomId: url.searchParams.get("roomId")?.trim() || undefined,
 			since: url.searchParams.get("since")?.trim() || undefined,
