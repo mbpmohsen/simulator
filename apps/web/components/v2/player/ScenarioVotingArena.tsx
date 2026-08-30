@@ -30,6 +30,7 @@ import {
 	Trophy,
 	Users,
 	Vote,
+	XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { playClickSound } from "@/lib/playClickSound";
@@ -155,6 +156,8 @@ interface MoveGroup {
 	remaining: number;
 	succeeded: number;
 	failed: number;
+	history: Array<{ id: string; outcome: "success" | "failed" }>;
+	lastOutcome: "success" | "failed" | null;
 	required: boolean;
 	status: StepView["status"];
 	cost: number | null;
@@ -248,6 +251,18 @@ export function ScenarioVotingArena({
 			const open = ordered.filter(
 				(step) => step.status !== "completed" && step.status !== "failed",
 			);
+			// Every time this move has been played, oldest first. The engine only
+			// gives us a status per step, so order stands in for the turn number.
+			const history = ordered
+				.filter(
+					(step) => step.status === "completed" || step.status === "failed",
+				)
+				.map((step) => ({
+					id: step.id,
+					outcome: (step.status === "completed" ? "success" : "failed") as
+						| "success"
+						| "failed",
+				}));
 			const nextStep = open.find((step) => step.available) ?? open[0] ?? null;
 			const cost = firstNumber(
 				...ordered.map((step) => step.cost),
@@ -268,6 +283,8 @@ export function ScenarioVotingArena({
 				remaining: open.length,
 				succeeded: ordered.filter((step) => step.status === "completed").length,
 				failed: ordered.filter((step) => step.status === "failed").length,
+				history,
+				lastOutcome: history[history.length - 1]?.outcome ?? null,
 				required: ordered.some((step) => step.required),
 				status: nextStep?.status ?? ordered[ordered.length - 1]?.status ?? "locked",
 				cost,
@@ -661,11 +678,39 @@ export function ScenarioVotingArena({
 													</p>
 												)}
 
-												{(group.succeeded > 0 || group.failed > 0) && (
-													<p className="mt-1.5 text-[11px] text-slate-500">
-														تاکنون {faNumber(group.succeeded)} بار موفق و{" "}
-														{faNumber(group.failed)} بار ناموفق بوده است.
-													</p>
+												{group.history.length > 0 && (
+													<div
+														className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3 py-2 ${group.lastOutcome === "success" ? "border-emerald-400/25 bg-emerald-500/[0.08]" : "border-rose-400/25 bg-rose-500/[0.08]"}`}
+													>
+														<span
+															className={`inline-flex items-center gap-1.5 text-xs font-bold ${group.lastOutcome === "success" ? "text-emerald-200" : "text-rose-200"}`}
+														>
+															{group.lastOutcome === "success" ? (
+																<CheckCircle2 className="size-3.5" />
+															) : (
+																<XCircle className="size-3.5" />
+															)}
+															آخرین اجرای این حرکت{" "}
+															{group.lastOutcome === "success"
+																? "موفق بود"
+																: "ناموفق بود"}
+														</span>
+														<span
+															className="flex items-center gap-1"
+															title="نتیجهٔ هر بار اجرا، از قدیمی به جدید"
+														>
+															{group.history.map((entry) => (
+																<span
+																	key={entry.id}
+																	className={`size-2 rounded-full ${entry.outcome === "success" ? "bg-emerald-400" : "bg-rose-400"}`}
+																/>
+															))}
+														</span>
+														<span className="text-[11px] text-slate-400">
+															{faNumber(group.succeeded)} موفق ·{" "}
+															{faNumber(group.failed)} ناموفق
+														</span>
+													</div>
 												)}
 											</div>
 										</div>

@@ -866,24 +866,39 @@ export default function PlayerDashboardPage() {
 											</CardTitle>
 										</CardHeader>
 										<CardContent>
+											<p className="mb-3 text-xs leading-6 text-slate-400">
+												ابتدا هدف این نوبت را انتخاب کنید، سپس مسیر آن را فعال
+												کنید. «سهم» نشان می‌دهد پیشرفت روی آن هدف چقدر در
+												پیشرفت کل موضوع اثر می‌گذارد.
+											</p>
 											<div className="mb-4 flex flex-wrap gap-2">
-												{selectedSubject.sub_subjects.map((sub) => (
-													<button
-														key={sub.id}
-														type="button"
-														onClick={() => {
-															setSelectedSubSubjectId(sub.id);
-															setSelectedScenarioId(null);
-														}}
-														className={`rounded-xl border px-3 py-2 text-sm ${selectedSubSubjectId === sub.id ? "border-violet-400/40 bg-violet-500/10 text-violet-100" : "border-white/10 bg-white/[0.03] text-slate-400"}`}
-													>
-														{getLocalized(sub.title, sub.title_fa)} ·{" "}
-														{sub.progress_share}٪{" "}
-														{sub.completed && (
-															<CheckCircle2 className="inline size-3 text-emerald-300" />
-														)}
-													</button>
-												))}
+												{selectedSubject.sub_subjects.map((sub) => {
+													const isActive =
+														runtime.state?.active_sub_subject_id === sub.id;
+													return (
+														<button
+															key={sub.id}
+															type="button"
+															onClick={() => {
+																setSelectedSubSubjectId(sub.id);
+																setSelectedScenarioId(null);
+															}}
+															className={`rounded-xl border px-3 py-2 text-right text-sm ${selectedSubSubjectId === sub.id ? "border-violet-400/40 bg-violet-500/10 text-violet-100" : "border-white/10 bg-white/[0.03] text-slate-400"}`}
+														>
+															<span className="flex items-center gap-1.5 font-bold">
+																{getLocalized(sub.title, sub.title_fa)}
+																{sub.completed && (
+																	<CheckCircle2 className="size-3.5 text-emerald-300" />
+																)}
+															</span>
+															<span className="mt-0.5 block text-[11px] text-slate-500">
+																سهم {formatNumberFa(sub.progress_share)}٪
+																{isActive ? " · مسیر فعال تیم" : ""}
+																{sub.stalled ? " · متوقف" : ""}
+															</span>
+														</button>
+													);
+												})}
 											</div>
 											{scenariosResource.error && (
 												<p className="mb-3 text-sm text-rose-300">
