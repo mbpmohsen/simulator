@@ -20,11 +20,14 @@ import {
 	Crown,
 	Gauge,
 	Hourglass,
+	Layers,
 	LoaderCircle,
 	LockKeyhole,
 	Radio,
+	Scale,
 	ShieldAlert,
 	Sparkles,
+	Trophy,
 	Users,
 	Vote,
 } from "lucide-react";
@@ -32,10 +35,24 @@ import { useEffect, useMemo, useState } from "react";
 import { playClickSound } from "@/lib/playClickSound";
 import { playNotificationSound } from "@/lib/playNotificationSound";
 import {
+	formatActionCodeFa,
 	formatPhaseFa,
 	formatStepStatusFa,
-	getLocalized,
 } from "@/lib/runtimeTranslationsFa";
+
+/**
+ * What the player already knows about an action from `/client/game_state`.
+ * The steps endpoint may omit the name, cost and probability, so we join on the
+ * action code and fill the gaps rather than falling back to a raw code.
+ */
+export interface ArenaActionInfo {
+	code: string;
+	name?: string | null;
+	nameFa?: string | null;
+	cost?: number | null;
+	probability?: number | null;
+	points?: number | null;
+}
 
 interface ScenarioVotingArenaProps {
 	steps: StepView[];
@@ -46,6 +63,7 @@ interface ScenarioVotingArenaProps {
 	currentUserId: number | null;
 	teamMembers: PlayerSchema[];
 	actionBusy: string | null;
+	actionCatalog?: ArenaActionInfo[];
 	loading?: boolean;
 	error?: string | null;
 	onVote: (stepId: string) => Promise<boolean>;
@@ -66,6 +84,28 @@ const riskLabel = (probability: number): string => {
 	if (probability >= 70) return "شانس بالا";
 	if (probability >= 45) return "شانس متوسط";
 	return "ریسک بالا";
+};
+
+/**
+ * One plain-Persian sentence per move, for an audience that has never seen a
+ * payoff matrix. Derived from the numbers so it stays true if they are retuned.
+ */
+const tradeoffHintFa = (
+	probability: number | null,
+	points: number | null,
+): string | null => {
+	if (probability === null) return null;
+	if (probability >= 70) {
+		return points !== null && points <= 1
+			? "کم‌ریسک: تقریباً همیشه می‌گیرد، اما هر بار فقط کمی جلو می‌برد."
+			: "کم‌ریسک: تقریباً همیشه می‌گیرد.";
+	}
+	if (probability < 45) {
+		return points !== null && points >= 3
+			? "پرریسک: بیشتر وقت‌ها شکست می‌خورد، اما وقتی بگیرد بُرد بزرگی است."
+			: "پرریسک: بیشتر وقت‌ها شکست می‌خورد.";
+	}
+	return "میانه: نه بهترین شانس، نه بزرگ‌ترین بُرد.";
 };
 
 const initials = (name: string): string => {
@@ -93,6 +133,43 @@ const voteStorageKey = ({
 	return `simulator-player-vote:${gameId}:${userId}:${turn}:${scenarioId}`;
 };
 
+const firstNumber = (
+	...values: Array<number | null | undefined>
+): number | null => {
+	for (const value of values) {
+		if (typeof value === "number" && Number.isFinite(value)) return value;
+	}
+	return null;
+};
+
+/**
+ * A plan can offer the same action once per turn, which arrives as several
+ * identical steps. Players should see one card per move, not one per turn.
+ */
+interface MoveGroup {
+	code: string;
+	label: string;
+	order: number;
+	steps: StepView[];
+	nextStep: StepView | null;
+	remaining: number;
+	succeeded: number;
+	failed: number;
+	required: boolean;
+	status: StepView["status"];
+	cost: number | null;
+	probability: number | null;
+	points: number | null;
+	expectedValue: number | null;
+	hint: string | null;
+}
+
+const faNumber = (value: number, digits = 0): string =>
+	value.toLocaleString("fa-IR", {
+		minimumFractionDigits: digits,
+		maximumFractionDigits: digits,
+	});
+
 export function ScenarioVotingArena({
 	steps,
 	phase,
@@ -102,6 +179,7 @@ export function ScenarioVotingArena({
 	currentUserId,
 	teamMembers,
 	actionBusy,
+	actionCatalog,
 	loading = false,
 	error,
 	onVote,
@@ -127,6 +205,93 @@ export function ScenarioVotingArena({
 	const votingOpen = phase === "VOTING";
 	const calculating = phase === "CALCULATION";
 
+	const catalogByCode = useMemo(() => {
+		const map = new Map<string, ArenaActionInfo>();
+		for (const entry of actionCatalog ?? []) map.set(entry.code, entry);
+		return map;
+	}, [actionCatalog]);
+
+	const groups = useMemo<MoveGroup[]>(() => {
+		const byCode = new Map<string, StepView[]>();
+		for (const step of steps) {
+			const bucket = byCode.get(step.action_code);
+			if (bucket) bucket.push(step);
+			else byCode.set(step.action_code, [step]);
+		}
+
+		const built: MoveGroup[] = [];
+		for (const [code, bucket] of byCode) {
+			const ordered = [...bucket].sort(
+				(left, right) => (left.order ?? 0) - (right.order ?? 0),
+			);
+			const info = catalogByCode.get(code);
+			// Persian first, then any English name, then a readable form of the code.
+			// The steps endpoint may omit names entirely, so the game-state catalog
+			// backs it up and a bare action code can never reach the screen.
+			const pick = (
+				...values: Array<string | null | undefined>
+			): string | null => {
+				for (const value of values) {
+					const text = value?.trim();
+					if (text && text !== "—" && text !== code) return text;
+				}
+				return null;
+			};
+			const resolvedLabel =
+				pick(
+					...ordered.map((step) => step.action_name_fa),
+					info?.nameFa,
+					...ordered.map((step) => step.action_name),
+					info?.name,
+				) ?? formatActionCodeFa(code);
+
+			const open = ordered.filter(
+				(step) => step.status !== "completed" && step.status !== "failed",
+			);
+			const nextStep = open.find((step) => step.available) ?? open[0] ?? null;
+			const cost = firstNumber(
+				...ordered.map((step) => step.cost),
+				info?.cost,
+			);
+			const probability = firstNumber(
+				...ordered.map((step) => step.probability),
+				info?.probability,
+			);
+			const points = firstNumber(info?.points);
+
+			built.push({
+				code,
+				label: resolvedLabel,
+				order: ordered[0]?.order ?? 0,
+				steps: ordered,
+				nextStep,
+				remaining: open.length,
+				succeeded: ordered.filter((step) => step.status === "completed").length,
+				failed: ordered.filter((step) => step.status === "failed").length,
+				required: ordered.some((step) => step.required),
+				status: nextStep?.status ?? ordered[ordered.length - 1]?.status ?? "locked",
+				cost,
+				probability,
+				points,
+				expectedValue:
+					probability !== null && points !== null
+						? (probability / 100) * points
+						: null,
+				hint: tradeoffHintFa(probability, points),
+			});
+		}
+		return built.sort((left, right) => left.order - right.order);
+	}, [steps, catalogByCode]);
+
+	// Only worth explaining the mixing idea when there is actually a choice.
+	const showMixingHint = groups.length >= 2;
+	const equalExpectedValue =
+		groups.length >= 2 &&
+		groups.every((group) => group.expectedValue !== null) &&
+		Math.max(...groups.map((group) => group.expectedValue ?? 0)) -
+			Math.min(...groups.map((group) => group.expectedValue ?? 0)) <
+			0.05;
+
 	useEffect(() => {
 		setSelectedStepId(null);
 		if (!storageKey) {
@@ -148,8 +313,9 @@ export function ScenarioVotingArena({
 		[currentUserId, teamMembers],
 	);
 
-	const selectStep = (step: StepView) => {
+	const selectStep = (step: StepView | null) => {
 		if (
+			!step ||
 			!votingOpen ||
 			!step.available ||
 			actionBusy !== null ||
@@ -195,8 +361,8 @@ export function ScenarioVotingArena({
 							</Badge>
 						</div>
 						<p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-							یک مسیر عملیاتی را بررسی کنید و سپس تصمیم نهایی خود را قفل کنید.
-							نتیجه در فاز محاسبه مشخص می‌شود.
+							این نوبت فقط یک حرکت انتخاب می‌کنید. هزینه و شانس موفقیت هر حرکت
+							روی کارت آن نوشته شده است. نتیجه در فاز محاسبه مشخص می‌شود.
 						</p>
 					</div>
 
@@ -235,7 +401,7 @@ export function ScenarioVotingArena({
 					<Progress value={missionProgress} className="h-1.5 bg-white/5" />
 					<div className="text-[11px] text-slate-500">
 						{resolvedSteps.toLocaleString("fa-IR")} از{" "}
-						{steps.length.toLocaleString("fa-IR")} گام تعیین تکلیف شده
+						{steps.length.toLocaleString("fa-IR")} فرصت حرکت مصرف شده
 					</div>
 				</div>
 			</CardHeader>
@@ -250,13 +416,13 @@ export function ScenarioVotingArena({
 					<div className="grid min-h-40 place-items-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02]">
 						<div className="text-center text-xs text-slate-500">
 							<LoaderCircle className="mx-auto mb-3 size-7 animate-spin text-cyan-300" />
-							در حال دریافت عملیات سناریو...
+							در حال دریافت حرکت‌های این مسیر...
 						</div>
 					</div>
 				)}
 				{!loading && !error && steps.length === 0 && (
 					<div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center text-sm text-slate-500">
-						برای این سناریو هنوز گام عملیاتی قابل نمایشی وجود ندارد.
+						برای این مسیر هنوز حرکت قابل نمایشی وجود ندارد.
 					</div>
 				)}
 
@@ -332,7 +498,7 @@ export function ScenarioVotingArena({
 							className="flex items-center gap-2 rounded-xl border border-cyan-400/15 bg-cyan-500/5 px-3 py-2 text-xs text-cyan-200"
 						>
 							<Radio className="size-3.5 animate-pulse" /> کانال رأی‌گیری باز
-							است؛ ابتدا یک عملیات را انتخاب کنید.
+							است؛ یکی از حرکت‌های زیر را انتخاب کنید.
 						</motion.div>
 					) : (
 						<motion.div
@@ -347,24 +513,55 @@ export function ScenarioVotingArena({
 					)}
 				</AnimatePresence>
 
+				{showMixingHint && (
+					<div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-xs leading-6 text-slate-400">
+						<div className="mb-1.5 flex items-center gap-1.5 font-bold text-slate-300">
+							<Scale className="size-3.5 text-cyan-300" /> چطور انتخاب کنم؟
+						</div>
+						{equalExpectedValue ? (
+							<>
+								اگر فقط به «ارزش مورد انتظار» نگاه کنید، هر سه حرکت تقریباً
+								یکسان‌اند: حرکت ارزان تقریباً همیشه می‌گیرد ولی کم می‌ارزد و
+								حرکت گران کم می‌گیرد ولی زیاد می‌ارزد. پس آنچه تعیین‌کننده است،
+								<span className="font-bold text-slate-200">
+									{" "}
+									انتخاب تیم مقابل است
+								</span>
+								؛ و اگر هر نوبت یک حرکت را تکرار کنید، حریف شما را می‌خواند و
+								دقیقاً همان را خنثی می‌کند.
+							</>
+						) : (
+							<>
+								حرکت ارزان‌تر شانس بیشتری دارد ولی کمتر می‌ارزد و حرکت گران‌تر
+								برعکس. اگر هر نوبت یک حرکت را تکرار کنید، حریف شما را می‌خواند
+								و دقیقاً همان را خنثی می‌کند؛ پس جابه‌جا شدن میان حرکت‌ها
+								بخشی از بازی است.
+							</>
+						)}
+					</div>
+				)}
+
 				<div className="grid gap-3">
-					{steps.map((step, index) => {
-						const selected = selectedStepId === step.id;
-						const resolved =
-							step.status === "completed" || step.status === "failed";
-						const submitted = submittedStepId === step.id && !resolved;
+					{groups.map((group, index) => {
+						const nextStep = group.nextStep;
+						const exhausted = group.remaining === 0;
+						const submitted =
+							submittedStepId !== null &&
+							group.steps.some((step) => step.id === submittedStepId);
+						const selected =
+							nextStep !== null && selectedStepId === nextStep.id && !submitted;
 						const locked =
-							!resolved && (!step.available || step.status === "locked");
+							!exhausted && (nextStep === null || !nextStep.available);
 						const canSelect =
-							votingOpen && !locked && !resolved && !submittedStepId;
+							votingOpen && !locked && !exhausted && !submittedStepId;
 						return (
 							<motion.article
 								layout
-								key={step.id}
+								key={group.code}
 								initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 								animate={{
 									opacity:
-										submittedStepId && !submitted && !resolved ? 0.52 : 1,
+										submittedStepId && !submitted && !exhausted ? 0.52 : 1,
 									y: 0,
 									scale: selected ? 1.012 : 1,
 								}}
@@ -374,7 +571,7 @@ export function ScenarioVotingArena({
 									stiffness: 260,
 									damping: 24,
 								}}
-								className={`group relative overflow-hidden rounded-2xl border p-4 transition-colors sm:p-5 ${stepTone[step.status]} ${selected ? "border-cyan-300/60 ring-1 ring-cyan-300/25 shadow-[0_0_34px_rgba(34,211,238,.13)]" : ""} ${submitted ? "border-emerald-300/60 ring-1 ring-emerald-300/20 shadow-[0_0_36px_rgba(52,211,153,.14)]" : ""}`}
+								className={`group relative overflow-hidden rounded-2xl border p-4 transition-colors sm:p-5 ${stepTone[group.status]} ${selected ? "border-cyan-300/60 ring-1 ring-cyan-300/25 shadow-[0_0_34px_rgba(34,211,238,.13)]" : ""} ${submitted ? "border-emerald-300/60 ring-1 ring-emerald-300/20 shadow-[0_0_36px_rgba(52,211,153,.14)]" : ""}`}
 							>
 								{selected && (
 									<motion.div
@@ -385,7 +582,7 @@ export function ScenarioVotingArena({
 								<div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 									<button
 										type="button"
-										onClick={() => selectStep(step)}
+										onClick={() => selectStep(nextStep)}
 										disabled={!canSelect || actionBusy !== null}
 										className="min-w-0 flex-1 text-right disabled:cursor-default"
 									>
@@ -396,7 +593,7 @@ export function ScenarioVotingArena({
 												{submitted ? (
 													<Check className="size-5 stroke-[3]" />
 												) : (
-													(step.order ?? "•")
+													faNumber(index + 1)
 												)}
 												{canSelect && !selected && (
 													<span className="absolute -inset-1 -z-10 rounded-2xl bg-cyan-400/0 transition-colors group-hover:bg-cyan-400/10" />
@@ -405,10 +602,7 @@ export function ScenarioVotingArena({
 											<div className="min-w-0">
 												<div className="flex flex-wrap items-center gap-2">
 													<h3 className="break-words font-black text-slate-100">
-														{getLocalized(
-															step.action_name ?? step.action_code,
-															step.action_name_fa,
-														)}
+														{group.label}
 													</h3>
 													<Badge
 														variant="secondary"
@@ -416,44 +610,72 @@ export function ScenarioVotingArena({
 													>
 														{submitted
 															? "رأی ثبت‌شده"
-															: formatStepStatusFa(step.status)}
+															: exhausted
+																? "فرصتی باقی نمانده"
+																: formatStepStatusFa(group.status)}
 													</Badge>
-													{step.required && (
+													{group.required && (
 														<Badge className="border border-rose-400/15 bg-rose-500/15 text-rose-200">
 															الزامی
 														</Badge>
 													)}
 												</div>
-												<div
-													dir="ltr"
-													className="mt-1.5 truncate text-left font-mono text-[10px] text-slate-500"
-												>
-													{step.action_code}
-												</div>
+
 												<div className="mt-3 flex flex-wrap gap-2">
-													{typeof step.probability === "number" && (
+													{group.probability !== null && (
 														<span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/10 bg-cyan-400/5 px-2.5 py-1 text-[11px] text-cyan-100">
 															<Gauge className="size-3" />{" "}
-															{riskLabel(step.probability)} ·{" "}
-															{step.probability.toLocaleString("fa-IR")}٪
+															{riskLabel(group.probability)} ·{" "}
+															{faNumber(group.probability)}٪ شانس موفقیت
 														</span>
 													)}
-													{typeof step.cost === "number" && (
+													{group.cost !== null && (
 														<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/10 bg-amber-400/5 px-2.5 py-1 text-[11px] text-amber-100">
 															<Coins className="size-3" /> هزینه{" "}
-															{step.cost.toLocaleString("fa-IR")} اعتبار
+															{faNumber(group.cost)} اعتبار
+														</span>
+													)}
+													{group.points !== null && (
+														<span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-400/10 bg-violet-400/5 px-2.5 py-1 text-[11px] text-violet-100">
+															<Trophy className="size-3" /> ارزش{" "}
+															{faNumber(group.points)} امتیاز
+														</span>
+													)}
+													{group.expectedValue !== null && (
+														<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300">
+															<Scale className="size-3" /> ارزش مورد انتظار{" "}
+															{faNumber(group.expectedValue, 2)}
+														</span>
+													)}
+													{group.steps.length > 1 && (
+														<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-400">
+															<Layers className="size-3" />{" "}
+															{faNumber(group.remaining)} فرصت باقی‌مانده
 														</span>
 													)}
 												</div>
+
+												{group.hint && (
+													<p className="mt-2.5 text-[11px] leading-6 text-slate-400">
+														{group.hint}
+													</p>
+												)}
+
+												{(group.succeeded > 0 || group.failed > 0) && (
+													<p className="mt-1.5 text-[11px] text-slate-500">
+														تاکنون {faNumber(group.succeeded)} بار موفق و{" "}
+														{faNumber(group.failed)} بار ناموفق بوده است.
+													</p>
+												)}
 											</div>
 										</div>
 									</button>
 
 									<div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
-										{locked && (votingOpen || step.status === "locked") && (
+										{locked && nextStep && (votingOpen || group.status === "locked") && (
 											<Button
 												variant="outline"
-												onClick={() => void onInspectLocks(step.id)}
+												onClick={() => void onInspectLocks(nextStep.id)}
 												disabled={actionBusy !== null}
 												className="border-white/10 bg-white/5 text-slate-300"
 											>
@@ -461,18 +683,17 @@ export function ScenarioVotingArena({
 											</Button>
 										)}
 
-										{resolved ? (
+										{exhausted ? (
 											<div
-												className={`inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-bold ${step.status === "completed" ? "bg-emerald-400/15 text-emerald-200" : "bg-rose-400/15 text-rose-200"}`}
+												className={`inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-bold ${group.succeeded >= group.failed ? "bg-emerald-400/15 text-emerald-200" : "bg-rose-400/15 text-rose-200"}`}
 											>
-												{step.status === "completed" ? (
+												{group.succeeded >= group.failed ? (
 													<CheckCircle2 className="size-4" />
 												) : (
 													<ShieldAlert className="size-4" />
 												)}
-												{step.status === "completed"
-													? "عملیات موفق"
-													: "عملیات ناموفق"}
+												{faNumber(group.succeeded)} موفق از{" "}
+												{faNumber(group.steps.length)}
 											</div>
 										) : submitted ? (
 											<Button
@@ -481,17 +702,17 @@ export function ScenarioVotingArena({
 											>
 												<CheckCircle2 className="size-4" /> رأی شما قفل شد
 											</Button>
-										) : selected ? (
+										) : selected && nextStep ? (
 											<motion.div
 												initial={{ opacity: 0, x: -6 }}
 												animate={{ opacity: 1, x: 0 }}
 											>
 												<Button
-													onClick={() => void submitVote(step.id)}
+													onClick={() => void submitVote(nextStep.id)}
 													disabled={!canSelect || actionBusy !== null}
 													className="bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-500/15 hover:bg-cyan-200"
 												>
-													{actionBusy === `step-${step.id}` ? (
+													{actionBusy === `step-${nextStep.id}` ? (
 														<LoaderCircle className="size-4 animate-spin" />
 													) : (
 														<Sparkles className="size-4" />
@@ -501,12 +722,12 @@ export function ScenarioVotingArena({
 											</motion.div>
 										) : (
 											<Button
-												onClick={() => selectStep(step)}
+												onClick={() => selectStep(nextStep)}
 												disabled={!canSelect || actionBusy !== null}
 												variant="outline"
 												className="border-cyan-400/15 bg-cyan-400/5 text-cyan-100 hover:border-cyan-300/30 hover:bg-cyan-400/10"
 											>
-												<Vote className="size-4" /> انتخاب عملیات
+												<Vote className="size-4" /> انتخاب این حرکت
 											</Button>
 										)}
 									</div>
@@ -529,6 +750,13 @@ export function ScenarioVotingArena({
 						);
 					})}
 				</div>
+
+				{groups.some((group) => group.expectedValue !== null) && (
+					<p className="text-[11px] leading-6 text-slate-600">
+						«ارزش مورد انتظار» یعنی شانس موفقیت ضربدر امتیاز آن حرکت — یعنی اگر
+						آن حرکت را بارها بزنید، به‌طور میانگین چقدر امتیاز می‌گیرید.
+					</p>
+				)}
 			</CardContent>
 		</Card>
 	);

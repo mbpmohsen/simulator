@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+	ActionSchema,
 	GamePhase,
 	GovernmentCatalogAction,
 	GovernmentCatalogSubject,
@@ -56,6 +57,7 @@ import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
 import PlayerMoveInsight from "@/components/v2/player/PlayerMoveInsight";
+import type { ArenaActionInfo } from "@/components/v2/player/ScenarioVotingArena";
 import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena";
 import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
@@ -111,6 +113,65 @@ const readPlayerLeaderFlag = (player: PlayerSchema): boolean =>
 
 const actionTypeFromCode = (code: string): "attack" | "defense" =>
 	code.toUpperCase().startsWith("DEF_") ? "defense" : "attack";
+
+const readActionNumber = (
+	source: Record<string, unknown>,
+	keys: string[],
+): number | null => {
+	for (const key of keys) {
+		const value = source[key];
+		if (typeof value === "number" && Number.isFinite(value)) return value;
+	}
+	const stats = source.base_stats ?? source.baseStats;
+	if (stats !== null && typeof stats === "object" && !Array.isArray(stats)) {
+		return readActionNumber(stats as Record<string, unknown>, keys);
+	}
+	return null;
+};
+
+const readActionText = (
+	source: Record<string, unknown>,
+	keys: string[],
+): string | null => {
+	for (const key of keys) {
+		const value = source[key];
+		if (typeof value === "string" && value.trim().length > 0) return value.trim();
+	}
+	return null;
+};
+
+/**
+ * The steps endpoint may leave out the action name, cost and probability. The
+ * game-state catalog always carries them, keyed by the action code, so the
+ * voting arena can fill the gaps instead of showing a raw code.
+ */
+const buildArenaActionCatalog = (
+	actions: ActionSchema[],
+): ArenaActionInfo[] =>
+	actions.map((action) => {
+		const raw = action as unknown as Record<string, unknown>;
+		return {
+			code: action.name,
+			name: readActionText(raw, ["displayName", "display_name", "name"]),
+			nameFa: readActionText(raw, [
+				"displayNameFa",
+				"display_name_fa",
+				"nameFa",
+				"name_fa",
+			]),
+			cost: readActionNumber(raw, ["cost"]),
+			probability: readActionNumber(raw, [
+				"probability",
+				"successProbability",
+				"success_probability",
+			]),
+			points: readActionNumber(raw, [
+				"points",
+				"pointsOnSuccess",
+				"points_on_success",
+			]),
+		};
+	});
 
 const buildPlayerActionsByCode = (
 	steps: StepView[],
@@ -246,6 +307,10 @@ export default function PlayerDashboardPage() {
 	});
 	const gameId = runtime.context?.gameId ?? null;
 	const gameState = runtime.context?.gameState ?? null;
+	const arenaActionCatalog = useMemo(
+		() => buildArenaActionCatalog(runtime.context?.actions ?? []),
+		[runtime.context?.actions],
+	);
 	const playerAiLevel =
 		aiLevelResource.status === "ready"
 			? aiLevelResource.level.current_level
@@ -886,6 +951,7 @@ export default function PlayerDashboardPage() {
 										currentUserId={user?.id ?? null}
 										teamMembers={teamMembers}
 										actionBusy={actionBusy}
+										actionCatalog={arenaActionCatalog}
 										loading={stepsResource.loading}
 										error={stepsResource.error}
 										onVote={voteStep}

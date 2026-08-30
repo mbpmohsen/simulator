@@ -496,10 +496,10 @@
   ],
   "sub_subjects": [
     {
-      "id": "SS_RED_PROBE",
+      "id": "SS_RED_MOVES",
       "subject_id": "SUBJ_RED_HOSPITAL",
-      "title": "Probing Line",
-      "progress_share": 34,
+      "title": "Pressure Campaign",
+      "progress_share": 100,
       "source": {
         "type": "executive_demo_simulation",
         "name": "Equilibrium Demo Pack",
@@ -510,47 +510,13 @@
         "type": "required_steps_success",
         "type_fa": "موفقیت در گام‌های الزامی"
       },
-      "title_fa": "خط کاوش"
+      "title_fa": "کارزار فشار"
     },
     {
-      "id": "SS_RED_DISRUPT",
-      "subject_id": "SUBJ_RED_HOSPITAL",
-      "title": "Disruption Line",
-      "progress_share": 33,
-      "source": {
-        "type": "executive_demo_simulation",
-        "name": "Equilibrium Demo Pack",
-        "name_fa": "بستهٔ دموی تعادل",
-        "type_fa": "شبیه‌سازی دمو"
-      },
-      "completion_rule": {
-        "type": "required_steps_success",
-        "type_fa": "موفقیت در گام‌های الزامی"
-      },
-      "title_fa": "خط اختلال"
-    },
-    {
-      "id": "SS_RED_BLACKOUT",
-      "subject_id": "SUBJ_RED_HOSPITAL",
-      "title": "Outage Line",
-      "progress_share": 33,
-      "source": {
-        "type": "executive_demo_simulation",
-        "name": "Equilibrium Demo Pack",
-        "name_fa": "بستهٔ دموی تعادل",
-        "type_fa": "شبیه‌سازی دمو"
-      },
-      "completion_rule": {
-        "type": "required_steps_success",
-        "type_fa": "موفقیت در گام‌های الزامی"
-      },
-      "title_fa": "خط قطعی"
-    },
-    {
-      "id": "SS_BLUE_HARDEN",
+      "id": "SS_BLUE_MOVES",
       "subject_id": "SUBJ_BLUE_HOSPITAL",
-      "title": "Hardening Line",
-      "progress_share": 34,
+      "title": "Protection Campaign",
+      "progress_share": 100,
       "source": {
         "type": "executive_demo_simulation",
         "name": "Equilibrium Demo Pack",
@@ -561,68 +527,14 @@
         "type": "required_steps_success",
         "type_fa": "موفقیت در گام‌های الزامی"
       },
-      "title_fa": "خط تقویت"
-    },
-    {
-      "id": "SS_BLUE_CONTAIN",
-      "subject_id": "SUBJ_BLUE_HOSPITAL",
-      "title": "Containment Line",
-      "progress_share": 33,
-      "source": {
-        "type": "executive_demo_simulation",
-        "name": "Equilibrium Demo Pack",
-        "name_fa": "بستهٔ دموی تعادل",
-        "type_fa": "شبیه‌سازی دمو"
-      },
-      "completion_rule": {
-        "type": "required_steps_success",
-        "type_fa": "موفقیت در گام‌های الزامی"
-      },
-      "title_fa": "خط مهار"
-    },
-    {
-      "id": "SS_BLUE_RESTORE",
-      "subject_id": "SUBJ_BLUE_HOSPITAL",
-      "title": "Recovery Line",
-      "progress_share": 33,
-      "source": {
-        "type": "executive_demo_simulation",
-        "name": "Equilibrium Demo Pack",
-        "name_fa": "بستهٔ دموی تعادل",
-        "type_fa": "شبیه‌سازی دمو"
-      },
-      "completion_rule": {
-        "type": "required_steps_success",
-        "type_fa": "موفقیت در گام‌های الزامی"
-      },
-      "title_fa": "خط بازیابی"
+      "title_fa": "کارزار حفاظت"
     }
   ],
   "scenarios": [
     {
-      "id": "SCN_RED_PROBE",
-      "sub_subject_id": "SS_RED_PROBE",
-      "title": "Probing Line",
-      "scenario_type": "attack_path",
-      "execution_mode": "checklist",
-      "allowed_team_roles": [
-        "ATTACKER"
-      ],
-      "allowed_team_roles_fa": [
-        "مهاجم"
-      ],
-      "base_reward_points": 0,
-      "base_credit_cost": 0,
-      "risk_level": "low",
-      "risk_level_fa": "کم",
-      "title_fa": "خط کاوش",
-      "scenario_type_fa": "مسیر تهاجمی",
-      "execution_mode_fa": "فهرستی"
-    },
-    {
-      "id": "SCN_RED_DISRUPT",
-      "sub_subject_id": "SS_RED_DISRUPT",
-      "title": "Disruption Line",
+      "id": "SCN_RED_MOVES",
+      "sub_subject_id": "SS_RED_MOVES",
+      "title": "Choose This Turn's Move",
       "scenario_type": "attack_path",
       "execution_mode": "checklist",
       "allowed_team_roles": [
@@ -635,54 +547,13 @@
       "base_credit_cost": 0,
       "risk_level": "medium",
       "risk_level_fa": "متوسط",
-      "title_fa": "خط اختلال",
-      "scenario_type_fa": "مسیر تهاجمی",
-      "execution_mode_fa": "فهرستی"
+      "title_fa": "انتخاب حرکت این نوبت",
+      "scenario_type_fa": "مسیر تهاجمی"
     },
     {
-      "id": "SCN_RED_BLACKOUT",
-      "sub_subject_id": "SS_RED_BLACKOUT",
-      "title": "Outage Line",
-      "scenario_type": "attack_path",
-      "execution_mode": "checklist",
-      "allowed_team_roles": [
-        "ATTACKER"
-      ],
-      "allowed_team_roles_fa": [
-        "مهاجم"
-      ],
-      "base_reward_points": 0,
-      "base_credit_cost": 0,
-      "risk_level": "high",
-      "risk_level_fa": "زیاد",
-      "title_fa": "خط قطعی",
-      "scenario_type_fa": "مسیر تهاجمی",
-      "execution_mode_fa": "فهرستی"
-    },
-    {
-      "id": "SCN_BLUE_HARDEN",
-      "sub_subject_id": "SS_BLUE_HARDEN",
-      "title": "Hardening Line",
-      "scenario_type": "defense_path",
-      "execution_mode": "checklist",
-      "allowed_team_roles": [
-        "DEFENCER"
-      ],
-      "allowed_team_roles_fa": [
-        "مدافع"
-      ],
-      "base_reward_points": 0,
-      "base_credit_cost": 0,
-      "risk_level": "low",
-      "risk_level_fa": "کم",
-      "title_fa": "خط تقویت",
-      "scenario_type_fa": "مسیر دفاعی",
-      "execution_mode_fa": "فهرستی"
-    },
-    {
-      "id": "SCN_BLUE_CONTAIN",
-      "sub_subject_id": "SS_BLUE_CONTAIN",
-      "title": "Containment Line",
+      "id": "SCN_BLUE_MOVES",
+      "sub_subject_id": "SS_BLUE_MOVES",
+      "title": "Choose This Turn's Move",
       "scenario_type": "defense_path",
       "execution_mode": "checklist",
       "allowed_team_roles": [
@@ -695,35 +566,14 @@
       "base_credit_cost": 0,
       "risk_level": "medium",
       "risk_level_fa": "متوسط",
-      "title_fa": "خط مهار",
-      "scenario_type_fa": "مسیر دفاعی",
-      "execution_mode_fa": "فهرستی"
-    },
-    {
-      "id": "SCN_BLUE_RESTORE",
-      "sub_subject_id": "SS_BLUE_RESTORE",
-      "title": "Recovery Line",
-      "scenario_type": "defense_path",
-      "execution_mode": "checklist",
-      "allowed_team_roles": [
-        "DEFENCER"
-      ],
-      "allowed_team_roles_fa": [
-        "مدافع"
-      ],
-      "base_reward_points": 0,
-      "base_credit_cost": 0,
-      "risk_level": "high",
-      "risk_level_fa": "زیاد",
-      "title_fa": "خط بازیابی",
-      "scenario_type_fa": "مسیر دفاعی",
-      "execution_mode_fa": "فهرستی"
+      "title_fa": "انتخاب حرکت این نوبت",
+      "scenario_type_fa": "مسیر دفاعی"
     }
   ],
   "scenario_steps": [
     {
-      "id": "STEP_RED_PROBE_01",
-      "scenario_id": "SCN_RED_PROBE",
+      "id": "STEP_RED_PROBE_ACCESS_01",
+      "scenario_id": "SCN_RED_MOVES",
       "order": 1,
       "action_code": "ATK_PROBE_ACCESS",
       "required": false,
@@ -731,47 +581,47 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_PROBE_02",
-      "scenario_id": "SCN_RED_PROBE",
+      "id": "STEP_RED_DISRUPT_WORKFLOW_01",
+      "scenario_id": "SCN_RED_MOVES",
       "order": 2,
-      "action_code": "ATK_PROBE_ACCESS",
+      "action_code": "ATK_DISRUPT_WORKFLOW",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_PROBE_03",
-      "scenario_id": "SCN_RED_PROBE",
+      "id": "STEP_RED_BLACKOUT_SERVICE_01",
+      "scenario_id": "SCN_RED_MOVES",
       "order": 3,
-      "action_code": "ATK_PROBE_ACCESS",
+      "action_code": "ATK_BLACKOUT_SERVICE",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 24
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_PROBE_04",
-      "scenario_id": "SCN_RED_PROBE",
+      "id": "STEP_RED_PROBE_ACCESS_02",
+      "scenario_id": "SCN_RED_MOVES",
       "order": 4,
       "action_code": "ATK_PROBE_ACCESS",
       "required": false,
@@ -779,239 +629,239 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_PROBE_05",
-      "scenario_id": "SCN_RED_PROBE",
+      "id": "STEP_RED_DISRUPT_WORKFLOW_02",
+      "scenario_id": "SCN_RED_MOVES",
       "order": 5,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_SERVICE_02",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 6,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_ACCESS_03",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 7,
       "action_code": "ATK_PROBE_ACCESS",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_PROBE_06",
-      "scenario_id": "SCN_RED_PROBE",
-      "order": 6,
+      "id": "STEP_RED_DISRUPT_WORKFLOW_03",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 8,
+      "action_code": "ATK_DISRUPT_WORKFLOW",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_BLACKOUT_SERVICE_03",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 9,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_ACCESS_04",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 10,
       "action_code": "ATK_PROBE_ACCESS",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_PROBE",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_DISRUPT_01",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 1,
+      "id": "STEP_RED_DISRUPT_WORKFLOW_04",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 11,
       "action_code": "ATK_DISRUPT_WORKFLOW",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_DISRUPT_02",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 2,
+      "id": "STEP_RED_BLACKOUT_SERVICE_04",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 12,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_ACCESS_05",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 13,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_WORKFLOW_05",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 14,
       "action_code": "ATK_DISRUPT_WORKFLOW",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_DISRUPT_03",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 3,
+      "id": "STEP_RED_BLACKOUT_SERVICE_05",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 15,
+      "action_code": "ATK_BLACKOUT_SERVICE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_PROBE_ACCESS_06",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 16,
+      "action_code": "ATK_PROBE_ACCESS",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_RED_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_RED_DISRUPT_WORKFLOW_06",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 17,
       "action_code": "ATK_DISRUPT_WORKFLOW",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_DISRUPT_04",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 4,
-      "action_code": "ATK_DISRUPT_WORKFLOW",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_DISRUPT_05",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 5,
-      "action_code": "ATK_DISRUPT_WORKFLOW",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_DISRUPT_06",
-      "scenario_id": "SCN_RED_DISRUPT",
-      "order": 6,
-      "action_code": "ATK_DISRUPT_WORKFLOW",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_DISRUPT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_BLACKOUT_01",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 1,
+      "id": "STEP_RED_BLACKOUT_SERVICE_06",
+      "scenario_id": "SCN_RED_MOVES",
+      "order": 18,
       "action_code": "ATK_BLACKOUT_SERVICE",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
+          "target": "SS_RED_MOVES",
+          "value": 24
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_RED_BLACKOUT_02",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 2,
-      "action_code": "ATK_BLACKOUT_SERVICE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_BLACKOUT_03",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 3,
-      "action_code": "ATK_BLACKOUT_SERVICE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_BLACKOUT_04",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 4,
-      "action_code": "ATK_BLACKOUT_SERVICE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_BLACKOUT_05",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 5,
-      "action_code": "ATK_BLACKOUT_SERVICE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_RED_BLACKOUT_06",
-      "scenario_id": "SCN_RED_BLACKOUT",
-      "order": 6,
-      "action_code": "ATK_BLACKOUT_SERVICE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_RED_BLACKOUT",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_HARDEN_01",
-      "scenario_id": "SCN_BLUE_HARDEN",
+      "id": "STEP_BLUE_HARDEN_IDENTITY_01",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 1,
       "action_code": "DEF_HARDEN_IDENTITY",
       "required": false,
@@ -1019,111 +869,15 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_BLUE_HARDEN_02",
-      "scenario_id": "SCN_BLUE_HARDEN",
-      "order": 2,
-      "action_code": "DEF_HARDEN_IDENTITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_HARDEN_03",
-      "scenario_id": "SCN_BLUE_HARDEN",
-      "order": 3,
-      "action_code": "DEF_HARDEN_IDENTITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_HARDEN_04",
-      "scenario_id": "SCN_BLUE_HARDEN",
-      "order": 4,
-      "action_code": "DEF_HARDEN_IDENTITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_HARDEN_05",
-      "scenario_id": "SCN_BLUE_HARDEN",
-      "order": 5,
-      "action_code": "DEF_HARDEN_IDENTITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_HARDEN_06",
-      "scenario_id": "SCN_BLUE_HARDEN",
-      "order": 6,
-      "action_code": "DEF_HARDEN_IDENTITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_HARDEN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_CONTAIN_01",
-      "scenario_id": "SCN_BLUE_CONTAIN",
-      "order": 1,
-      "action_code": "DEF_CONTAIN_TRIAGE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_CONTAIN_02",
-      "scenario_id": "SCN_BLUE_CONTAIN",
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_01",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 2,
       "action_code": "DEF_CONTAIN_TRIAGE",
       "required": false,
@@ -1131,111 +885,15 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_BLUE_CONTAIN_03",
-      "scenario_id": "SCN_BLUE_CONTAIN",
-      "order": 3,
-      "action_code": "DEF_CONTAIN_TRIAGE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_CONTAIN_04",
-      "scenario_id": "SCN_BLUE_CONTAIN",
-      "order": 4,
-      "action_code": "DEF_CONTAIN_TRIAGE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_CONTAIN_05",
-      "scenario_id": "SCN_BLUE_CONTAIN",
-      "order": 5,
-      "action_code": "DEF_CONTAIN_TRIAGE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_CONTAIN_06",
-      "scenario_id": "SCN_BLUE_CONTAIN",
-      "order": 6,
-      "action_code": "DEF_CONTAIN_TRIAGE",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_CONTAIN",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_RESTORE_01",
-      "scenario_id": "SCN_BLUE_RESTORE",
-      "order": 1,
-      "action_code": "DEF_RESTORE_CONTINUITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_RESTORE_02",
-      "scenario_id": "SCN_BLUE_RESTORE",
-      "order": 2,
-      "action_code": "DEF_RESTORE_CONTINUITY",
-      "required": false,
-      "depends_on": [],
-      "on_success": [
-        {
-          "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
-        }
-      ],
-      "on_failure": []
-    },
-    {
-      "id": "STEP_BLUE_RESTORE_03",
-      "scenario_id": "SCN_BLUE_RESTORE",
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_01",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 3,
       "action_code": "DEF_RESTORE_CONTINUITY",
       "required": false,
@@ -1243,47 +901,47 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 24
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_BLUE_RESTORE_04",
-      "scenario_id": "SCN_BLUE_RESTORE",
+      "id": "STEP_BLUE_HARDEN_IDENTITY_02",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 4,
-      "action_code": "DEF_RESTORE_CONTINUITY",
+      "action_code": "DEF_HARDEN_IDENTITY",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 8
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_BLUE_RESTORE_05",
-      "scenario_id": "SCN_BLUE_RESTORE",
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_02",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 5,
-      "action_code": "DEF_RESTORE_CONTINUITY",
+      "action_code": "DEF_CONTAIN_TRIAGE",
       "required": false,
       "depends_on": [],
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 16
         }
       ],
       "on_failure": []
     },
     {
-      "id": "STEP_BLUE_RESTORE_06",
-      "scenario_id": "SCN_BLUE_RESTORE",
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_02",
+      "scenario_id": "SCN_BLUE_MOVES",
       "order": 6,
       "action_code": "DEF_RESTORE_CONTINUITY",
       "required": false,
@@ -1291,8 +949,200 @@
       "on_success": [
         {
           "type": "ADVANCE_PROGRESS",
-          "target": "SS_BLUE_RESTORE",
-          "value": 10
+          "target": "SS_BLUE_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_IDENTITY_03",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 7,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_03",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 8,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_03",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 9,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_IDENTITY_04",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 10,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_04",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 11,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_04",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 12,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_IDENTITY_05",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 13,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_05",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 14,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_05",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 15,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 24
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_HARDEN_IDENTITY_06",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 16,
+      "action_code": "DEF_HARDEN_IDENTITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 8
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_CONTAIN_TRIAGE_06",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 17,
+      "action_code": "DEF_CONTAIN_TRIAGE",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 16
+        }
+      ],
+      "on_failure": []
+    },
+    {
+      "id": "STEP_BLUE_RESTORE_CONTINUITY_06",
+      "scenario_id": "SCN_BLUE_MOVES",
+      "order": 18,
+      "action_code": "DEF_RESTORE_CONTINUITY",
+      "required": false,
+      "depends_on": [],
+      "on_success": [
+        {
+          "type": "ADVANCE_PROGRESS",
+          "target": "SS_BLUE_MOVES",
+          "value": 24
         }
       ],
       "on_failure": []
