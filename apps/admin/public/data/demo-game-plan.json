@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "game_config": {
-    "num_turns": 6,
+    "num_turns": 7,
     "point_threshold": 5,
     "turn_duration_seconds": 110,
     "selection_phase_duration": 40,
