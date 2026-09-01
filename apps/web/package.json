@@ -16,6 +16,7 @@
 		"@trpc/client": "^10.45.2",
 		"@trpc/react-query": "^10.45.2",
 		"@trpc/server": "^10.45.2",
+		"@tursodatabase/serverless": "^1.4.0",
 		"@types/howler": "^2.2.12",
 		"@workspace/trpc": "workspace:*",
 		"@workspace/ui": "workspace:*",

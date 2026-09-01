@@ -4,33 +4,55 @@ import { CommunicationHttpError } from "./types";
 
 let servicePromise: Promise<CommunicationMessageService> | null = null;
 
+type StorageBackend = "turso" | "mongodb" | "sqlite";
+
 const isServerless = (): boolean =>
 	Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 
-const useMongo = (): boolean => {
+/**
+ * An explicit COMMUNICATION_STORAGE always wins. Otherwise the presence of a
+ * connection string decides, so a deployment only has to set the credentials
+ * for the store it actually uses. Local development falls through to SQLite.
+ */
+const selectBackend = (): StorageBackend => {
 	const storage = process.env.COMMUNICATION_STORAGE?.toLowerCase();
-	if (storage === "mongodb") return true;
-	if (storage === "sqlite") return false;
-	return Boolean(process.env.MONGODB_URI || process.env.MONGODB_HOST);
+	if (storage === "turso" || storage === "libsql") return "turso";
+	if (storage === "mongodb") return "mongodb";
+	if (storage === "sqlite") return "sqlite";
+	if (process.env.TURSO_DATABASE_URL) return "turso";
+	if (process.env.MONGODB_URI || process.env.MONGODB_HOST) return "mongodb";
+	return "sqlite";
 };
 
 const createRepository = async (): Promise<CommunicationRepository> => {
-	if (useMongo()) {
-		// Loaded lazily so the driver is only pulled in when it is the backend.
-		const { createMongoCommunicationRepository } = await import(
-			"./mongoRepository"
-		);
-		return createMongoCommunicationRepository();
+	// Each backend is loaded lazily so a deployment never resolves a driver it
+	// does not use - node:sqlite in particular does not exist on every runtime.
+	switch (selectBackend()) {
+		case "turso": {
+			const { createTursoCommunicationRepository } = await import(
+				"./tursoRepository"
+			);
+			return createTursoCommunicationRepository();
+		}
+		case "mongodb": {
+			const { createMongoCommunicationRepository } = await import(
+				"./mongoRepository"
+			);
+			return createMongoCommunicationRepository();
+		}
+		default:
+			break;
 	}
 
 	// SQLite writes to the local filesystem and keeps state in the process. On a
 	// serverless host every invocation gets a fresh, ephemeral container, so
-	// messages would silently vanish between requests. Fail loudly instead.
+	// messages would silently vanish between requests - and two concurrent
+	// requests would not even share a file. Fail loudly instead.
 	if (isServerless()) {
 		console.error(
 			"[communication] SQLite storage cannot be used on a serverless deployment. " +
-				"Set MONGODB_URI (and optionally MONGODB_DB_NAME), or set " +
-				"COMMUNICATION_STORAGE=mongodb, in the deployment environment.",
+				"Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN (hosted libSQL - same SQL, " +
+				"reached over HTTP), or MONGODB_URI, in the deployment environment.",
 		);
 		throw new CommunicationHttpError(
 			503,
@@ -39,8 +61,6 @@ const createRepository = async (): Promise<CommunicationRepository> => {
 		);
 	}
 
-	// `node:sqlite` does not exist on every Node runtime. Importing it lazily
-	// keeps a Mongo-backed deployment from ever resolving the module.
 	try {
 		const { createSqliteCommunicationRepository } = await import(
 			"./sqliteRepository"
@@ -51,7 +71,7 @@ const createRepository = async (): Promise<CommunicationRepository> => {
 		throw new CommunicationHttpError(
 			503,
 			"COMMUNICATION_STORAGE_UNAVAILABLE",
-			"ذخیره‌ساز محلی پیام‌رسانی در دسترس نیست. Node 22 به بالا لازم است یا MONGODB_URI را تنظیم کنید.",
+			"ذخیره‌ساز محلی پیام‌رسانی در دسترس نیست. Node 22 به بالا لازم است یا TURSO_DATABASE_URL را تنظیم کنید.",
 		);
 	}
 };
