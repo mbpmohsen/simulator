@@ -1,0 +1,486 @@
+<title>فرمول‌های تعادل بازی</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #f4f6f9;
+    --surface: #ffffff;
+    --sunk: #eceff5;
+    --ink: #12151c;
+    --ink-2: #454d5c;
+    --ink-3: #737c8c;
+    --rule: #dce0e8;
+    --rule-strong: #c3c9d4;
+    --accent: #3a4a7c;
+    --accent-soft: #e5e9f4;
+    --red: #a8353f;
+    --red-soft: #f6e6e7;
+    --blue: #226d7d;
+    --blue-soft: #e0eff1;
+    --shadow: 0 1px 2px rgba(18, 21, 28, .05), 0 8px 24px -16px rgba(18, 21, 28, .28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1116;
+      --surface: #161a22;
+      --sunk: #1c2129;
+      --ink: #e5e8ee;
+      --ink-2: #a8b0bd;
+      --ink-3: #79818f;
+      --rule: #262c36;
+      --rule-strong: #363d49;
+      --accent: #93a6de;
+      --accent-soft: #1e2536;
+      --red: #e2949b;
+      --red-soft: #2b1d20;
+      --blue: #7cc3ce;
+      --blue-soft: #16292d;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0e1116;
+    --surface: #161a22;
+    --sunk: #1c2129;
+    --ink: #e5e8ee;
+    --ink-2: #a8b0bd;
+    --ink-3: #79818f;
+    --rule: #262c36;
+    --rule-strong: #363d49;
+    --accent: #93a6de;
+    --accent-soft: #1e2536;
+    --red: #e2949b;
+    --red-soft: #2b1d20;
+    --blue: #7cc3ce;
+    --blue-soft: #16292d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Vazirmatn, "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 6rem;
+  }
+
+  code, .mono, pre, .num { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.75rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    direction: ltr;
+    text-align: right;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    font-weight: 900;
+    line-height: 1.3;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: .6rem 0 .9rem;
+  }
+
+  .standfirst { font-size: 1.06rem; color: var(--ink-2); margin: 0; max-width: 40ch; }
+
+  .filepath {
+    display: inline-block;
+    direction: ltr;
+    margin-top: 1.4rem;
+    padding: .35rem .6rem;
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    font-size: .78rem;
+    color: var(--ink-2);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { margin-top: 3.25rem; }
+
+  h2 {
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+    font-size: 1.28rem;
+    font-weight: 900;
+    margin: 0 0 1rem;
+    padding-bottom: .55rem;
+    border-bottom: 1px solid var(--rule);
+    text-wrap: balance;
+  }
+
+  h2 .step {
+    flex: 0 0 auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: .1rem .45rem;
+    direction: ltr;
+  }
+
+  h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    margin: 2rem 0 .7rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  ul { margin: 0 0 1rem; padding-inline-start: 1.15rem; }
+  li { margin-bottom: .45rem; }
+
+  strong { font-weight: 700; }
+
+  /* ---------- formula blocks ---------- */
+
+  .formula {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin: 1.4rem 0;
+    overflow: hidden;
+  }
+
+  .formula pre {
+    direction: ltr;
+    text-align: left;
+    margin: 0;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    font-size: .845rem;
+    line-height: 2;
+    color: var(--ink);
+    background: var(--sunk);
+  }
+
+  .formula pre .cm { color: var(--ink-3); }
+
+  .formula figcaption {
+    padding: .8rem 1.25rem;
+    font-size: .84rem;
+    color: var(--ink-2);
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  /* ---------- tables ---------- */
+
+  .scroll { overflow-x: auto; margin: 1.3rem 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: .6rem .7rem;
+    text-align: right;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  thead th {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    background: var(--sunk);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+
+  .num { font-variant-numeric: tabular-nums; direction: ltr; text-align: left; }
+
+  td.name { white-space: normal; min-width: 11rem; }
+
+  .code-cell { font-family: "IBM Plex Mono", monospace; font-size: .76rem; direction: ltr; text-align: left; color: var(--ink-2); }
+
+  .matrix th, .matrix td { text-align: center; }
+  .matrix thead th:first-child { text-align: right; }
+  .matrix tbody th { text-align: right; font-weight: 500; font-size: .8rem; }
+  .matrix .diag { background: var(--accent-soft); font-weight: 600; }
+
+  .red { color: var(--red); }
+  .blue { color: var(--blue); }
+
+  .tag {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .1rem .45rem;
+    border-radius: 4px;
+  }
+  .tag.atk { color: var(--red); background: var(--red-soft); }
+  .tag.def { color: var(--blue); background: var(--blue-soft); }
+
+  /* ---------- callout ---------- */
+
+  .note {
+    border-inline-start: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.15rem;
+    margin: 1.4rem 0;
+    font-size: .93rem;
+    color: var(--ink-2);
+  }
+
+  .note strong { color: var(--ink); }
+
+  /* ---------- warnings list ---------- */
+
+  .codes { display: grid; gap: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .codes > div { display: grid; grid-template-columns: minmax(11rem, auto) 1fr; gap: 1rem; padding: .7rem 1rem; border-bottom: 1px solid var(--rule); font-size: .87rem; }
+  .codes > div:last-child { border-bottom: 0; }
+  .codes b { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: .78rem; direction: ltr; text-align: left; color: var(--accent); }
+  @media (max-width: 34rem) { .codes > div { grid-template-columns: 1fr; gap: .2rem; } .codes b { text-align: right; direction: ltr; } }
+
+  footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: .82rem; color: var(--ink-3); }
+</style>
+
+<div class="page" dir="rtl">
+
+  <header class="masthead">
+    <div class="eyebrow">packages/api · game-plan</div>
+    <h1>فرمول‌های تعادل بازی</h1>
+    <p class="standfirst">هر عددی که در تب «تعادل بازی» دیده می‌شود، از کجا می‌آید — برای تیم بک‌اند.</p>
+    <span class="filepath">packages/api/game-plan/equilibrium.ts</span>
+  </header>
+
+  <section>
+    <h2><span class="step">۰</span> خلاصهٔ یک‌خطی</h2>
+    <p>یک بازی ماتریسی مجموع‌صفر بین «مهاجم» و «مدافع» ساخته می‌شود و تعادل نش با راهبرد مختلط از طریق برنامه‌ریزی خطی حل می‌گردد. تمام محاسبه در فرانت‌اند و به‌صورت تابع محض روی همان JSON برنامهٔ بازی انجام می‌شود — <strong>هیچ فراخوانی به سرور ندارد</strong> و بنابراین یک پیش‌نویس منتشرنشده هم قابل حل است.</p>
+
+    <div class="note">
+      <strong>سه ورودی، و نه بیشتر.</strong> کل محاسبه فقط به <code>plan.teams</code>، <code>plan.actions</code> و <code>plan.action_counters</code> نگاه می‌کند. اهداف، موضوع‌ها، زیرموضوع‌ها، سناریوها و گام‌ها هیچ اثری روی تعادل ندارند. اگر ساختار درخت بازی تغییر کند ولی این سه بخش دست‌نخورده بمانند، خروجی دقیقاً همان است.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="step">۱</span> از کنش به حرکت</h2>
+    <p>هر عضو <code>plan.actions</code> ابتدا به یک ساختار «حرکت» تبدیل می‌شود. تفکیک دو طرف صرفاً بر اساس فیلد <code>action.type</code> است: مقدار <code>"attack"</code> در سطرهای ماتریس و <code>"defense"</code> در ستون‌ها می‌نشیند.</p>
+
+    <figure class="formula">
+      <pre>cost            = base_stats.cost                  <span class="cm">// credits</span>
+p               = base_stats.success_probability   <span class="cm">// 0..100</span>
+pts             = base_stats.points_on_success
+
+expectedPoints  = (p / 100) * pts
+pointsPerCredit = cost &gt; 0 ? expectedPoints / cost : 0</pre>
+      <figcaption><code>expectedPoints</code> و <code>pointsPerCredit</code> فقط برای نمایش در جدول‌ها محاسبه می‌شوند و در حل تعادل نقشی ندارند.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="step">۲</span> ماتریس پرداخت</h2>
+    <p>برای هر جفت «حملهٔ <span class="mono">i</span> در برابر دفاع <span class="mono">j</span>» سه عدد ساخته می‌شود. <span class="mono">e</span> اثربخشی ضدکنش است که از <code>action_counters[].countered_by[].effectiveness</code> خوانده می‌شود و اگر آن جفت در پیکربندی نباشد، صفر در نظر گرفته می‌شود.</p>
+
+    <figure class="formula">
+      <pre>e   = counterEffectiveness(attack_i, defense_j) ?? 0   <span class="cm">// 0..100</span>
+
+A[i][j] = (p_i / 100) * (1 - e / 100) * pts_i          <span class="cm">// attackPayoff</span>
+D[i][j] = (q_j / 100) * pts_j                          <span class="cm">// defensePayoff</span>
+M[i][j] = A[i][j] - D[i][j]                            <span class="cm">// netPayoff</span></pre>
+      <figcaption>ماتریسی که به حل‌کننده داده می‌شود <code>M</code> است. <code>A</code> و <code>D</code> فقط برای نمایش در پنل نگهداری می‌شوند.</figcaption>
+    </figure>
+
+    <div class="note">
+      <strong>چرا <code>D</code> به <span class="mono">i</span> وابسته نیست.</strong> این عمداً موتور پایتون را دنبال می‌کند: <code>points_on_success</code> بر پایهٔ تاس موفقیت خودِ کنش داده می‌شود، مستقل از اینکه طرف مقابل چه بازی کرده است. ضدکنش فقط شانس مؤثر مهاجم را کم می‌کند و امتیاز مدافع را زیاد نمی‌کند. نتیجه اینکه ستون‌های <code>D</code> ثابت‌اند و کل کشمکش در جملهٔ <code>(1 − e/100)</code> متمرکز است. اگر روزی موتور این قاعده را عوض کرد، این دقیقاً همان خطی است که باید عوض شود.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="step">۳</span> حل بازی مجموع‌صفر</h2>
+    <p>ماتریس <code>M</code> با روش استاندارد برنامه‌ریزی خطی حل می‌شود. چون سیمپلکس به مقادیر مثبت نیاز دارد، ابتدا کل ماتریس با یک ثابت جابه‌جا می‌شود و در پایان همان ثابت از مقدار بازی کم می‌گردد — این جابه‌جایی روی راهبردهای بهینه اثری ندارد.</p>
+
+    <figure class="formula">
+      <pre><span class="cm">// ۱) جابه‌جایی به ناحیهٔ مثبت</span>
+s  = min(M) &lt;= 0 ? -min(M) + 1 : 0
+M' = M + s
+
+<span class="cm">// ۲) برنامهٔ خطی</span>
+maximize    Σ y_j
+subject to  M' · y &lt;= 1 ,  y &gt;= 0
+
+<span class="cm">// ۳) بازخوانی نتیجه</span>
+v'     = 1 / Σ y*_j
+value  = v' - s
+column = normalize(y*)        <span class="cm">// راهبرد مختلط مدافع</span>
+row    = normalize(duals)     <span class="cm">// راهبرد مختلط مهاجم</span></pre>
+      <figcaption>دوگان‌ها از ستون‌های متغیر کمکی در تابلوی نهایی خوانده می‌شوند. <code>normalize</code> مقادیر منفی را صفر می‌کند و سپس بر مجموع تقسیم می‌کند؛ اگر مجموع صفر باشد، توزیع یکنواخت برمی‌گرداند.</figcaption>
+    </figure>
+
+    <h3>جزئیات پیاده‌سازی سیمپلکس</h3>
+    <ul>
+      <li>قاعدهٔ ورود متغیر: <strong>قاعدهٔ بلاند</strong> (کوچک‌ترین اندیس) — از دور افتادن جلوگیری می‌کند و برای ماتریس‌های کوچک این بازی هزینه‌ای ندارد.</li>
+      <li>سقف تکرار <code class="mono">500</code>؛ آستانهٔ عددی <code class="mono">1e-9</code>؛ گره‌گشایی تساوی نسبت با <code class="mono">1e-12</code>.</li>
+      <li>اگر مقدار هدف کمتر یا مساوی آستانه شود، حل ناموفق تلقی می‌شود و <code>solvable: false</code> برمی‌گردد.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="step">۴</span> اعدادی که نمایش داده می‌شوند</h2>
+
+    <figure class="formula">
+      <pre>weight_i  = row[i]           <span class="cm">// سهم هر حملهٔ i در راهبرد بهینه</span>
+weight_j  = column[j]        <span class="cm">// سهم هر دفاع j</span>
+dominated = weight &lt; 1e-6    <span class="cm">// عملاً هرگز انتخاب نمی‌شود</span>
+
+attackerExpectedPoints = Σ_i Σ_j  row[i] * column[j] * A[i][j]
+defenderExpectedPoints = Σ_i Σ_j  row[i] * column[j] * D[i][j]
+
+attackerExpectedCost   = Σ_i  row[i]    * cost_i
+defenderExpectedCost   = Σ_j  column[j] * cost_j</pre>
+      <figcaption>هر چهار عدد «به ازای یک نوبت» هستند، نه کل بازی.</figcaption>
+    </figure>
+
+    <p><code>value</code> برتری خالص مهاجم در هر نوبت است. مقدار مثبت یعنی برنامه به سود مهاجم چیده شده و مقدار منفی یعنی به سود مدافع؛ نزدیک صفر یعنی متوازن.</p>
+  </section>
+
+  <section>
+    <h2><span class="step">۵</span> همین محاسبه روی دموی فعلی</h2>
+    <p>اعداد زیر خروجی واقعی <code>buildEquilibrium</code> روی <code>demo-game-plan.json</code> است و می‌تواند به‌عنوان بردار آزمون برای پیاده‌سازی سمت سرور استفاده شود.</p>
+
+    <h3>حرکت‌ها</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>حرکت</th>
+            <th>کد</th>
+            <th class="num">هزینه</th>
+            <th class="num">شانس</th>
+            <th class="num">امتیاز</th>
+            <th class="num">امتیاز انتظاری</th>
+            <th class="num">وزن تعادل</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="name"><span class="tag atk">حمله</span> کاوش — فشار بر دسترسی</td><td class="code-cell">ATK_PROBE_ACCESS</td><td class="num">۸</td><td class="num">۹۰٪</td><td class="num">۱</td><td class="num">۰٫۹۰</td><td class="num red">۳۴٫۵٪</td></tr>
+          <tr><td class="name"><span class="tag atk">حمله</span> اختلال — فشار بر گردش کار</td><td class="code-cell">ATK_DISRUPT_WORKFLOW</td><td class="num">۱۲</td><td class="num">۴۵٪</td><td class="num">۲</td><td class="num">۰٫۹۰</td><td class="num red">۳۲٫۶٪</td></tr>
+          <tr><td class="name"><span class="tag atk">حمله</span> قطعی — توقف سرویس</td><td class="code-cell">ATK_BLACKOUT_SERVICE</td><td class="num">۱۶</td><td class="num">۳۰٪</td><td class="num">۳</td><td class="num">۰٫۹۰</td><td class="num red">۳۲٫۹٪</td></tr>
+          <tr><td class="name"><span class="tag def">دفاع</span> تقویت هویت و دسترسی</td><td class="code-cell">DEF_HARDEN_IDENTITY</td><td class="num">۸</td><td class="num">۷۴٪</td><td class="num">۱</td><td class="num">۰٫۷۴</td><td class="num blue">۲۵٫۸٪</td></tr>
+          <tr><td class="name"><span class="tag def">دفاع</span> مهار و اولویت‌بندی</td><td class="code-cell">DEF_CONTAIN_TRIAGE</td><td class="num">۱۲</td><td class="num">۴۰٪</td><td class="num">۲</td><td class="num">۰٫۸۰</td><td class="num blue">۳۲٫۴٪</td></tr>
+          <tr><td class="name"><span class="tag def">دفاع</span> بازیابی تداوم سرویس</td><td class="code-cell">DEF_RESTORE_CONTINUITY</td><td class="num">۱۶</td><td class="num">۲۸٪</td><td class="num">۳</td><td class="num">۰٫۸۴</td><td class="num blue">۴۱٫۸٪</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>اثربخشی ضدکنش‌ها: کاوش ← تقویت هویت <span class="mono num">۷۸</span>، اختلال ← مهار <span class="mono num">۶۲</span>، قطعی ← بازیابی <span class="mono num">۴۸</span>. هر سه حمله عمداً روی امتیاز انتظاری <span class="mono num">۰٫۹۰</span> تنظیم شده‌اند تا انتخاب صرفاً به رفتار طرف مقابل وابسته شود.</p>
+
+    <h3>ماتریس خالص <code>M</code></h3>
+    <div class="scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>حمله \ دفاع</th>
+            <th class="blue">تقویت هویت</th>
+            <th class="blue">مهار</th>
+            <th class="blue">بازیابی</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th class="red">کاوش</th><td class="num diag">−۰٫۵۴۲</td><td class="num">+۰٫۱۰۰</td><td class="num">+۰٫۰۶۰</td></tr>
+          <tr><th class="red">اختلال</th><td class="num">+۰٫۱۶۰</td><td class="num diag">−۰٫۴۵۸</td><td class="num">+۰٫۰۶۰</td></tr>
+          <tr><th class="red">قطعی</th><td class="num">+۰٫۱۶۰</td><td class="num">+۰٫۱۰۰</td><td class="num diag">−۰٫۳۷۲</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>خانه‌های تیره جفت‌های «حمله و ضدکنش مستقیمش» هستند. یک نمونهٔ دستی: برای کاوش در برابر تقویت هویت، <span class="mono num" dir="ltr">A = 0.90 × (1 − 0.78) × 1 = 0.198</span> و <span class="mono num" dir="ltr">D = 0.74 × 1 = 0.74</span>، پس <span class="mono num" dir="ltr">M = −0.542</span>.</p>
+
+    <h3>خروجی نهایی</h3>
+    <div class="scroll">
+      <table>
+        <tbody>
+          <tr><th>مقدار بازی (<code>value</code>)</th><td class="num">−۰٫۰۸۲</td><td>برتری اندک مدافع در هر نوبت</td></tr>
+          <tr><th>امتیاز انتظاری مهاجم</th><td class="num">۰٫۷۱۹</td><td>در هر نوبت</td></tr>
+          <tr><th>امتیاز انتظاری مدافع</th><td class="num">۰٫۸۰۱</td><td>در هر نوبت</td></tr>
+          <tr><th>هزینهٔ انتظاری مهاجم</th><td class="num">۱۱٫۹۴</td><td>اعتبار در هر نوبت</td></tr>
+          <tr><th>هزینهٔ انتظاری مدافع</th><td class="num">۱۲٫۶۴</td><td>اعتبار در هر نوبت</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="step">۶</span> هشدارها</h2>
+    <p>هرکدام از این کدها که برگردد، یعنی برنامهٔ بازی از نظر نظریهٔ بازی مشکل طراحی دارد — نه اینکه محاسبه شکست خورده باشد (به‌جز مورد آخر).</p>
+    <div class="codes">
+      <div><b>NO_ATTACK_ACTIONS</b><span>هیچ کنشی با <code>type: "attack"</code> وجود ندارد.</span></div>
+      <div><b>NO_DEFENSE_ACTIONS</b><span>هیچ کنشی با <code>type: "defense"</code> وجود ندارد.</span></div>
+      <div><b>ATTACK_HAS_NO_COUNTER</b><span>این حمله در هیچ ضدکنشی نیامده، پس هیچ دفاعی آن را کم نمی‌کند.</span></div>
+      <div><b>DEFENSE_COUNTERS_NOTHING</b><span>این دفاع هیچ حمله‌ای را خنثی نمی‌کند و فقط از تاس خودش امتیاز می‌گیرد.</span></div>
+      <div><b>MOVE_SCORES_NOTHING</b><span><code>points_on_success</code> صفر است، پس این حرکت هرگز در تعادل ظاهر نمی‌شود.</span></div>
+      <div><b>DOMINATED_MOVE</b><span>وزن تعادلی زیر <code>1e-6</code> است؛ یک تیم منطقی هرگز آن را انتخاب نمی‌کند.</span></div>
+      <div><b>MORE_THAN_TWO_SIDES</b><span>برنامه بیش از دو سمت دارد و همه در دو گروه مهاجم/مدافع ادغام شده‌اند.</span></div>
+      <div><b>SOLVER_FAILED</b><span>سیمپلکس به جواب نرسید؛ <code>solvable: false</code> برمی‌گردد.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="step">۷</span> آنچه در محاسبه لحاظ نمی‌شود</h2>
+    <p>این نکته برای بک‌اند مهم‌ترین بخش است: تعادل، برنامه را <strong>همان‌طور که نوشته شده</strong> حل می‌کند، نه آن‌طور که در میانهٔ بازی جریان دارد. موارد زیر عمداً بیرون گذاشته شده‌اند:</p>
+    <ul>
+      <li>اثرهای فعال در حین بازی و آیتم‌های بازار سیاه</li>
+      <li>ممنوعیت‌های اعمال‌شده توسط دولت</li>
+      <li><code>cooldown_turns</code>، سقف اعتبار تیم‌ها و تعداد نوبت‌های باقی‌مانده</li>
+      <li>ساختار درخت بازی و اثرهای <code>ADVANCE_PROGRESS</code></li>
+    </ul>
+    <p>تنها راه اعمال یک محدودیت، حذف کد کنش از محاسبه است:</p>
+    <figure class="formula">
+      <pre>buildEquilibrium(plan, { excludedActionCodes: ["ATK_BLACKOUT_SERVICE"] })
+buildEquilibriumWithout(plan, "ATK_BLACKOUT_SERVICE")   <span class="cm">// میان‌بر همان کار</span></pre>
+      <figcaption>پنل مدیریت از همین برای سناریوی «اگر این حرکت را ممنوع کنیم چه می‌شود» استفاده می‌کند و دو تعادل را کنار هم می‌گذارد.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span class="step">۸</span> امضای توابع صادرشده</h2>
+    <figure class="formula">
+      <pre>buildEquilibrium(plan: ConfigureAllRequestV2, options?: EquilibriumOptions)
+  =&gt; EquilibriumResult
+
+buildEquilibriumWithout(plan: ConfigureAllRequestV2, actionCode: string)
+  =&gt; EquilibriumResult
+
+solveZeroSumGame(matrix: number[][])
+  =&gt; { value: number; row: number[]; column: number[] } | null</pre>
+      <figcaption><code>solveZeroSumGame</code> مستقل از دامنهٔ بازی است و می‌تواند برای هر ماتریس مجموع‌صفری استفاده شود.</figcaption>
+    </figure>
+  </section>
+
+  <footer>
+    این سند از روی کد <code>packages/api/game-plan/equilibrium.ts</code> نوشته شده است. اعداد بخش ۵ خروجی اجرای واقعی همان تابع روی <code>apps/admin/public/data/demo-game-plan.json</code> هستند.
+  </footer>
+
+</div>

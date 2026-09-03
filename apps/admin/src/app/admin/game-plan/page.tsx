@@ -24,6 +24,12 @@ import { Input } from "@workspace/ui/components/input";
 import { Progress } from "@workspace/ui/components/progress";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { Textarea } from "@workspace/ui/components/textarea";
+import {
+	buildSummaryLookups,
+	describeEntity,
+	EntitySummaryCard,
+	EntitySummaryHeader,
+} from "@/components/CollectionSummary";
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	Activity,
@@ -290,10 +296,14 @@ function MetricCard({
 function CollectionEditor({
 	collectionKey,
 	items,
+	plan,
 	onChange,
 }: {
 	collectionKey: CollectionKey;
 	items: unknown[];
+	// Cards resolve references - an action code into its Persian name, a
+	// sub-subject id into its parent - so the editor needs the whole plan.
+	plan: unknown;
 	onChange: (items: Record<string, unknown>[]) => void;
 }) {
 	const records = useMemo<Record<string, unknown>[]>(
@@ -305,6 +315,7 @@ function CollectionEditor({
 			}, []),
 		[items],
 	);
+	const lookups = useMemo(() => buildSummaryLookups(plan), [plan]);
 	const [query, setQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [draft, setDraft] = useState("");
@@ -387,18 +398,14 @@ function CollectionEditor({
 									onClick={() => setSelectedIndex(index)}
 									className={`block w-full overflow-hidden min-w-0 rounded-xl border p-3 text-right transition ${selectedIndex === index ? "border-cyan-400/50 bg-cyan-400/10" : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"}`}
 								>
-									<div className="line-clamp-1 text-sm font-bold">
-										{entityTitle(item, index)}
-									</div>
-                                    <div
-                                        title={entityKey(item, index)}
-                                        dir="ltr"
-                                        className="mt-1 min-w-0 max-w-full truncate text-left font-mono text-[10px] text-slate-500"
-                                    >
-                                        {entityKey(item, index).length > 20
-                                            ? `${entityKey(item, index).slice(0, 20)}...`
-                                            : entityKey(item, index)}
-                                    </div>
+									<EntitySummaryCard
+										summary={describeEntity(
+											collectionKey,
+											item,
+											index,
+											lookups,
+										)}
+									/>
 								</button>
 							))}
 						</div>
@@ -428,16 +435,27 @@ function CollectionEditor({
 					</div>
 				</CardHeader>
 				<CardContent className="space-y-4">
+					{selected && (
+						<EntitySummaryHeader
+							summary={describeEntity(
+								collectionKey,
+								selected,
+								selectedIndex,
+								lookups,
+							)}
+						/>
+					)}
 					<p className="text-sm leading-7 text-slate-400">
-						همه فیلدهای قرارداد v2 بدون تغییر نام در این ویرایشگر نگه‌داری
-						می‌شوند. تغییرها روی یک نسخه کپی‌شده اعمال می‌شوند.
+						کارت بالا خلاصهٔ همین مورد است. برای تغییر هر مقداری، JSON زیر را
+						ویرایش کنید — همه فیلدهای قرارداد v2 بدون تغییر نام نگه‌داری
+						می‌شوند و تغییرها روی یک نسخه کپی‌شده اعمال می‌شوند.
 					</p>
 					<Textarea
 						dir="ltr"
 						value={draft}
 						onChange={(event) => setDraft(event.target.value)}
 						disabled={!selected}
-						className="min-h-[390px] border-white/10 bg-slate-950 font-mono text-xs leading-6 text-slate-200"
+						className="min-h-[300px] border-white/10 bg-slate-950 font-mono text-xs leading-6 text-slate-200"
 					/>
 					{error && (
 						<div className="rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-sm text-rose-200">
@@ -1209,6 +1227,7 @@ export default function AdminGamePlanPage() {
 								plan && (
 									<CollectionEditor
 										collectionKey={activeTab as CollectionKey}
+										plan={plan}
 										items={
 											(plan[activeTab as CollectionKey] ?? []) as unknown[]
 										}
