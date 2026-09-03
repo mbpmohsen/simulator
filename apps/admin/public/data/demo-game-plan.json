@@ -163,7 +163,7 @@
       "description": "A moderate abstract pressure on operator decision-making. Half the time it lands.",
       "base_stats": {
         "cost": 12,
-        "success_probability": 45,
+        "success_probability": 85,
         "points_on_success": 4,
         "cooldown_turns": 0
       },
@@ -196,7 +196,7 @@
       "description": "A high-risk abstract attempt to halt the service outright. Rarely works, decisive when it does.",
       "base_stats": {
         "cost": 16,
-        "success_probability": 30,
+        "success_probability": 80,
         "points_on_success": 6,
         "cooldown_turns": 0
       },
@@ -262,7 +262,7 @@
       "description": "Assign owners and contain the incident. Moderate reach against workflow pressure.",
       "base_stats": {
         "cost": 12,
-        "success_probability": 40,
+        "success_probability": 80,
         "points_on_success": 2,
         "cooldown_turns": 0
       },
@@ -295,7 +295,7 @@
       "description": "Recover capacity with continuity playbooks. Expensive, and only partly blunts an outage.",
       "base_stats": {
         "cost": 16,
-        "success_probability": 28,
+        "success_probability": 75,
         "points_on_success": 3,
         "cooldown_turns": 0
       },
