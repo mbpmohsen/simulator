@@ -7,12 +7,6 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-/**
- * The game server this route authenticates against is reached from the server
- * side, not the browser. Pinning the function to Frankfurt keeps that hop on
- * the same continent instead of defaulting to Washington.
- */
-export const preferredRegion = ["fra1"];
 
 const noStoreHeaders = { "Cache-Control": "no-store" };
 
