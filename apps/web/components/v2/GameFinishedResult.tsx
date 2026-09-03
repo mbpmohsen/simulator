@@ -227,9 +227,11 @@ export function GameFinishedResult({
 													{team.role ?? "TEAM"}
 												</div>
 											</div>
-											<span className="text-slate-300">
-												{numberFa(team.points ?? 0)} امتیاز
-											</span>
+											{team.role !== "GOVERNMENT" && (
+												<span className="text-slate-300">
+													{numberFa(team.points ?? 0)} امتیاز
+												</span>
+											)}
 											<span className="text-amber-200">
 												{numberFa(team.credits ?? 0)} اعتبار
 											</span>

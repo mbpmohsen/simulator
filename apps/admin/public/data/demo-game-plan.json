@@ -445,7 +445,188 @@
       ]
     }
   ],
-  "black_market": [],
+  "black_market": [
+    {
+      "code": "BM_RED_RECON_DOSSIER",
+      "name": "Recon Dossier",
+      "description": "Recon Dossier is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "attack_modifier",
+      "effect_type": "probability_increase",
+      "target": {
+        "action_code": "ATK_BLACKOUT_SERVICE",
+        "action_type": "attack",
+        "action_type_fa": "تهاجمی"
+      },
+      "effect": {
+        "value": 12
+      },
+      "duration_turns": 1,
+      "cost": 20,
+      "availability": {
+        "start_turn": 3,
+        "end_turn": 10,
+        "max_purchases": 1
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-red",
+        "color": "crimson"
+      },
+      "description_fa": "شانس موفقیت «قطعی — توقف سرویس» را برای یک نوبت ۱۲ واحد بالا می‌برد. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "پروندهٔ شناسایی",
+      "item_type_fa": "اصلاح‌گر تهاجمی"
+    },
+    {
+      "code": "BM_BLUE_CONTINUITY_DRILL",
+      "name": "Continuity Drill",
+      "description": "Continuity Drill is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "defense_modifier",
+      "effect_type": "probability_increase",
+      "target": {
+        "action_code": "DEF_RESTORE_CONTINUITY",
+        "action_type": "defense",
+        "action_type_fa": "دفاعی"
+      },
+      "effect": {
+        "value": 12
+      },
+      "duration_turns": 1,
+      "cost": 20,
+      "availability": {
+        "start_turn": 3,
+        "end_turn": 10,
+        "max_purchases": 1
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-blue",
+        "color": "navy"
+      },
+      "description_fa": "شانس موفقیت «بازیابی تداوم سرویس» را برای یک نوبت ۱۲ واحد بالا می‌برد. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "رزمایش تداوم",
+      "item_type_fa": "اصلاح‌گر دفاعی"
+    },
+    {
+      "code": "BM_RED_COVER_TOKEN",
+      "name": "Cover Token",
+      "description": "Cover Token is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "attack_modifier",
+      "effect_type": "REDUCE_VISIBILITY",
+      "target": {
+        "action_code": "ATK_PROBE_ACCESS",
+        "action_type": "attack",
+        "action_type_fa": "تهاجمی"
+      },
+      "effect": {
+        "value": 10
+      },
+      "duration_turns": 2,
+      "cost": 16,
+      "availability": {
+        "start_turn": 2,
+        "end_turn": 10,
+        "max_purchases": 1
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-red",
+        "color": "crimson"
+      },
+      "description_fa": "ردپای «کاوش — فشار بر دسترسی» را کم‌رنگ می‌کند تا حریف الگوی شما را دیرتر بخواند. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "ژتون پوشش",
+      "item_type_fa": "اصلاح‌گر تهاجمی"
+    },
+    {
+      "code": "BM_BLUE_IDENTITY_AUDIT",
+      "name": "Identity Audit",
+      "description": "Identity Audit is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "defense_modifier",
+      "effect_type": "probability_increase",
+      "target": {
+        "action_code": "DEF_HARDEN_IDENTITY",
+        "action_type": "defense",
+        "action_type_fa": "دفاعی"
+      },
+      "effect": {
+        "value": 8
+      },
+      "duration_turns": 2,
+      "cost": 14,
+      "availability": {
+        "start_turn": 2,
+        "end_turn": 10,
+        "max_purchases": 1
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-blue",
+        "color": "navy"
+      },
+      "description_fa": "شانس موفقیت «تقویت هویت و دسترسی» را برای دو نوبت ۸ واحد بالا می‌برد. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "ممیزی هویت",
+      "item_type_fa": "اصلاح‌گر دفاعی"
+    },
+    {
+      "code": "BM_RED_PRESSURE_VOUCHER",
+      "name": "Pressure Voucher",
+      "description": "Pressure Voucher is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "attack_modifier",
+      "effect_type": "cost_decrease",
+      "target": {
+        "action_code": "ATK_DISRUPT_WORKFLOW",
+        "action_type": "attack",
+        "action_type_fa": "تهاجمی"
+      },
+      "effect": {
+        "value": 4
+      },
+      "duration_turns": 2,
+      "cost": 12,
+      "availability": {
+        "start_turn": 2,
+        "end_turn": 10,
+        "max_purchases": 2
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-red",
+        "color": "crimson"
+      },
+      "description_fa": "هزینهٔ «اختلال — فشار بر گردش کار» را برای دو نوبت ۴ اعتبار کم می‌کند. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "کوپن فشار",
+      "item_type_fa": "اصلاح‌گر تهاجمی"
+    },
+    {
+      "code": "BM_BLUE_TRIAGE_BUDGET",
+      "name": "Triage Budget",
+      "description": "Triage Budget is a temporary, safe game modifier with no real-world capability.",
+      "item_type": "defense_modifier",
+      "effect_type": "cost_decrease",
+      "target": {
+        "action_code": "DEF_CONTAIN_TRIAGE",
+        "action_type": "defense",
+        "action_type_fa": "دفاعی"
+      },
+      "effect": {
+        "value": 4
+      },
+      "duration_turns": 2,
+      "cost": 12,
+      "availability": {
+        "start_turn": 2,
+        "end_turn": 10,
+        "max_purchases": 2
+      },
+      "stackable": false,
+      "visual": {
+        "icon": "market-blue",
+        "color": "navy"
+      },
+      "description_fa": "هزینهٔ «مهار و اولویت‌بندی» را برای دو نوبت ۴ اعتبار کم می‌کند. یک اصلاح‌گر موقت و امن در بازی است و هیچ قابلیت عملیاتی در دنیای واقعی ندارد.",
+      "name_fa": "بودجهٔ اولویت‌بندی",
+      "item_type_fa": "اصلاح‌گر دفاعی"
+    }
+  ],
   "goals": [
     {
       "id": "GOAL_RED_PRESSURE",

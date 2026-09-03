@@ -10,6 +10,16 @@ const GAME_SERVER_URLS = [
 		Boolean(value) && values.indexOf(value) === index,
 );
 
+/**
+ * Without a deadline an unreachable game server holds the serverless function
+ * open until the platform kills it - the caller waits ten seconds for what is
+ * really an instant failure, and the log says nothing useful.
+ */
+const GAME_SERVER_TIMEOUT_MS = (() => {
+	const raw = Number(process.env.GAME_SERVER_TIMEOUT_MS);
+	return Number.isFinite(raw) && raw > 0 ? raw : 6000;
+})();
+
 const asRecord = (value: unknown): Record<string, unknown> | null =>
 	value !== null && typeof value === "object" && !Array.isArray(value)
 		? (value as Record<string, unknown>)
@@ -97,15 +107,15 @@ const requestGameState = async (
 			"آدرس سرور بازی برای احراز هویت تنظیم نشده است.",
 		);
 	}
+	let timedOut = false;
 	for (const [index, gameServerUrl] of GAME_SERVER_URLS.entries()) {
+		const target = `${gameServerUrl.replace(/\/$/, "")}${path}`;
 		try {
-			const response = await fetch(
-				`${gameServerUrl.replace(/\/$/, "")}${path}`,
-				{
-					headers: { Authorization: authorization },
-					cache: "no-store",
-				},
-			);
+			const response = await fetch(target, {
+				headers: { Authorization: authorization },
+				cache: "no-store",
+				signal: AbortSignal.timeout(GAME_SERVER_TIMEOUT_MS),
+			});
 			let body: unknown = null;
 			try {
 				body = await response.json();
@@ -117,12 +127,22 @@ const requestGameState = async (
 				continue;
 			}
 			return { ok: response.ok, status: response.status, body };
-		} catch {}
+		} catch (error) {
+			// Swallowing this silently is why an outage looks like a storage bug.
+			const name = error instanceof Error ? error.name : "Error";
+			if (name === "TimeoutError" || name === "AbortError") timedOut = true;
+			console.error(
+				`[communication] game server request failed: ${target}`,
+				error instanceof Error ? `${name}: ${error.message}` : error,
+			);
+		}
 	}
 	throw new CommunicationHttpError(
 		503,
-		"GAME_SERVER_UNAVAILABLE",
-		"اتصال به سرور بازی برای احراز هویت برقرار نشد.",
+		timedOut ? "GAME_SERVER_TIMEOUT" : "GAME_SERVER_UNREACHABLE",
+		timedOut
+			? "سرور بازی در مهلت مقرر پاسخ نداد. این استقرار از شبکهٔ خود به سرور بازی دسترسی ندارد."
+			: "اتصال به سرور بازی برای احراز هویت برقرار نشد.",
 	);
 };
 
