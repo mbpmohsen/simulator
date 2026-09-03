@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "game_config": {
-    "num_turns": 7,
+    "num_turns": 6,
     "point_threshold": 5,
     "turn_duration_seconds": 110,
     "selection_phase_duration": 40,
@@ -131,7 +131,7 @@
       "base_stats": {
         "cost": 8,
         "success_probability": 90,
-        "points_on_success": 1,
+        "points_on_success": 2,
         "cooldown_turns": 0
       },
       "requirements": {
@@ -164,7 +164,7 @@
       "base_stats": {
         "cost": 12,
         "success_probability": 45,
-        "points_on_success": 2,
+        "points_on_success": 4,
         "cooldown_turns": 0
       },
       "requirements": {
@@ -197,7 +197,7 @@
       "base_stats": {
         "cost": 16,
         "success_probability": 30,
-        "points_on_success": 3,
+        "points_on_success": 6,
         "cooldown_turns": 0
       },
       "requirements": {
