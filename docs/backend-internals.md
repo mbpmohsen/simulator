@@ -1,5 +1,30 @@
 # Python Game Server – API and Runtime Guide
 
+> **Provenance and scope — read this first.**
+>
+> This describes the **internals** of the Python game server — its runtime
+> objects, action execution, lifecycle and `config.yml` — not the contract a
+> frontend codes against. For that, see `docs/backend-integration.md` and
+> `docs/gameplay-api.md`.
+>
+> **File date: 2025-10-25.** It is the oldest document in the repository and has
+> not been reconciled against the current server. Treat specifics as historical
+> unless you have verified them.
+>
+> **Known to be out of date:** the WebSocket endpoints (`/ws/{code}`) and the
+> HTTP admin section predate the v2 gameplay model. The frontend authenticates
+> over REST with a bearer token and receives live updates over SSE, not a socket.
+>
+> **Still useful and documented nowhere else:** the runtime object model
+> (`server/models.py`), action execution semantics (`server/Actions.py`), the
+> game lifecycle (`server/game_logic.py`), and the whole `config.yml` reference —
+> including the `ne` section, which controls the server's own Nash-equilibrium
+> analytics and where it writes plots (`logs/plots/<game_id>/`).
+>
+> Renamed from `INSTRUCTION.md` on 2026-09-04. Content unchanged.
+
+---
+
 This document describes the server-side API, data models, and runtime behavior for the Python Game Server. It focuses on the HTTP endpoints, WebSocket channels, and how request payloads map to runtime objects. Where applicable, example payloads are provided.
 
 The FastAPI app lives in `server/networking.py`. Core runtime is in `server/game_server.py` and `server/game_logic.py`. Action execution is implemented in `server/Actions.py`. Domain models are in `server/models.py`.

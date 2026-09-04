@@ -1,5 +1,24 @@
 # Frontend Game Integration Guide
 
+> **Provenance and scope — read this first.**
+>
+> This guide came from the backend team and describes the Python game server at
+> `game.darkube.ir`, which is **not** in this repository. File date: 2026-07-06.
+>
+> **Still authoritative:** authentication (§4), the SSE event stream (§15), the
+> game state machine (§11), the government system (§7), directives (§8), black
+> market (§9), the readiness model (§10), the `configure_all` contract (§6), and
+> the per-phase UI rules (§17).
+>
+> **Superseded:** the gameplay loop. Sections 5.2, 12 and 13 describe the older
+> `/client/vote_action` model, where a player picks an action and a target
+> directly. The frontend no longer works that way — it uses the v2 subject /
+> sub-subject / scenario / step model. See `docs/gameplay-api.md`.
+>
+> Renamed from `apps/README (1).md` on 2026-09-04. Content unchanged.
+
+---
+
 This document describes the gameplay model, REST API, SSE event flow, game state machine, government system, and frontend integration rules for the game server in this repository.
 
 The goal is that a frontend team can implement:

@@ -1,626 +1,708 @@
-# Graph Report - simulator  (2026-08-28)
+# Graph Report - simulator  (2026-09-04)
 
 ## Corpus Check
-- 225 files · ~122,408 words
+- 261 files · ~24,199,581 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2082 nodes · 4332 edges · 172 communities (116 shown, 56 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 65 edges (avg confidence: 0.83)
-- Token cost: 63,875 input · 16,388 output
+- 2375 nodes · 4714 edges · 185 communities (118 shown, 49 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 45 edges (avg confidence: 0.83)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `fc012ff9`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Game Server API Types
-- Login & Attack Screens
-- Shared UI Primitives
-- Attack Action Config Editor
-- Player Docs Page
-- App Layouts & Fonts
-- AI Subject Insights
-- Game Client API Router
-- Admin Analytics Dashboard
-- Admin Configuration Page
-- Government Dashboard & Events
-- Game Conclusion & Results
-- Biome Formatter Config
-- Communication Composers
-- ESLint Config Package
-- Runtime Gateway Hooks
-- Player Dashboard Page
-- Government Catalog Normalization
-- Admin Result Dialogs
-- Government Runtime API
-- ATT&CK Group Browser
-- Root Workspace Manifest
-- Game Server API Methods
-- Web Server Admin API
-- Admin TS Compiler Options
-- Game Plan Graph Model
-- Admin Monitoring Page
-- Game Server Router Setup
-- Communication Domain Model
-- Communication Policy & Service
-- Menus & Dropdown UI
-- Base TypeScript Config
-- Communication API Route
-- UI Package Dependencies
-- AI Assistant Level Hooks
-- Client Communication Service
-- API Package Manifest
-- Admin App Dependencies
-- API TS Compiler Options
-- UI Dev Dependencies
-- MITRE ATT&CK Data Route
-- Admin Game Config Store
-- Game Plan Graph Viewer
-- Game Plan Editor Page
-- Web shadcn Component Config
-- Game Events API Client
-- Web App Dependencies
-- Web TS Compiler Options
-- UI shadcn Component Config
-- Admin Dev Dependencies
-- Admin AI Assistant Page
-- Admin Game Plan Client
-- Game Footer & Results UI
-- Persian Localization Maps
-- Prepared Catalog Build Script
-- Game Plan Validation
-- Repo README Notes
-- Prepared Catalog Route
-- UI TS Compiler Options
-- Admin Dialog Type Registry
-- Scenario Voting Arena
-- Web Package Scripts
-- Attack/Defense Economy Spec
-- Admin Endpoints Spec
-- Server Config & Analytics Spec
-- Next.js TypeScript Config
-- Admin Package Scripts
-- Web Dev Dependencies
-- UI Lint TS Config
-- tRPC Server Wiring
-- Event Feed & Notifications
-- Runtime Persian Translations
-- Game Event Model Spec
-- Admin Auth Gate
-- ESLint Flat Configs
-- node:sqlite Type Shims
-- Turn Loop & Scoring Spec
-- API Error Parsing
-- Matrix Login Background
-- AI Assistant Upgrade UI
-- Communication Actor Auth
-- Communication SQLite Store
-- Game Tab Definitions
-- Message Timeline UI
-- Player Game State Types
-- Action Modules Spec
-- Player Channel & Contract Spec
-- TS Config Package Manifest
-- React Library TS Config
-- UI Package Manifest
-- Auth Store
-- Communication Service Contract
-- OpenAPI Generated Types
-- UI Package Exports
-- Compact Player Card
-- Players Team List
-- Player Action Types
-- User Auth Endpoints
-- Alert Component
-- AI Assistant Config Endpoints
-- API Test Harness Page
-- Docs Page Shell
-- Game Plan Graph Endpoint
-- Event Replay Endpoint
-- Admin Event List Endpoint
-- PostCSS UI Config
-- Root tsconfig Reference
-- Admin Next Env Types
-- axios Dependency
-- hookform Resolvers Dependency
-- immer Dependency
-- lucide-react Dependency (Admin)
-- ATT&CK Data Model Dependency
-- next-themes Dependency (Admin)
-- React Dependency (Admin)
-- React DOM Dependency (Admin)
-- react-hook-form Dependency
-- server-only Dependency (Admin)
-- superjson Dependency (Admin)
-- TanStack Query Dependency (Admin)
-- tRPC Server Dependency (Admin)
-- Howler Types Dependency (Admin)
-- Workspace UI Dependency (Admin)
-- xyflow React Flow Dependency
-- Admin PostCSS Config
-- Web Next Env Types
-- Howler Dependency (Web)
-- lucide-react Dependency (Web)
-- MongoDB Dependency
-- next-themes Dependency (Web)
-- React Dependency (Web)
-- server-only Dependency (Web)
-- Sonner Dependency
-- superjson Dependency (Web)
-- TanStack Query Dependency (Web)
-- tRPC Client Dependency
-- tRPC React Query Dependency
-- tRPC Server Dependency (Web)
-- Workspace UI Dependency (Web)
-- Zustand Dependency
-- cmdk Dependency
-- Clear Directives Endpoint
-- Turn Analytics Endpoint
-- Server Health Endpoint
-- Event Stream Endpoint
-- lucide-react Dependency (UI)
-- Radix Checkbox Dependency
-- Radix Dropdown Dependency
-- Radix Label Dependency
-- Radix Scroll Area Dependency
-- Radix Separator Dependency
-- Radix Slot Dependency
-- Radix Tabs Dependency
-- React DOM Dependency (UI)
-- Zod Dependency
+- game-server/types.ts
+- game-client/router.ts
+- ScenarioVotingArena.tsx
+- web/app/docs/page.tsx
+- cn
+- web/app/layout.tsx
+- government-catalog.ts
+- BlackMarketDialog.tsx
+- equilibrium.ts
+- CommunicationPanel.tsx
+- analytics/page.tsx
+- configuration/page.tsx
+- dependencies
+- game-plan.test.ts
+- government/page.tsx
+- biome.json
+- GameServerApi
+- CollectionSummary.tsx
+- admin/game-plan/page.tsx
+- graph/page.tsx
+- devDependencies
+- player/page.tsx
+- communication.ts
+- dependencies
+- game-server/router.ts
+- dependencies
+- monitoring/page.tsx
+- gameEventsApi.ts
+- api.ts
+- server/communication/types.ts
+- validation.ts
+- game/page.tsx
+- aiAssistantApi.ts
+- card.tsx
+- devDependencies
+- current-flow/page.tsx
+- runtimeTranslationsFa.ts
+- communicationService.ts
+- attack-data/route.ts
+- store.ts
+- compilerOptions
+- compilerOptions
+- button.tsx
+- AiAssistantLevels.tsx
+- CommunicationHttpError
+- web/components.json
+- game-client/types.ts
+- tsconfig.lint.json
+- ui/components.json
+- PersianTranslator
+- devDependencies
+- Game Plan v2 — Data Model Reference
+- scripts
+- localization.ts
+- compilerOptions
+- build-deck.mjs
+- build-prepared-catalog.mjs
+- ConfigureAllRequestV2
+- useGameStore
+- prepared-catalog/route.ts
+- devDependencies
+- api/package.json
+- ui/package.json
+- DialogType
+- login/page.tsx
+- AiAssistantUpgradePanel.tsx
+- scripts
+- compilerOptions
+- scripts
+- EquilibriumComparison.tsx
+- Frontend Game Integration Guide
+- Messaging Subsystem
+- GameNavbar/index.tsx
+- tursoRepository.ts
+- EquilibriumPanel.tsx
+- trpc.ts
+- Deployment and Environment Runbook
+- include
+- next.js
+- auth.ts
+- mongoRepository.ts
+- sqliteRepository.ts
+- DatabaseSync
+- AdminAuthGate.tsx
+- parseApiError
+- MatrixBackground.tsx
+- Demo Scenario Design Notes
+- api-test/page.tsx
+- Gameplay API (v2)
+- gameState.types.ts
+- typescript-config/package.json
+- getLocalized
+- openapi-types.ts
+- README.md
+- 2. Core Concepts
+- actions.types.ts
+- UserAuthResponse
+- ui/tsconfig.json
+- lucide-react
+- react-dom
+- vercel.json
+- Python Game Server – API and Runtime Guide
+- howler
+- next-themes
+- server-only
+- superjson
+- @trpc/client
+- @trpc/server
+- zustand
+- ui/postcss.config.mjs
+- tsconfig.json
+- admin/postcss.config.mjs
+- web/next-env.d.ts
+- Decision Log
+- Configuration (config.yml)
+- 5. Player endpoints in detail
+- Admin — Facilitator Console
+- 15. SSE Event Stream
+- 11. Game State Machine
+- 17. Frontend UI By Phase
+- 7. Government System
+- react-library.json
+- 6. Configure All Contract
+- CommunicationService
+- exports
+- web/package.json
+- 12. Role-Specific Gameplay Flow
+- 13. Player Endpoints In Detail
+- 3. Source Of Truth For Frontend
+- 4. Authentication
+- Salvage
+- 16. Replay And Recovery Endpoints
+- axios
+- @hookform/resolvers
+- immer
+- lucide-react
+- @mitre-attack/attack-data-model
+- next-themes
+- react
+- react-hook-form
+- server-only
+- superjson
+- @tanstack/react-query
+- @trpc/server
+- @types/howler
+- @workspace/ui
+- @xyflow/react
+- framer-motion
+- react
+- sonner
+- @tanstack/react-query
+- @types/howler
+- @workspace/trpc
+- zod
+- cmdk
+- eslint-config/README.md
+- typescript-config/README.md
+- lucide-react
+- @radix-ui/react-checkbox
+- @radix-ui/react-dropdown-menu
+- @radix-ui/react-label
+- @radix-ui/react-scroll-area
+- @radix-ui/react-separator
+- @radix-ui/react-slot
+- @radix-ui/react-tabs
+- react-dom
+- zod
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 103 edges
-2. `Button()` - 45 edges
-3. `PlayerDashboardPage()` - 36 edges
-4. `GameServerApi` - 35 edges
-5. `GovernmentDashboardPage()` - 32 edges
-6. `Badge()` - 30 edges
-7. `parseRuntimeApiError()` - 29 edges
-8. `GameClientApi` - 29 edges
-9. `Card()` - 29 edges
-10. `CardContent()` - 28 edges
+2. `Button()` - 48 edges
+3. `PlayerDashboardPage()` - 37 edges
+4. `GameServerApi` - 37 edges
+5. `Badge()` - 33 edges
+6. `GovernmentDashboardPage()` - 32 edges
+7. `Card()` - 32 edges
+8. `CardContent()` - 31 edges
+9. `parseRuntimeApiError()` - 29 edges
+10. `GameClientApi` - 29 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Python Game Server API OpenAPI 3.1 Contract v3.0.0` --semantically_similar_to--> `FastAPI App (server/networking.py)`  [AMBIGUOUS] [semantically similar]
-  packages/api/README.md → INSTRUCTION.md
-- `SSE Event Stream /api/games/{gameId}/events/stream` --semantically_similar_to--> `WebSocket /ws/{code} Player Channel`  [INFERRED] [semantically similar]
-  packages/api/README.md → INSTRUCTION.md
-- `Admin Directives Routes (/admin/configure_directives)` --semantically_similar_to--> `POST /admin/configure_all`  [INFERRED] [semantically similar]
-  packages/api/README.md → INSTRUCTION.md
-- `userId Player Identity` --semantically_similar_to--> `Player Connection Code`  [INFERRED] [semantically similar]
-  packages/api/README.md → INSTRUCTION.md
-- `WebSocket /ws/game-info Observer Channel` --conceptually_related_to--> `admin Next.js App`  [AMBIGUOUS]
-  INSTRUCTION.md → apps/admin/README.md
+- `EquilibriumComparisonProps` --references--> `GameServerApi`  [EXTRACTED]
+  apps/admin/src/components/EquilibriumComparison.tsx → packages/api/game-server/router.ts
+- `GovernmentDashboardPage()` --indirect_call--> `isTerminalGameEvent()`  [INFERRED]
+  apps/web/app/government/page.tsx → packages/api/game-client/conclusion.ts
+- `PlayerDashboardPage()` --indirect_call--> `isTerminalGameEvent()`  [INFERRED]
+  apps/web/app/player/page.tsx → packages/api/game-client/conclusion.ts
+- `MenuItem()` --calls--> `cn()`  [EXTRACTED]
+  apps/web/components/PlayerAttackCard/AttackMenu.tsx → packages/ui/src/lib/utils.ts
+- `pnpm Workspace Layout (apps/*, packages/*)` --references--> `@workspace/eslint-config`  [EXTRACTED]
+  pnpm-workspace.yaml → package.json
 
 ## Import Cycles
 - None detected.
 
-## Hyperedges (group relationships)
-- **Per-Turn Resolution Flow** — instruction_turn_loop, instruction_gameevent, instruction_voting, instruction_attackaction, instruction_defenseaction, instruction_blackmarketaction, instruction_ne_analytics, instruction_db_manager [EXTRACTED 1.00]
-- **Action Effectiveness Modifier Stack** — instruction_probability_model, instruction_growth_factor, instruction_tech_factor, instruction_vulnerability_tracking, instruction_gameevent, instruction_blackmarketitem [INFERRED 0.85]
-- **Monorepo Workspace Composition** — pnpm_workspace_packages_layout, readme_web_app, apps_admin_readme_admin_app, readme_workspace_ui_package, packages_api_readme_workspace_trpc, packages_eslint_config_readme_eslint_config, packages_typescript_config_readme_typescript_config [EXTRACTED 1.00]
+## Communities (185 total, 49 thin omitted)
 
-## Communities (172 total, 56 thin omitted)
-
-### Community 0 - "Game Server API Types"
+### Community 0 - "game-server/types.ts"
 Cohesion: 0.03
-Nodes (72): ActionBaseStats, ActionBaseStatsRequest, ActionConfig, ActionConfigRequest, ActionCounter, ActionCounterRequest, ActionRequirements, ActionRequirementsRequest (+64 more)
+Nodes (71): ActionBaseStats, ActionBaseStatsRequest, ActionConfig, ActionCounter, ActionCounterRequest, ActionRequirements, ActionRequirementsRequest, ActionType (+63 more)
 
-### Community 1 - "Login & Attack Screens"
-Cohesion: 0.08
-Nodes (40): LoginCardProps, AuthMode, motionVariants, Attack, PlayerCardProps, Attack, AttackStatusPanel(), icons (+32 more)
-
-### Community 2 - "Shared UI Primitives"
-Cohesion: 0.07
-Nodes (36): DocsCallout(), AttackDetailCard(), WaitingPopup(), AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter() (+28 more)
-
-### Community 3 - "Attack Action Config Editor"
-Cohesion: 0.10
-Nodes (39): CurrentFlowNode, FlowNodeData, NODE_ICON, NODE_LABEL, nodeTypes, ActionConfig, ActionsData, Group (+31 more)
-
-### Community 4 - "Player Docs Page"
+### Community 1 - "game-client/router.ts"
 Cohesion: 0.06
-Nodes (30): CALLOUT_ICONS, CALLOUT_STYLES, SECTION_ICONS, TAB_ICONS, ADMIN_LIFECYCLE_STEPS, ADMIN_PAGES, ANALYTICS_METRICS, CalloutTone (+22 more)
+Nodes (29): GovernmentCatalogPanelProps, useGovernmentCatalog(), useGovernmentOrders(), useGovernmentOverview(), getGovernmentCatalogErrorMessageFa(), GovernmentOrderDraft, GovernmentRuntimeApi, createSubjectScenarioApi() (+21 more)
 
-### Community 5 - "App Layouts & Fonts"
+### Community 2 - "ScenarioVotingArena.tsx"
+Cohesion: 0.06
+Nodes (45): Announcement, announcementsData, AnnouncementsMenu(), GameFooter(), GameResults, GameResultsDisplay(), Player, TeamData (+37 more)
+
+### Community 3 - "web/app/docs/page.tsx"
+Cohesion: 0.06
+Nodes (37): adminHref(), CALLOUT_ICONS, CALLOUT_STYLES, DocsPage(), searchTextForSection(), SECTION_ICONS, TAB_ICONS, ADMIN_LIFECYCLE_STEPS (+29 more)
+
+### Community 4 - "cn"
+Cohesion: 0.07
+Nodes (34): DocsCallout(), AttackDetailCard(), WaitingPopup(), AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter() (+26 more)
+
+### Community 5 - "web/app/layout.tsx"
 Cohesion: 0.05
 Nodes (36): appDir, nextConfig, metadata, Providers(), vazirmatn, fontMono, fontSans, fontVazir (+28 more)
 
-### Community 6 - "AI Subject Insights"
-Cohesion: 0.08
-Nodes (40): AiInsightFactorListProps, formatCriticality(), formatProgress(), formatSubjectStatus(), insightProvider, levelLabel(), SubjectAiInsightDialog, SubjectAiInsightDialogProps (+32 more)
-
-### Community 7 - "Game Client API Router"
+### Community 6 - "government-catalog.ts"
 Cohesion: 0.07
-Nodes (20): AiAssistantUpgradePanelProps, createSubjectScenarioApi(), createGameClientApi(), createHttpClient(), GameClientApi, GameClientApiConfig, CapturedRequest, AvailableActionsResponse (+12 more)
+Nodes (62): SubjectAiInsightDialogProps, ActionNumbers, AiInsightProvider, average(), compact(), costPressureLabel(), countCompletedSubSubjects(), flattenScenarios() (+54 more)
 
-### Community 8 - "Admin Analytics Dashboard"
+### Community 7 - "BlackMarketDialog.tsx"
+Cohesion: 0.08
+Nodes (29): Props, AdminSummaryDialog(), AttackActionConfigDialog(), BlackMarketDialog(), BlackMarketDialogProps, BlackMarketItem, Group, GroupDetail (+21 more)
+
+### Community 8 - "equilibrium.ts"
+Cohesion: 0.10
+Nodes (24): eq, plan, eq, plan, buildEquilibrium(), buildEquilibriumWithout(), counterKey(), EquilibriumCounter (+16 more)
+
+### Community 9 - "CommunicationPanel.tsx"
+Cohesion: 0.12
+Nodes (25): blueTeam, Player, redTeam, AnnouncementComposer(), MessageInbox(), RelatedGameNodePicker(), SimulationMessageComposer(), SimulationType (+17 more)
+
+### Community 10 - "analytics/page.tsx"
 Cohesion: 0.13
 Nodes (38): AdminAnalyticsPage(), AnalyticsEvent, AnalyticsPlotCard(), asArray(), asRecord(), comparisonRows(), deriveBestTargets(), flowActions() (+30 more)
 
-### Community 9 - "Admin Configuration Page"
+### Community 11 - "configuration/page.tsx"
 Cohesion: 0.08
 Nodes (37): ActionCounterDraft, ActionDraft, ActionKind, AdminConfigurationPage(), AdminGameStateResponse, AdminUser, API_ROLE_BY_DRAFT_ROLE, ApiRoleType (+29 more)
 
-### Community 10 - "Government Dashboard & Events"
-Cohesion: 0.11
-Nodes (32): eventTypeHas(), GovernmentDashboardPage(), ORDER_GUIDE, ORDER_TYPES, orderPayloadSummaryFa(), teamRoleFa(), GovernmentCatalogPanel(), scenarioTypeFa() (+24 more)
-
-### Community 11 - "Game Conclusion & Results"
-Cohesion: 0.09
-Nodes (29): GameFinishedResult(), GameFinishedResultProps, numberFa(), playGameFinishedSound(), buildGameConclusion(), GameConclusion, GameConclusionSide, GameOutcome (+21 more)
-
-### Community 12 - "Biome Formatter Config"
-Cohesion: 0.06
-Nodes (34): source, assist, actions, enabled, files, ignoreUnknown, formatter, arrowParentheses (+26 more)
-
-### Community 13 - "Communication Composers"
-Cohesion: 0.16
-Nodes (24): AnnouncementComposer(), audienceForType(), GOVERNMENT_CHANNEL_TYPES, GovernmentChannel(), RelatedGameNodePicker(), SimulationMessageComposer(), SimulationType, TeamChatRoom() (+16 more)
-
-### Community 14 - "ESLint Config Package"
-Cohesion: 0.06
-Nodes (33): eslint-config-prettier, eslint-plugin-only-warn, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-turbo, globals, @next/eslint-plugin-next, devDependencies (+25 more)
-
-### Community 15 - "Runtime Gateway Hooks"
-Cohesion: 0.16
-Nodes (16): RuntimeGatewayPage(), useGovernmentOrders(), LockReasonLoader, usePlayerState(), EMPTY_SUBJECTS, parseRuntimeApiError(), RuntimeApiError, createPlayerRuntimeApi() (+8 more)
-
-### Community 16 - "Player Dashboard Page"
-Cohesion: 0.11
-Nodes (29): actionTypeFromCode(), AiInsightSnapshot, buildPlayerActionsByCode(), buildPlayerAiSubject(), eventTypeHas(), forcedOrder(), formatNumberFa(), orderDetailFa() (+21 more)
-
-### Community 17 - "Government Catalog Normalization"
-Cohesion: 0.20
-Nodes (32): arrayField(), asArray(), asRecord(), booleanField(), firstValue(), GovernmentCatalogNodeOption, GovernmentCatalogNodeType, GovernmentCatalogStats (+24 more)
-
-### Community 18 - "Admin Result Dialogs"
-Cohesion: 0.10
-Nodes (17): Props, AdminSummaryDialog(), AttackType, attackTypes, ConfigureAllResponse, StartGameResponse, WaitForPhaseRequest, WaitForPhaseResponse (+9 more)
-
-### Community 19 - "Government Runtime API"
-Cohesion: 0.10
-Nodes (13): GovernmentCatalogPanelProps, useGovernmentCatalog(), useGovernmentOverview(), getGovernmentCatalogErrorMessageFa(), GovernmentOrderDraft, GovernmentRuntimeApi, GoalSelectResponse, GovernmentCatalogResponse (+5 more)
-
-### Community 20 - "ATT&CK Group Browser"
-Cohesion: 0.11
-Nodes (17): Game(), Group, Language, Technique, useGroupDetails(), useGroups(), AiInsightFactorList(), formatMetric() (+9 more)
-
-### Community 21 - "Root Workspace Manifest"
-Cohesion: 0.07
-Nodes (28): devDependencies, @biomejs/biome, prettier, turbo, typescript, @workspace/eslint-config, @workspace/typescript-config, engines (+20 more)
-
-### Community 22 - "Game Server API Methods"
-Cohesion: 0.08
-Nodes (13): GameServerApi, ActiveDirectivesResponse, AdminClearEventsResponse, AdminGameCatalogResponse, AdminGameStateResponse, DetailResponse, DirectiveDeletedResponse, DirectivesListResponse (+5 more)
-
-### Community 23 - "Web Server Admin API"
-Cohesion: 0.07
-Nodes (14): LoginPage(), AuthPayload, BlackMarketItemConfig, ConfigureAllRequest, ConfigureEventsRequest, DetailResponse, GameEventConfig, gameServerApi (+6 more)
-
-### Community 24 - "Admin TS Compiler Options"
-Cohesion: 0.07
-Nodes (26): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+18 more)
-
-### Community 25 - "Game Plan Graph Model"
-Cohesion: 0.12
-Nodes (23): CurrentPublishedFlowPage(), edgeColor(), ReadOnlyNode(), getActiveGameId(), loadPublishedGamePlan(), buildGamePlanGraph(), buildGraphWarnings(), filterGamePlanGraphNodes() (+15 more)
-
-### Community 26 - "Admin Monitoring Page"
-Cohesion: 0.19
-Nodes (24): AdminMonitoringPage(), asArray(), asRecord(), directiveFromRecord(), EventStatus, eventSummary(), eventTone(), extractDirectives() (+16 more)
-
-### Community 27 - "Game Server Router Setup"
-Cohesion: 0.11
-Nodes (17): createGameServerApi(), createHttpClient(), GameServerApiConfig, CapturedRequest, AddDirectivesRequest, AdminAuthResponse, AdminLoginRequest, AdminUsersResponse (+9 more)
-
-### Community 28 - "Communication Domain Model"
-Cohesion: 0.13
-Nodes (17): MessageInbox(), CommunicationServiceOptions, CommunicationActorTeam, CommunicationAudienceType, CommunicationMessage, CommunicationPermissionOptions, CommunicationRoom, CommunicationSendInput (+9 more)
-
-### Community 29 - "Communication Policy & Service"
-Cohesion: 0.16
-Nodes (16): AUDIENCE_TYPES, createMessageSchema, DISALLOWED_PERSONAL_ABUSE, MESSAGE_TYPES, nullableTrimmedString, numericAudienceId(), parseCommunicationMessageInput(), teamById() (+8 more)
-
-### Community 30 - "Menus & Dropdown UI"
-Cohesion: 0.15
-Nodes (15): Announcement, announcementsData, AnnouncementsMenu(), DropdownMenu(), DropdownMenuCheckboxItem(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel() (+7 more)
-
-### Community 31 - "Base TypeScript Config"
-Cohesion: 0.09
-Nodes (21): compilerOptions, allowImportingTsExtensions, declaration, declarationMap, esModuleInterop, incremental, isolatedModules, lib (+13 more)
-
-### Community 32 - "Communication API Route"
-Cohesion: 0.19
-Nodes (15): dynamic, errorResponse(), GET(), noStoreHeaders, POST(), runtime, requestGameState(), resolveCommunicationActor() (+7 more)
-
-### Community 33 - "UI Package Dependencies"
+### Community 12 - "dependencies"
 Cohesion: 0.10
 Nodes (21): class-variance-authority, clsx, dependencies, class-variance-authority, clsx, @radix-ui/react-accordion, @radix-ui/react-alert-dialog, @radix-ui/react-dialog (+13 more)
 
-### Community 34 - "AI Assistant Level Hooks"
-Cohesion: 0.16
-Nodes (12): useAiAssistantConfig(), UseAiAssistantConfigOptions, initialState, UseAiAssistantLevelOptions, UsePurchaseAiAssistantLevelOptions, AiAssistantApi, AiAssistantClient, AiAssistantLevelState (+4 more)
+### Community 13 - "game-plan.test.ts"
+Cohesion: 0.11
+Nodes (26): CurrentPublishedFlowPage(), edgeColor(), ReadOnlyNode(), getActiveGameId(), loadServerGamePlanGraph(), buildGamePlanGraph(), buildGraphWarnings(), filterGamePlanGraphNodes() (+18 more)
 
-### Community 35 - "Client Communication Service"
-Cohesion: 0.17
-Nodes (18): asRecord(), COMMUNICATION_BACKEND_NOTICE, COMMUNICATION_CONNECTION_ERROR, createCommunicationService(), createLocalCommunicationService(), createServerCommunicationService(), getCommunicationError(), hiddenStorageKey() (+10 more)
+### Community 14 - "government/page.tsx"
+Cohesion: 0.12
+Nodes (28): eventTypeHas(), GovernmentDashboardPage(), ORDER_GUIDE, ORDER_TYPES, orderPayloadSummaryFa(), teamRoleFa(), GovernmentCatalogPanel(), scenarioTypeFa() (+20 more)
 
-### Community 36 - "API Package Manifest"
+### Community 15 - "biome.json"
+Cohesion: 0.06
+Nodes (34): source, assist, actions, enabled, files, ignoreUnknown, formatter, arrowParentheses (+26 more)
+
+### Community 16 - "GameServerApi"
+Cohesion: 0.06
+Nodes (16): GameServerApi, ActiveDirectivesResponse, AdminClearEventsResponse, AdminGameCatalogResponse, AdminGameStateResponse, AiAssistantConfigRequest, DetailResponse, DirectiveDeletedResponse (+8 more)
+
+### Community 17 - "CollectionSummary.tsx"
+Cohesion: 0.14
+Nodes (19): arr(), buildSummaryLookups(), chip(), CHIP_CLASS, Chips(), ChipTone, describeEntity(), EntitySummary (+11 more)
+
+### Community 18 - "admin/game-plan/page.tsx"
+Cohesion: 0.13
+Nodes (26): AdminGamePlanPage(), COLLECTION_LABEL, CollectionEditor(), CollectionKey, entityKey(), entityTitle(), groupLabel, INITIAL_ITEM (+18 more)
+
+### Community 19 - "graph/page.tsx"
+Cohesion: 0.15
+Nodes (16): AdminGamePlanGraphPage(), compactSubjectLayout(), EDGE_COLOR, FlowNodeData, mapGraph(), NODE_ICON, NODE_LABEL, NODE_TONE (+8 more)
+
+### Community 20 - "devDependencies"
+Cohesion: 0.06
+Nodes (33): eslint-config-prettier, eslint-plugin-only-warn, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-turbo, globals, @next/eslint-plugin-next, devDependencies (+25 more)
+
+### Community 21 - "player/page.tsx"
+Cohesion: 0.08
+Nodes (42): RuntimeGatewayPage(), actionTypeFromCode(), AiInsightSnapshot, buildArenaActionCatalog(), buildPlayerActionsByCode(), buildPlayerAiSubject(), eventTypeHas(), forcedOrder() (+34 more)
+
+### Community 22 - "communication.ts"
+Cohesion: 0.15
+Nodes (15): CommunicationServiceOptions, CommunicationActorTeam, CommunicationAudienceType, CommunicationMessage, CommunicationPermissionOptions, CommunicationSendInput, CommunicationServiceCapabilities, CommunicationViewer (+7 more)
+
+### Community 23 - "dependencies"
+Cohesion: 0.12
+Nodes (17): dependencies, classnames, client-only, mongodb, next, react-dom, @trpc/react-query, @tursodatabase/serverless (+9 more)
+
+### Community 24 - "game-server/router.ts"
 Cohesion: 0.10
-Nodes (19): dependencies, axios, devDependencies, @types/node, typescript, vitest, axios, @types/node (+11 more)
+Nodes (18): createGameServerApi(), createHttpClient(), GameServerApiConfig, AddDirectivesRequest, AdminAuthResponse, AdminEventListQuery, AdminEventListResponse, AdminLoginRequest (+10 more)
 
-### Community 37 - "Admin App Dependencies"
+### Community 25 - "dependencies"
 Cohesion: 0.11
 Nodes (19): dependencies, client-only, framer-motion, howler, next, @trpc/client, @trpc/react-query, @workspace/trpc (+11 more)
 
-### Community 38 - "API TS Compiler Options"
-Cohesion: 0.11
-Nodes (18): compilerOptions, allowImportingTsExtensions, esModuleInterop, module, moduleResolution, outDir, rootDir, exclude (+10 more)
-
-### Community 39 - "UI Dev Dependencies"
-Cohesion: 0.11
-Nodes (19): devDependencies, tailwindcss, @tailwindcss/postcss, @turbo/gen, @types/node, @types/react, @types/react-dom, typescript (+11 more)
-
-### Community 40 - "MITRE ATT&CK Data Route"
-Cohesion: 0.18
-Nodes (16): Definition, ExternalReference, GET(), getGroups(), getGroupTechniqueRelationships(), getMitigations(), getTacticNames(), getTactics() (+8 more)
-
-### Community 41 - "Admin Game Config Store"
+### Community 26 - "monitoring/page.tsx"
 Cohesion: 0.19
-Nodes (12): GameConfigState, initialConfig, ActionConfig, Actions, ActionSide, BlackMarketItem, BlackMarketItemType, EffectType (+4 more)
+Nodes (24): AdminMonitoringPage(), asArray(), asRecord(), directiveFromRecord(), EventStatus, eventSummary(), eventTone(), extractDirectives() (+16 more)
 
-### Community 42 - "Game Plan Graph Viewer"
+### Community 27 - "gameEventsApi.ts"
+Cohesion: 0.13
+Nodes (17): PlayerMoveInsightProps, GameEventsState, mergeEvents(), useGameEvents(), createRuntimeHttpError(), asRecord(), createGameEventsApi(), EventHistoryQuery (+9 more)
+
+### Community 28 - "api.ts"
+Cohesion: 0.08
+Nodes (11): AuthPayload, BlackMarketItemConfig, ConfigureAllRequest, ConfigureEventsRequest, DetailResponse, GameEventConfig, gameServerApi, HTTPValidationError (+3 more)
+
+### Community 29 - "server/communication/types.ts"
 Cohesion: 0.16
-Nodes (15): AdminGamePlanGraphPage(), compactSubjectLayout(), EDGE_COLOR, FlowNodeData, mapGraph(), NODE_ICON, NODE_LABEL, NODE_TONE (+7 more)
+Nodes (16): AUDIENCE_TYPES, createMessageSchema, DISALLOWED_PERSONAL_ABUSE, MESSAGE_TYPES, nullableTrimmedString, numericAudienceId(), parseCommunicationMessageInput(), teamById() (+8 more)
 
-### Community 43 - "Game Plan Editor Page"
+### Community 30 - "validation.ts"
+Cohesion: 0.16
+Nodes (17): asRecord(), ClientValidationIssue, ClientValidationResult, cloneValue(), duplicateIds(), normalizeDefaultGamePlan(), normalizePlayer(), teamRoleType() (+9 more)
+
+### Community 31 - "game/page.tsx"
+Cohesion: 0.09
+Nodes (24): Game(), Group, Language, Technique, useGroupDetails(), useGroups(), ActionConfig, ActionsData (+16 more)
+
+### Community 32 - "aiAssistantApi.ts"
 Cohesion: 0.15
-Nodes (15): COLLECTION_LABEL, CollectionEditor(), CollectionKey, entityKey(), entityTitle(), groupLabel, INITIAL_ITEM, sourceLabel (+7 more)
+Nodes (13): useAiAssistantConfig(), UseAiAssistantConfigOptions, initialState, UseAiAssistantLevelOptions, UsePurchaseAiAssistantLevelOptions, AiAssistantApi, AiAssistantClient, AiAssistantLevelState (+5 more)
 
-### Community 44 - "Web shadcn Component Config"
-Cohesion: 0.12
-Nodes (16): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+8 more)
+### Community 33 - "card.tsx"
+Cohesion: 0.20
+Nodes (14): LoginCardProps, Attack, PlayerCardProps, Player, TimeOverDialogProps, statusLabel, WaitingForVoteDialogProps, WaitingPopupProps (+6 more)
 
-### Community 45 - "Game Events API Client"
-Cohesion: 0.15
-Nodes (11): GameEventsState, createRuntimeHttpError(), asRecord(), EventHistoryQuery, GameEventsApi, ParsedSseBuffer, parseGameEvent(), EventStatusData (+3 more)
-
-### Community 46 - "Web App Dependencies"
-Cohesion: 0.12
-Nodes (17): dependencies, classnames, client-only, framer-motion, next, react-dom, @types/howler, @workspace/trpc (+9 more)
-
-### Community 47 - "Web TS Compiler Options"
-Cohesion: 0.12
-Nodes (16): compilerOptions, baseUrl, paths, plugins, exclude, extends, include, next-env.d.ts (+8 more)
-
-### Community 48 - "UI shadcn Component Config"
-Cohesion: 0.12
-Nodes (16): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+8 more)
-
-### Community 49 - "Admin Dev Dependencies"
+### Community 34 - "devDependencies"
 Cohesion: 0.13
 Nodes (15): devDependencies, @biomejs/biome, tailwindcss, @tailwindcss/postcss, @types/node, @types/react, @types/react-dom, typescript (+7 more)
 
-### Community 50 - "Admin AI Assistant Page"
-Cohesion: 0.21
-Nodes (14): AdminAiAssistantPage(), BusyState, cloneDefaultRows(), DEFAULT_ROWS, formatNumberFa(), getLevelLabel(), LevelRow, Notice (+6 more)
-
-### Community 51 - "Admin Game Plan Client"
-Cohesion: 0.26
-Nodes (14): AdminGamePlanPage(), ACTIVE_GAME_ID_STORAGE_KEY, ADMIN_TOKEN_STORAGE_KEY, createAdminApi(), GAME_PLAN_SESSION_KEY, loadDefaultGamePlan(), loadDemoGamePlan(), saveAiAssistantConfig() (+6 more)
-
-### Community 52 - "Game Footer & Results UI"
+### Community 35 - "current-flow/page.tsx"
 Cohesion: 0.18
-Nodes (12): GameFooter(), GameResults, GameResultsDisplay(), Player, TeamData, SettingsMenu(), getGameState(), GameResults (+4 more)
+Nodes (21): CurrentFlowNode, FlowNodeData, NODE_ICON, NODE_LABEL, nodeTypes, isGovernmentTeam(), roleLabel, roleType() (+13 more)
 
-### Community 53 - "Persian Localization Maps"
-Cohesion: 0.13
-Nodes (13): EFFECT_TYPE_FA, EXECUTION_MODE_FA, localizeText, LOCK_REASON_FA, ORDER_TYPE_FA, PHASE_FA, ROLE_FA, SCENARIO_TYPE_FA (+5 more)
+### Community 36 - "runtimeTranslationsFa.ts"
+Cohesion: 0.09
+Nodes (29): MessageTimeline(), CommunicationPanel(), mergeMessage(), GameEventFeed(), LockReasonList(), LockReasonsDialog(), GameEventsStatus, getIncomingGovernmentOrders() (+21 more)
 
-### Community 54 - "Prepared Catalog Build Script"
-Cohesion: 0.24
-Nodes (13): buildCatalog(), cleanText(), getFaTacticName(), INPUT_PATH, main(), normalize(), normalizeTacticName(), OUTPUT_PATH (+5 more)
+### Community 37 - "communicationService.ts"
+Cohesion: 0.17
+Nodes (18): asRecord(), COMMUNICATION_BACKEND_NOTICE, COMMUNICATION_CONNECTION_ERROR, createCommunicationService(), createLocalCommunicationService(), createServerCommunicationService(), getCommunicationError(), hiddenStorageKey() (+10 more)
 
-### Community 55 - "Game Plan Validation"
+### Community 38 - "attack-data/route.ts"
+Cohesion: 0.18
+Nodes (16): Definition, ExternalReference, GET(), getGroups(), getGroupTechniqueRelationships(), getMitigations(), getTacticNames(), getTactics() (+8 more)
+
+### Community 39 - "store.ts"
 Cohesion: 0.19
-Nodes (13): asRecord(), ClientValidationIssue, ClientValidationResult, cloneValue(), duplicateIds(), normalizePlayer(), teamRoleType(), validateDefaultGamePlanClientSide() (+5 more)
+Nodes (12): GameConfigState, initialConfig, ActionConfig, Actions, ActionSide, BlackMarketItem, BlackMarketItemType, EffectType (+4 more)
 
-### Community 56 - "Repo README Notes"
-Cohesion: 0.28
-Nodes (13): admin Next.js App, Admin Dev Server Workflow, Admin Directives Routes (/admin/configure_directives), openapi-types.ts Generated Types, @workspace/trpc API Package, @workspace/eslint-config, @workspace/typescript-config, pnpm Workspace Layout (apps/*, packages/*) (+5 more)
+### Community 40 - "compilerOptions"
+Cohesion: 0.09
+Nodes (21): compilerOptions, allowImportingTsExtensions, declaration, declarationMap, esModuleInterop, incremental, isolatedModules, lib (+13 more)
 
-### Community 57 - "Prepared Catalog Route"
-Cohesion: 0.33
-Nodes (12): GET(), Lang, loadCatalog(), localizeActionTemplate(), localizeBlackMarketTemplate(), localizeCounterTemplate(), localizeItem(), normalizeEffectiveness() (+4 more)
-
-### Community 58 - "UI TS Compiler Options"
-Cohesion: 0.15
-Nodes (12): compilerOptions, baseUrl, paths, exclude, extends, include, dist, node_modules (+4 more)
-
-### Community 59 - "Admin Dialog Type Registry"
-Cohesion: 0.17
-Nodes (11): TeamMembersDialogProps, BlackMarketDialogData, DialogDataMap, DialogType, ADMIN_SUMMARY, ATTACK_ACTION_CONFIG, BLACK_MARKET, GAME_SETUP (+3 more)
-
-### Community 60 - "Scenario Voting Arena"
-Cohesion: 0.27
-Nodes (10): initials(), riskLabel(), ScenarioVotingArena(), ScenarioVotingArenaProps, stepTone, voteStorageKey(), clickSound, playClickSound() (+2 more)
-
-### Community 61 - "Web Package Scripts"
-Cohesion: 0.17
-Nodes (11): name, private, scripts, build, dev, lint, lint:fix, start (+3 more)
-
-### Community 62 - "Attack/Defense Economy Spec"
-Cohesion: 0.24
-Nodes (12): ActionConfig (probability, growth, tech, cost, counter_actions), Attack / Defense Action Catalog, ConfigureAllRequest Payload, Counter-Action Pairing, Credits Economy, Growth Factor Progression, Success Probability Model (0-100 percent), Initial Side Credits (+4 more)
-
-### Community 63 - "Admin Endpoints Spec"
-Cohesion: 0.23
-Nodes (12): DELETE /admin/clear_events, POST /admin/configure_all, DELETE /admin/delete_event/{event_name}, GET /admin/get_current_events, GET /admin/start_game, Configuration Coherence Constraints, display_final_scores() and Game Finish, FastAPI App (server/networking.py) (+4 more)
-
-### Community 64 - "Server Config & Analytics Spec"
-Cohesion: 0.20
-Nodes (12): server/config_loader.py, config.yml Runtime Configuration, database Config Section (MongoDB), server/db_manager.py Persistence, Discount Gamma for Future Payoffs, server/logging_config.py, logging Config Section, Nash Equilibrium Analytics (+4 more)
-
-### Community 65 - "Next.js TypeScript Config"
+### Community 41 - "compilerOptions"
 Cohesion: 0.17
 Nodes (11): compilerOptions, allowJs, jsx, module, moduleResolution, noEmit, plugins, display (+3 more)
 
-### Community 66 - "Admin Package Scripts"
-Cohesion: 0.18
-Nodes (10): name, private, scripts, build, build:prepared-catalog, dev, format, lint (+2 more)
+### Community 42 - "button.tsx"
+Cohesion: 0.20
+Nodes (11): items, MenuItem(), formatCriticality(), formatProgress(), formatSubjectStatus(), insightProvider, levelLabel(), SubjectAiInsightDialog (+3 more)
 
-### Community 67 - "Web Dev Dependencies"
+### Community 43 - "AiAssistantLevels.tsx"
 Cohesion: 0.18
-Nodes (11): devDependencies, @types/node, @types/react, @types/react-dom, typescript, @workspace/typescript-config, @types/node, @types/react (+3 more)
+Nodes (16): AdminAiAssistantPage(), useAdminAuth(), AiAssistantLevels(), AiAssistantLevelsProps, BusyState, cloneDefaultRows(), DEFAULT_ROWS, formatNumberFa() (+8 more)
 
-### Community 68 - "UI Lint TS Config"
+### Community 44 - "CommunicationHttpError"
+Cohesion: 0.21
+Nodes (16): dynamic, errorResponse(), GET(), noStoreHeaders, POST(), runtime, requestGameState(), resolveCommunicationActor() (+8 more)
+
+### Community 45 - "web/components.json"
+Cohesion: 0.12
+Nodes (16): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+8 more)
+
+### Community 46 - "game-client/types.ts"
+Cohesion: 0.09
+Nodes (29): GameFinishedResult(), GameFinishedResultProps, numberFa(), playGameFinishedSound(), buildGameConclusion(), GameConclusion, GameConclusionSide, GameOutcome (+21 more)
+
+### Community 47 - "tsconfig.lint.json"
 Cohesion: 0.18
 Nodes (10): compilerOptions, outDir, exclude, extends, include, dist, node_modules, src (+2 more)
 
-### Community 69 - "tRPC Server Wiring"
-Cohesion: 0.31
-Nodes (6): appRouter, baseProcedure, createCallerFactory, createTRPCContext, createTRPCRouter, t
+### Community 48 - "ui/components.json"
+Cohesion: 0.12
+Nodes (16): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+8 more)
 
-### Community 70 - "Event Feed & Notifications"
-Cohesion: 0.27
-Nodes (9): CommunicationPanel(), mergeMessage(), GameEventFeed(), GameEventsStatus, getIncomingGovernmentOrders(), useIncomingOrderNotifications(), playNotificationSound(), eventMessageFa() (+1 more)
+### Community 49 - "PersianTranslator"
+Cohesion: 0.16
+Nodes (10): Any, main(), PersianTranslator, Translates all text fields in JSON to Persian using googletrans (free) with…, Translate text to Persian with caching and retry logic, Translate all relevant fields in an object (runs in parallel), Process the entire JSON file with parallel processing, Save current progress to output file (+2 more)
 
-### Community 71 - "Runtime Persian Translations"
-Cohesion: 0.22
-Nodes (9): ACTION_TOKEN_FA, EVENT_TYPE_FA, formatActionCodeFa(), formatActionOptionFa(), LockReasonDisplay, PHASES, SUBJECT_STATUS_FA, GovernmentOrderType (+1 more)
+### Community 50 - "devDependencies"
+Cohesion: 0.18
+Nodes (11): devDependencies, @types/node, @types/react, @types/react-dom, typescript, @workspace/typescript-config, @types/node, @types/react (+3 more)
 
-### Community 72 - "Game Event Model Spec"
+### Community 51 - "Game Plan v2 — Data Model Reference"
+Cohesion: 0.12
+Nodes (16): 10. `black_market` (optional), 11. What validation actually checks, 12. Fields that drive the equilibrium, 13. Editing a plan by hand, 1. `game_config`, 2. `teams`, 3. `actions` — where the numbers live, 4. `action_counters` (+8 more)
+
+### Community 52 - "scripts"
+Cohesion: 0.05
+Nodes (36): devDependencies, @biomejs/biome, prettier, turbo, typescript, @workspace/eslint-config, @workspace/typescript-config, engines (+28 more)
+
+### Community 53 - "localization.ts"
+Cohesion: 0.13
+Nodes (13): EFFECT_TYPE_FA, EXECUTION_MODE_FA, localizeText, LOCK_REASON_FA, ORDER_TYPE_FA, PHASE_FA, ROLE_FA, SCENARIO_TYPE_FA (+5 more)
+
+### Community 54 - "compilerOptions"
+Cohesion: 0.07
+Nodes (26): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+18 more)
+
+### Community 55 - "build-deck.mjs"
+Cohesion: 0.21
+Nodes (12): addBox(), addHeader(), addRule(), addText(), bullets(), C, flowNode(), OUT_DIR (+4 more)
+
+### Community 56 - "build-prepared-catalog.mjs"
+Cohesion: 0.24
+Nodes (13): buildCatalog(), cleanText(), getFaTacticName(), INPUT_PATH, main(), normalize(), normalizeTacticName(), OUTPUT_PATH (+5 more)
+
+### Community 57 - "ConfigureAllRequestV2"
+Cohesion: 0.13
+Nodes (10): EquilibriumPanelProps, TeamMemberAssignmentProps, PublishedGamePlanGraphLoaders, CapturedRequest, ConfigureAllRequest, ConfigureAllRequestV2, ConfigureAllResponse, GamePlanGraphResponse (+2 more)
+
+### Community 58 - "useGameStore"
+Cohesion: 0.11
+Nodes (19): Attack, AttackStatusPanel(), icons, PlayerAttackCard(), enemyColors, enemyIcons, Player, teamColors (+11 more)
+
+### Community 59 - "prepared-catalog/route.ts"
 Cohesion: 0.33
-Nodes (10): POST /admin/add_events, POST /admin/configure_events, BlackMarketItem Model, ConfigureEventsRequest / GameEventConfig, Modifier Types (increase / decrease / multiply), GameEvent Model, GameSide Model, Domain Models (server/models.py) (+2 more)
+Nodes (12): GET(), Lang, loadCatalog(), localizeActionTemplate(), localizeBlackMarketTemplate(), localizeCounterTemplate(), localizeItem(), normalizeEffectiveness() (+4 more)
 
-### Community 73 - "Admin Auth Gate"
-Cohesion: 0.33
-Nodes (6): AdminAuthContext, AdminAuthContextValue, AdminAuthGate(), getAdminToken(), listAdminUsers(), logoutAdmin()
+### Community 60 - "devDependencies"
+Cohesion: 0.11
+Nodes (19): devDependencies, tailwindcss, @tailwindcss/postcss, @turbo/gen, @types/node, @types/react, @types/react-dom, typescript (+11 more)
 
-### Community 74 - "ESLint Flat Configs"
-Cohesion: 0.31
-Nodes (4): nextConfig, config, nextJsConfig, config
+### Community 61 - "api/package.json"
+Cohesion: 0.10
+Nodes (19): dependencies, axios, devDependencies, @types/node, typescript, vitest, axios, @types/node (+11 more)
 
-### Community 75 - "node:sqlite Type Shims"
-Cohesion: 0.22
-Nodes (3): DatabaseSync, node:sqlite, StatementSync
-
-### Community 76 - "Turn Loop & Scoring Spec"
-Cohesion: 0.25
-Nodes (9): Black Market Economy, game Config Section (turn_duration, vote_timeout, info_interval), Point Threshold Win Condition, Points Scoring (1 point per successful attack), Per-Turn Resolution Loop, Vote Weight and Leader Flag, Player Voting and Vote Collection, WebSocket /ws/game-info Observer Channel (+1 more)
-
-### Community 77 - "API Error Parsing"
-Cohesion: 0.39
-Nodes (7): LoginCard(), loginAdmin(), asRecord(), parseApiError(), ParsedApiError, readStatus(), formatLockReasonFa()
-
-### Community 78 - "Matrix Login Background"
-Cohesion: 0.29
-Nodes (5): DEFAULT_LANGS, MatrixBackground(), MatrixBackgroundProps, Speed, Stream
-
-### Community 79 - "AI Assistant Upgrade UI"
-Cohesion: 0.39
-Nodes (6): AiAssistantLevelCard(), AiAssistantLevelCardProps, formatNumberFa(), AiAssistantUpgradePanel(), formatNumberFa(), getStatusMessage()
-
-### Community 80 - "Communication Actor Auth"
-Cohesion: 0.50
-Nodes (7): actorFromGameState(), asRecord(), GAME_SERVER_URLS, isPhase(), isRole(), numberOrNull(), parseTeams()
-
-### Community 81 - "Communication SQLite Store"
-Cohesion: 0.29
-Nodes (5): asRecord(), CommunicationSqliteGlobals, getDatabase(), parseMessageRow(), sqliteGlobals
-
-### Community 82 - "Game Tab Definitions"
-Cohesion: 0.29
-Nodes (6): GameNavbarProps, GameTabs, ATTACK, BLACK_MARKET, GAME, HISTORY
-
-### Community 83 - "Message Timeline UI"
-Cohesion: 0.48
-Nodes (5): MessageTimeline(), formatCommunicationAudienceFa(), formatCommunicationTypeFa(), formatPhaseFa(), formatRoleFa()
-
-### Community 84 - "Player Game State Types"
-Cohesion: 0.29
-Nodes (6): ActionConfig, ActionSide, BlackMarketItemType, EffectType, GameStateResponse, TargetActionType
-
-### Community 85 - "Action Modules Spec"
-Cohesion: 0.52
-Nodes (7): Action Execution Module (server/Actions.py), AttackAction Resolution, BlackMarketAction Resolution, DefenseAction Resolution, Limit Effects (disable_attack / disable_defense), record_detailed_action Audit Snapshot, Attacker-Specific Vulnerability Tracking
-
-### Community 86 - "Player Channel & Contract Spec"
-Cohesion: 0.33
-Nodes (7): client Liveness Config (ping, pong, heartbeat), Player Connection Code, WebSocket /ws/{code} Player Channel, Python Game Server API OpenAPI 3.1 Contract v3.0.0, REST Response Envelope (success, data, timestamp, error), SSE Event Stream /api/games/{gameId}/events/stream, userId Player Identity
-
-### Community 87 - "TS Config Package Manifest"
-Cohesion: 0.29
-Nodes (6): license, name, private, publishConfig, access, version
-
-### Community 88 - "React Library TS Config"
-Cohesion: 0.29
-Nodes (6): compilerOptions, jsx, display, extends, ./base.json, $schema
-
-### Community 89 - "UI Package Manifest"
+### Community 62 - "ui/package.json"
 Cohesion: 0.29
 Nodes (6): name, private, scripts, lint, type, version
 
-### Community 90 - "Auth Store"
-Cohesion: 0.33
-Nodes (5): AuthErrorResponse, AuthResponse, AuthStore, AuthSuccessResponse, AuthUser
+### Community 63 - "DialogType"
+Cohesion: 0.17
+Nodes (11): TeamMembersDialogProps, BlackMarketDialogData, DialogDataMap, DialogType, ADMIN_SUMMARY, ATTACK_ACTION_CONFIG, BLACK_MARKET, GAME_SETUP (+3 more)
 
-### Community 92 - "OpenAPI Generated Types"
+### Community 64 - "login/page.tsx"
+Cohesion: 0.23
+Nodes (10): AuthMode, LoginPage(), motionVariants, loginUser(), signupUser(), AuthErrorResponse, AuthResponse, AuthStore (+2 more)
+
+### Community 65 - "AiAssistantUpgradePanel.tsx"
+Cohesion: 0.27
+Nodes (8): AiAssistantLevelCard(), AiAssistantLevelCardProps, formatNumberFa(), AiAssistantUpgradePanel(), AiAssistantUpgradePanelProps, formatNumberFa(), getStatusMessage(), PlayerAiLevelResponse
+
+### Community 66 - "scripts"
+Cohesion: 0.29
+Nodes (7): scripts, build, dev, lint, lint:fix, start, typecheck
+
+### Community 67 - "compilerOptions"
+Cohesion: 0.11
+Nodes (18): compilerOptions, allowImportingTsExtensions, esModuleInterop, module, moduleResolution, outDir, rootDir, exclude (+10 more)
+
+### Community 68 - "scripts"
+Cohesion: 0.18
+Nodes (10): name, private, scripts, build, build:prepared-catalog, dev, format, lint (+2 more)
+
+### Community 69 - "EquilibriumComparison.tsx"
+Cohesion: 0.33
+Nodes (9): asRecord(), EquilibriumComparison(), EquilibriumComparisonProps, extractEvents(), fa(), PlayedMove, readPlayed(), roleOf() (+1 more)
+
+### Community 70 - "Frontend Game Integration Guide"
+Cohesion: 0.13
+Nodes (15): 10. Readiness Model, 14. Stable Vote Rejection Codes, 18. Recommended Frontend State Structure, 19. Suggested Implementation Order, 1. What This Game Is, 20. Known Contract Nuances, 21. Minimal End-To-End Flow, 22. Final Rule For Frontend (+7 more)
+
+### Community 71 - "Messaging Subsystem"
+Cohesion: 0.14
+Nodes (13): 1. Shape, 2. The repository interface, 3. Backend selection, 4. Visibility, 5. Authentication, 6. Policy, 7. The stored message, 8. Adding a fourth backend (+5 more)
+
+### Community 72 - "GameNavbar/index.tsx"
+Cohesion: 0.20
+Nodes (10): GameNavbar(), GameNavbarProps, tabs, TimeOverDialog(), WaitingForVoteDialog(), GameTabs, ATTACK, BLACK_MARKET (+2 more)
+
+### Community 73 - "tursoRepository.ts"
+Cohesion: 0.25
+Nodes (6): asRecord(), LibsqlClient, parseMessageRow(), SCHEMA_STATEMENTS, SqlArg, TursoGlobals
+
+### Community 74 - "EquilibriumPanel.tsx"
+Cohesion: 0.44
+Nodes (9): EquilibriumPanel(), fa(), MatrixTable(), MixCard(), MixCardProps, moveLabel(), percent(), SIGNED() (+1 more)
+
+### Community 75 - "trpc.ts"
+Cohesion: 0.31
+Nodes (6): appRouter, baseProcedure, createCallerFactory, createTRPCContext, createTRPCRouter, t
+
+### Community 76 - "Deployment and Environment Runbook"
+Cohesion: 0.14
+Nodes (13): 1. Environment variables, 2. Local development, 3. Why local SQLite cannot be used in production, 4. Production setup — Turso, 5. Function region, 6. Troubleshooting, 7. Known limitation — server-side reachability, 8. Pre-deploy checklist (+5 more)
+
+### Community 77 - "include"
+Cohesion: 0.12
+Nodes (16): compilerOptions, baseUrl, paths, plugins, exclude, extends, include, next-env.d.ts (+8 more)
+
+### Community 78 - "next.js"
+Cohesion: 0.31
+Nodes (4): nextConfig, config, nextJsConfig, config
+
+### Community 79 - "auth.ts"
+Cohesion: 0.42
+Nodes (8): actorFromGameState(), asRecord(), GAME_SERVER_TIMEOUT_MS, GAME_SERVER_URLS, isPhase(), isRole(), numberOrNull(), parseTeams()
+
+### Community 80 - "mongoRepository.ts"
+Cohesion: 0.25
+Nodes (5): buildConnectionUri(), CommunicationMessageDocument, CommunicationMongoGlobals, getCollection(), mongoGlobals
+
+### Community 81 - "sqliteRepository.ts"
+Cohesion: 0.25
+Nodes (5): asRecord(), CommunicationSqliteGlobals, getDatabase(), parseMessageRow(), sqliteGlobals
+
+### Community 82 - "DatabaseSync"
+Cohesion: 0.22
+Nodes (3): DatabaseSync, node:sqlite, StatementSync
+
+### Community 83 - "AdminAuthGate.tsx"
+Cohesion: 0.33
+Nodes (6): AdminAuthContext, AdminAuthContextValue, AdminAuthGate(), getAdminToken(), listAdminUsers(), logoutAdmin()
+
+### Community 84 - "parseApiError"
+Cohesion: 0.39
+Nodes (7): LoginCard(), loginAdmin(), asRecord(), parseApiError(), ParsedApiError, readStatus(), formatLockReasonFa()
+
+### Community 85 - "MatrixBackground.tsx"
+Cohesion: 0.29
+Nodes (5): DEFAULT_LANGS, MatrixBackground(), MatrixBackgroundProps, Speed, Stream
+
+### Community 86 - "Demo Scenario Design Notes"
+Cohesion: 0.15
+Nodes (12): 1. The core design: three moves, identical expected value, 2. Counters, 3. Why the attacker is favoured, 4. Structure, 5. Credits and the black market, 6. Game configuration, 7. When you change these numbers, Demo Scenario Design Notes (+4 more)
+
+### Community 87 - "api-test/page.tsx"
+Cohesion: 0.29
+Nodes (4): Page(), StartGameResponse, WaitForPhaseRequest, WaitForPhaseResponse
+
+### Community 88 - "Gameplay API (v2)"
+Cohesion: 0.15
+Nodes (12): 1. How v2 differs from v1, 2. Authentication, 3. Endpoint index, 4. A turn, endpoint by endpoint, 6. Government endpoints, 7. AI assistant, 8. Fields you cannot rely on, 9. What is still undocumented (+4 more)
+
+### Community 89 - "gameState.types.ts"
+Cohesion: 0.29
+Nodes (6): ActionConfig, ActionSide, BlackMarketItemType, EffectType, GameStateResponse, TargetActionType
+
+### Community 90 - "typescript-config/package.json"
+Cohesion: 0.29
+Nodes (6): license, name, private, publishConfig, access, version
+
+### Community 91 - "getLocalized"
+Cohesion: 0.48
+Nodes (6): asRecord(), PlayerMoveInsight(), prettify(), readResolved(), ResolvedStep, getLocalized()
+
+### Community 92 - "openapi-types.ts"
 Cohesion: 0.33
 Nodes (5): components, $defs, operations, paths, webhooks
 
-### Community 93 - "UI Package Exports"
-Cohesion: 0.33
-Nodes (6): exports, ./components/*, ./globals.css, ./hooks/*, ./lib/*, ./postcss.config
+### Community 93 - "README.md"
+Cohesion: 0.17
+Nodes (7): Cyber-Security Wargame Simulator, Documentation, Quick start, The domain model, The equilibrium solver, The three pieces, Workspaces
 
-### Community 94 - "Compact Player Card"
-Cohesion: 0.50
-Nodes (4): CompactPlayerCard(), CompactPlayerCardProps, fmt(), Track
+### Community 94 - "2. Core Concepts"
+Cohesion: 0.20
+Nodes (10): 2.1 IDs, 2.2 User vs Player, 2.3 Side, 2.4 Team, 2.5 Team Roles, 2.6 Actions, 2.7 Black Market Items, 2.8 Directives (+2 more)
 
-### Community 95 - "Players Team List"
-Cohesion: 0.40
-Nodes (3): blueTeam, Player, redTeam
-
-### Community 96 - "Player Action Types"
+### Community 95 - "actions.types.ts"
 Cohesion: 0.40
 Nodes (4): ActionConfig, ActionSide, BlackMarketItem, PlayerGameStateResponse
 
-### Community 97 - "User Auth Endpoints"
+### Community 96 - "UserAuthResponse"
 Cohesion: 0.40
 Nodes (3): UserAuthResponse, UserLoginRequest, UserSignupRequest
 
-### Community 98 - "Alert Component"
+### Community 97 - "ui/tsconfig.json"
+Cohesion: 0.15
+Nodes (12): compilerOptions, baseUrl, paths, exclude, extends, include, dist, node_modules (+4 more)
+
+### Community 100 - "vercel.json"
 Cohesion: 0.50
-Nodes (4): Alert(), AlertDescription(), AlertTitle(), alertVariants
+Nodes (3): regions, $schema, fra1
 
-### Community 101 - "Docs Page Shell"
+### Community 101 - "Python Game Server – API and Runtime Guide"
+Cohesion: 0.20
+Nodes (10): Action Execution Semantics (server/Actions.py), Changelog (docs only), Field Reference and Constraints, Game Lifecycle (server/game_logic.py), HTTP Admin Endpoints, Models and Runtime Objects, Python Game Server – API and Runtime Guide, Quick Start (+2 more)
+
+### Community 119 - "Decision Log"
+Cohesion: 0.20
+Nodes (10): 2026-08-29 — Team membership comes from the API, never from the plan JSON, 2026-08-30 — The equilibrium solver runs in the frontend, 2026-08-31 — Steps are grouped by action code in the player UI, 2026-09-01 — Function region is set project-wide, not per route, 2026-09-01 — Turso for messaging storage in production, 2026-09-02 — Attacker points doubled to make the demo winnable, 2026-09-03 — Balance warnings come from the solver, not from expected values, 2026-09-03 — Rich summary cards in the plan builder, JSON editor kept (+2 more)
+
+### Community 132 - "Configuration (config.yml)"
+Cohesion: 0.22
+Nodes (9): client, Configuration (config.yml), database, game, log related configurations of NE, logging, ne (Nash/analytics), network (+1 more)
+
+### Community 133 - "5. Player endpoints in detail"
+Cohesion: 0.22
+Nodes (9): 5. Player endpoints in detail, `GET /client/player/nodes/{nodeId}/lock-reasons`, `GET /client/player/orders?turn=`, `GET /client/player/scenarios/{scenarioId}/steps`, `GET /client/player/state`, `GET /client/player/sub-subjects/{subSubjectId}/scenarios`, `GET /client/player/subjects`, `POST /client/player/scenarios/{scenarioId}/select` (+1 more)
+
+### Community 134 - "Admin — Facilitator Console"
+Cohesion: 0.25
+Nodes (7): Admin — Facilitator Console, Analytics, Further reading, Layout notes, Monitoring, Routes, The builder
+
+### Community 135 - "15. SSE Event Stream"
+Cohesion: 0.25
+Nodes (8): 15.1 Stream endpoint, 15.2 SSE format, 15.3 Stream startup behavior, 15.4 Event envelope, 15.5 Event visibility, 15.6 Most important event types for gameplay UI, 15.7 Snapshot payload, 15. SSE Event Stream
+
+### Community 136 - "11. Game State Machine"
+Cohesion: 0.29
+Nodes (7): 11.1 Coarse lifecycle field, 11.2 Authoritative status field, 11.3 Turn phase field, 11.4 Turn and phase meta fields, 11.5 Actual sequence, 11.6 Frontend gating rule, 11. Game State Machine
+
+### Community 137 - "17. Frontend UI By Phase"
+Cohesion: 0.29
+Nodes (7): 17.1 Waiting, 17.2 Government selection, 17.3 Selection, 17.4 Voting, 17.5 Calculation, 17.6 Finished, 17. Frontend UI By Phase
+
+### Community 138 - "7. Government System"
+Cohesion: 0.29
+Nodes (7): 7.1 What government does, 7.2 Government permissions, 7.3 Government cooldown and quota, 7.4 Government targeting model, 7.5 Government alerts, 7.6 Government UI rules, 7. Government System
+
+### Community 139 - "react-library.json"
+Cohesion: 0.29
+Nodes (6): compilerOptions, jsx, display, extends, ./base.json, $schema
+
+### Community 140 - "6. Configure All Contract"
+Cohesion: 0.33
+Nodes (6): 6.1 Non-negotiable rules, 6.2 Team role object, 6.3 Action eligibility, 6.4 Action counters, 6.5 Black market config, 6. Configure All Contract
+
+### Community 142 - "exports"
+Cohesion: 0.33
+Nodes (6): exports, ./components/*, ./globals.css, ./hooks/*, ./lib/*, ./postcss.config
+
+### Community 143 - "web/package.json"
+Cohesion: 0.40
+Nodes (4): name, private, type, version
+
+### Community 144 - "12. Role-Specific Gameplay Flow"
+Cohesion: 0.40
+Nodes (5): 12.1 Government team, 12.2 Attacker team, 12.3 Defender team, 12.4 Both-role team, 12. Role-Specific Gameplay Flow
+
+### Community 145 - "13. Player Endpoints In Detail"
+Cohesion: 0.40
+Nodes (5): 13.1 `GET /client/game_state`, 13.2 `GET /client/actions`, 13.3 `GET /client/targets`, 13.4 `POST /client/vote_action`, 13. Player Endpoints In Detail
+
+### Community 146 - "3. Source Of Truth For Frontend"
+Cohesion: 0.40
+Nodes (5): 3.1 Initial screen load, 3.2 During live play, 3.3 On reconnect, 3.4 Important schema distinction, 3. Source Of Truth For Frontend
+
+### Community 147 - "4. Authentication"
+Cohesion: 0.50
+Nodes (4): 4.1 Admin auth, 4.2 User auth, 4.3 Auth transport, 4. Authentication
+
+### Community 148 - "Salvage"
+Cohesion: 0.50
+Nodes (3): Salvage, `turn-analytics-response.json.txt`, `zod-plan-schemas.tsx.txt`
+
+### Community 149 - "16. Replay And Recovery Endpoints"
 Cohesion: 0.67
-Nodes (3): adminHref(), DocsPage(), searchTextForSection()
-
-## Ambiguous Edges - Review These
-- `FastAPI App (server/networking.py)` → `Python Game Server API OpenAPI 3.1 Contract v3.0.0`  [AMBIGUOUS]
-  packages/api/README.md · relation: semantically_similar_to
-- `WebSocket /ws/game-info Observer Channel` → `admin Next.js App`  [AMBIGUOUS]
-  INSTRUCTION.md · relation: conceptually_related_to
+Nodes (3): 16.1 `GET /api/games/{gameId}/events/status`, 16.2 `GET /api/games/{gameId}/events`, 16. Replay And Recovery Endpoints
 
 ## Knowledge Gaps
-- **705 isolated node(s):** `appDir`, `nextConfig`, `name`, `version`, `private` (+700 more)
-  These have ≤1 connection - possible missing edges or undocumented components.
-- **56 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **911 isolated node(s):** `OUT_DIR`, `C`, `presentation`, `appDir`, `nextConfig` (+906 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1062 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **49 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `FastAPI App (server/networking.py)` and `Python Game Server API OpenAPI 3.1 Contract v3.0.0`?**
-  _Edge tagged AMBIGUOUS (relation: semantically_similar_to) - confidence is low._
-- **What is the exact relationship between `WebSocket /ws/game-info Observer Channel` and `admin Next.js App`?**
-  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `cn()` connect `Shared UI Primitives` to `Login & Attack Screens`, `Alert Component`, `Attack Action Config Editor`, `Player Docs Page`, `Communication Composers`, `Admin Result Dialogs`, `ATT&CK Group Browser`, `Menus & Dropdown UI`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `Button()` connect `Admin Result Dialogs` to `Login & Attack Screens`, `Shared UI Primitives`, `Attack Action Config Editor`, `Player Docs Page`, `AI Subject Insights`, `Admin Analytics Dashboard`, `Admin Configuration Page`, `Government Dashboard & Events`, `Game Conclusion & Results`, `Communication Composers`, `Player Dashboard Page`, `ATT&CK Group Browser`, `Admin Monitoring Page`, `Menus & Dropdown UI`, `Game Plan Graph Viewer`, `Game Plan Editor Page`, `Admin AI Assistant Page`, `Game Footer & Results UI`, `Scenario Voting Arena`, `AI Assistant Upgrade UI`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `Badge()` connect `Communication Composers` to `Login & Attack Screens`, `Shared UI Primitives`, `Attack Action Config Editor`, `Player Docs Page`, `AI Subject Insights`, `Admin Analytics Dashboard`, `Game Plan Graph Viewer`, `Game Plan Editor Page`, `Government Dashboard & Events`, `Game Conclusion & Results`, `AI Assistant Upgrade UI`, `Player Dashboard Page`, `Admin AI Assistant Page`, `Admin Result Dialogs`, `Message Timeline UI`, `Admin Monitoring Page`, `Scenario Voting Arena`, `Players Team List`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **What connects `appDir`, `nextConfig`, `name` to the rest of the system?**
-  _705 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Game Server API Types` be split into smaller, more focused modules?**
-  _Cohesion score 0.027777777777777776 - nodes in this community are weakly interconnected._
+- **Why does `Button()` connect `button.tsx` to `ScenarioVotingArena.tsx`, `web/app/docs/page.tsx`, `cn`, `BlackMarketDialog.tsx`, `CommunicationPanel.tsx`, `analytics/page.tsx`, `configuration/page.tsx`, `government/page.tsx`, `admin/game-plan/page.tsx`, `graph/page.tsx`, `player/page.tsx`, `monitoring/page.tsx`, `game/page.tsx`, `card.tsx`, `current-flow/page.tsx`, `AiAssistantLevels.tsx`, `game-client/types.ts`, `login/page.tsx`, `AiAssistantUpgradePanel.tsx`, `EquilibriumComparison.tsx`, `GameNavbar/index.tsx`, `EquilibriumPanel.tsx`, `api-test/page.tsx`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `card.tsx`, `ScenarioVotingArena.tsx`, `web/app/docs/page.tsx`, `current-flow/page.tsx`, `BlackMarketDialog.tsx`, `GameNavbar/index.tsx`, `CommunicationPanel.tsx`, `button.tsx`, `useGameStore`, `game/page.tsx`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `Badge()` connect `CommunicationPanel.tsx` to `ScenarioVotingArena.tsx`, `web/app/docs/page.tsx`, `cn`, `BlackMarketDialog.tsx`, `analytics/page.tsx`, `government/page.tsx`, `CollectionSummary.tsx`, `admin/game-plan/page.tsx`, `graph/page.tsx`, `player/page.tsx`, `monitoring/page.tsx`, `game/page.tsx`, `card.tsx`, `current-flow/page.tsx`, `runtimeTranslationsFa.ts`, `button.tsx`, `AiAssistantLevels.tsx`, `game-client/types.ts`, `AiAssistantUpgradePanel.tsx`, `EquilibriumComparison.tsx`, `EquilibriumPanel.tsx`?**
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+- **What connects `OUT_DIR`, `C`, `presentation` to the rest of the system?**
+  _911 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `game-server/types.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.028169014084507043 - nodes in this community are weakly interconnected._
+- **Should `game-client/router.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05704365079365079 - nodes in this community are weakly interconnected._
+- **Should `ScenarioVotingArena.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.05669199298655757 - nodes in this community are weakly interconnected._
