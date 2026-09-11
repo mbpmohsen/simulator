@@ -101,6 +101,7 @@ Full derivation, payoff formulas and worked numbers: [`docs/equilibrium-formulas
 | --- | --- |
 | [`docs/architecture.md`](docs/architecture.md) | *(not yet written)* how a click becomes a resolved step |
 | [`docs/gameplay-api.md`](docs/gameplay-api.md) | The v2 REST contract the frontend actually calls |
+| [`docs/black-market-contract.md`](docs/black-market-contract.md) | Proposed black-market endpoints — spec for the backend |
 | [`docs/game-plan-model.md`](docs/game-plan-model.md) | Every field of the scenario contract, and what validation checks |
 | [`docs/equilibrium-formulas.html`](docs/equilibrium-formulas.html) | Payoff matrix, LP formulation, every displayed number |
 | [`docs/demo-scenario.md`](docs/demo-scenario.md) | Why the demo numbers are what they are — read before changing them |

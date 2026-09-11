@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import { normalizeGovernmentCatalog } from "../game-plan/government-catalog";
 import type {
+	BlackMarketItemView,
 	GoalSelectResponse,
 	GovernmentCatalogResponse,
 	GovernmentOrder,
@@ -96,6 +97,9 @@ export interface GameClientApi {
 		nodeId: string,
 		config?: AxiosRequestConfig,
 	): Promise<LockReasonsResponse>;
+	getBlackMarketItems(
+		config?: AxiosRequestConfig,
+	): Promise<BlackMarketItemView[]>;
 	getPlayerAiLevel(config?: AxiosRequestConfig): Promise<PlayerAiLevelResponse>;
 	purchasePlayerAiLevel(
 		config?: AxiosRequestConfig,
@@ -274,6 +278,14 @@ export const createGameClientApi = (
 		async getGovernmentLockReasons(teamId, nodeId, requestConfig) {
 			const { data } = await http.get<LockReasonsResponse>(
 				`/government/teams/${encodeURIComponent(teamId)}/nodes/${encodeURIComponent(nodeId)}/lock-reasons`,
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getBlackMarketItems(requestConfig) {
+			const { data } = await http.get<BlackMarketItemView[]>(
+				"/client/player/black-market",
 				requestConfig,
 			);
 			return data;

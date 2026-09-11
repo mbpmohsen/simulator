@@ -1,4 +1,7 @@
 import type {
+	BlackMarketItemView,
+	ClientVoteActionRequest,
+	ClientVoteActionResponse,
 	GameClientApi,
 	LockReasonsResponse,
 	OrderView,
@@ -29,6 +32,9 @@ export interface PlayerRuntimeApi {
 	voteStep(stepId: string): Promise<VoteStepResponse>;
 	getOrders(turn?: number): Promise<OrderView[]>;
 	getAiLevel(): Promise<PlayerAiLevelResponse>;
+	getBlackMarketItems(): Promise<BlackMarketItemView[]>;
+	/** Purchasing rides the v1 vote endpoint and needs the NUMERIC item id. */
+	voteAction(payload: ClientVoteActionRequest): Promise<ClientVoteActionResponse>;
 	purchaseAiLevel(): Promise<PlayerAiPurchaseResponse>;
 	getRuntimeContext(): Promise<RuntimeApiContext>;
 }
@@ -48,6 +54,8 @@ export const createPlayerRuntimeApi = (token: string): PlayerRuntimeApi => {
 		voteStep: (stepId) => client.votePlayerStep(stepId),
 		getOrders: (turn) => client.getPlayerOrders(turn),
 		getAiLevel: () => client.getPlayerAiLevel(),
+		getBlackMarketItems: () => client.getBlackMarketItems(),
+		voteAction: (payload) => client.voteAction(payload),
 		purchaseAiLevel: () => client.purchasePlayerAiLevel(),
 		getRuntimeContext: () => loadRuntimeApiContext(client),
 	};

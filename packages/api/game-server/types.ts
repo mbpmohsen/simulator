@@ -637,6 +637,58 @@ export interface StepView {
 	probability?: number;
 }
 
+/**
+ * Black market as the player sees it.
+ *
+ * Distinct from `BlackMarketItemRequest`, which is what an admin authors. The
+ * player-facing view is resolved and localized: the target is an action *code*
+ * rather than a numeric id, availability is already decided by the server, and
+ * the Persian strings are carried through from the plan.
+ *
+ * Contract proposed by the frontend; see docs/black-market-contract.md.
+ */
+/** Stable reason codes the server returns when `available` is false. */
+export type BlackMarketUnavailableReason =
+	| "NOT_YET_AVAILABLE"
+	| "PER_TEAM_LIMIT_REACHED"
+	| "OUT_OF_STOCK"
+	| "INSUFFICIENT_CREDITS"
+	| "ALREADY_ACTIVE_NOT_STACKABLE";
+
+export interface BlackMarketItemView {
+	code: string;
+	name: string;
+	name_fa?: string | null;
+	description?: string | null;
+	description_fa?: string | null;
+	item_type?: string | null;
+	item_type_fa?: string | null;
+	effect_type?: string | null;
+	effect_value?: number | null;
+	/** Action this item modifies, by code - never a numeric id. */
+	target_action_code?: string | null;
+	duration_turns?: number;
+	cost: number;
+	/** Server decides; the client must not re-derive availability rules. */
+	available: boolean;
+	/**
+	 * A CODE, not display text - the server keeps it stable and the client
+	 * localizes it. Typed loosely because the server may add codes.
+	 */
+	unavailable_reason?: BlackMarketUnavailableReason | string | null;
+	purchases_used?: number;
+	max_purchases?: number | null;
+}
+
+export interface BlackMarketPurchaseResponse {
+	ok: boolean;
+	item_code: string;
+	cost: number;
+	credits_after: number;
+	turn: number;
+	expires_turn?: number | null;
+}
+
 export interface LockReason {
 	code: string;
 	message: string;

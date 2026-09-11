@@ -13,6 +13,7 @@ import { Progress } from "@workspace/ui/components/progress";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
 	Activity,
+	Ban,
 	Check,
 	CheckCircle2,
 	CircleDot,
@@ -30,6 +31,8 @@ import {
 	Trophy,
 	Users,
 	Vote,
+	ShieldHalf,
+	Swords,
 	XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -53,6 +56,9 @@ export interface ArenaActionInfo {
 	cost?: number | null;
 	probability?: number | null;
 	points?: number | null;
+	/** The move on the other side that this one is tied to, already localized. */
+	counterName?: string | null;
+	counterRelation?: "countered-by" | "counters" | null;
 }
 
 interface ScenarioVotingArenaProps {
@@ -65,6 +71,8 @@ interface ScenarioVotingArenaProps {
 	teamMembers: PlayerSchema[];
 	actionBusy: string | null;
 	actionCatalog?: ArenaActionInfo[];
+	/** action_code -> remaining turns, from this turn's government orders. */
+	bannedActionCodes?: Map<string, number | null>;
 	loading?: boolean;
 	error?: string | null;
 	onVote: (stepId: string) => Promise<boolean>;
@@ -165,6 +173,9 @@ interface MoveGroup {
 	points: number | null;
 	expectedValue: number | null;
 	hint: string | null;
+	counterName: string | null;
+	counterRelation: "countered-by" | "counters" | null;
+	bannedFor: number | null | undefined;
 }
 
 const faNumber = (value: number, digits = 0): string =>
@@ -183,6 +194,7 @@ export function ScenarioVotingArena({
 	teamMembers,
 	actionBusy,
 	actionCatalog,
+	bannedActionCodes,
 	loading = false,
 	error,
 	onVote,
@@ -295,10 +307,15 @@ export function ScenarioVotingArena({
 						? (probability / 100) * points
 						: null,
 				hint: tradeoffHintFa(probability, points),
+				counterName: info?.counterName ?? null,
+				counterRelation: info?.counterRelation ?? null,
+				bannedFor: bannedActionCodes?.has(code)
+					? bannedActionCodes.get(code)
+					: undefined,
 			});
 		}
 		return built.sort((left, right) => left.order - right.order);
-	}, [steps, catalogByCode]);
+	}, [steps, catalogByCode, bannedActionCodes]);
 
 	// Only worth explaining the mixing idea when there is actually a choice.
 	const showMixingHint = groups.length >= 2;
@@ -569,8 +586,13 @@ export function ScenarioVotingArena({
 							nextStep !== null && selectedStepId === nextStep.id && !submitted;
 						const locked =
 							!exhausted && (nextStep === null || !nextStep.available);
+						const banned = group.bannedFor !== undefined;
 						const canSelect =
-							votingOpen && !locked && !exhausted && !submittedStepId;
+							votingOpen &&
+							!locked &&
+							!banned &&
+							!exhausted &&
+							!submittedStepId;
 						return (
 							<motion.article
 								layout
@@ -636,6 +658,14 @@ export function ScenarioVotingArena({
 															الزامی
 														</Badge>
 													)}
+													{group.bannedFor !== undefined && (
+														<Badge className="border border-orange-400/25 bg-orange-500/15 text-orange-200">
+															<Ban className="size-3" />
+															{typeof group.bannedFor === "number"
+																? `ممنوع برای ${faNumber(group.bannedFor)} نوبت`
+																: "ممنوع‌شده توسط دولت"}
+														</Badge>
+													)}
 												</div>
 
 												<div className="mt-3 flex flex-wrap gap-2">
@@ -675,6 +705,44 @@ export function ScenarioVotingArena({
 												{group.hint && (
 													<p className="mt-2.5 text-[11px] leading-6 text-slate-400">
 														{group.hint}
+													</p>
+												)}
+
+												{group.counterName && group.counterRelation && (
+													<p className="mt-1.5 flex items-center gap-1.5 text-[11px] leading-6 text-slate-400">
+														{group.counterRelation === "countered-by" ? (
+															<>
+																<ShieldHalf className="size-3 shrink-0 text-sky-300" />
+																<span>
+																	حریف می‌تواند این حرکت را با «
+																	<span className="text-slate-300">
+																		{group.counterName}
+																	</span>
+																	» خنثی کند.
+																</span>
+															</>
+														) : (
+															<>
+																<Swords className="size-3 shrink-0 text-rose-300" />
+																<span>
+																	این حرکت جلوی «
+																	<span className="text-slate-300">
+																		{group.counterName}
+																	</span>
+																	» را می‌گیرد.
+																</span>
+															</>
+														)}
+													</p>
+												)}
+
+												{group.bannedFor !== undefined && (
+													<p className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-6 text-orange-200/80">
+														<Ban className="mt-1 size-3 shrink-0" />
+														<span>
+															دولت این حرکت را ممنوع کرده است؛ تا پایان
+															ممنوعیت قابل انتخاب نیست.
+														</span>
 													</p>
 												)}
 

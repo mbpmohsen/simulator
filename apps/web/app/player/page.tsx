@@ -56,6 +56,7 @@ import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
+import PlayerBlackMarket from "@/components/v2/player/PlayerBlackMarket";
 import PlayerMoveInsight from "@/components/v2/player/PlayerMoveInsight";
 import type { ArenaActionInfo } from "@/components/v2/player/ScenarioVotingArena";
 import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena";
@@ -63,6 +64,7 @@ import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
 import { useLockReasons } from "@/hooks/useLockReasons";
+import { usePlayerBlackMarket } from "@/hooks/usePlayerBlackMarket";
 import { usePlayerOrders } from "@/hooks/usePlayerOrders";
 import { usePlayerScenarios } from "@/hooks/usePlayerScenarios";
 import { usePlayerState } from "@/hooks/usePlayerState";
@@ -73,6 +75,7 @@ import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import { createCommunicationService } from "@/lib/communicationService";
 import { createPlayerRuntimeApi } from "@/lib/playerRuntimeApi";
 import {
+	formatActionCodeFa,
 	formatExecutionModeFa,
 	formatOrderTypeFa,
 	formatPhaseFa,
@@ -84,13 +87,17 @@ import {
 import type { SubjectRuntimeProgress } from "@/lib/subjectAiInsightGenerator";
 import { useAuthStore } from "@/store/auth.store";
 
-const orderDetailFa = (order: OrderView): string => {
+const orderDetailFa = (
+	order: OrderView,
+	actionName?: (code: string) => string,
+): string => {
 	const payload = order.payload;
 	const subjectId = payload.subject_id;
 	const actionCode = payload.action_code;
 	const amount = payload.amount;
 	if (typeof subjectId === "string") return `موضوع: ${subjectId}`;
-	if (typeof actionCode === "string") return `کنش: ${actionCode}`;
+	if (typeof actionCode === "string")
+		return `کنش: ${actionName?.(actionCode) ?? actionCode}`;
 	if (typeof amount === "number")
 		return `اعتبار: ${amount.toLocaleString("fa-IR")}`;
 	return `تیم هدف: ${order.target_team_id}`;
@@ -147,11 +154,46 @@ const readActionText = (
  */
 const buildArenaActionCatalog = (
 	actions: ActionSchema[],
-): ArenaActionInfo[] =>
-	actions.map((action) => {
+): ArenaActionInfo[] => {
+	// counterActionId points at another action by numeric id, so the catalogue
+	// has to be indexed before any entry can name its counterpart.
+	const byId = new Map<number, ActionSchema>();
+	for (const action of actions) byId.set(action.id, action);
+
+	const counterpart = (
+		action: ActionSchema,
+	): { name: string | null; relation: "countered-by" | "counters" | null } => {
+		const id = readActionNumber(
+			action as unknown as Record<string, unknown>,
+			["counterActionId", "counter_action_id"],
+		);
+		const other = id === null ? undefined : byId.get(id);
+		if (!other) return { name: null, relation: null };
+		const raw = other as unknown as Record<string, unknown>;
+		const name =
+			readActionText(raw, [
+				"displayNameFa",
+				"display_name_fa",
+				"nameFa",
+				"name_fa",
+			]) ?? readActionText(raw, ["displayName", "display_name", "name"]);
+		// Derive the direction from the two categories rather than assuming what
+		// the field means: a defence named on an attack neutralises it, and an
+		// attack named on a defence is the thing that defence stops.
+		const mine = actionTypeFromCode(action.name);
+		const theirs = actionTypeFromCode(other.name);
+		const relation =
+			mine === theirs ? null : mine === "attack" ? "countered-by" : "counters";
+		return { name, relation };
+	};
+
+	return actions.map((action) => {
 		const raw = action as unknown as Record<string, unknown>;
+		const counter = counterpart(action);
 		return {
 			code: action.name,
+			counterName: counter.name,
+			counterRelation: counter.relation,
 			name: readActionText(raw, ["displayName", "display_name", "name"]),
 			nameFa: readActionText(raw, [
 				"displayNameFa",
@@ -172,6 +214,7 @@ const buildArenaActionCatalog = (
 			]),
 		};
 	});
+};
 
 const buildPlayerActionsByCode = (
 	steps: StepView[],
@@ -296,6 +339,27 @@ export default function PlayerDashboardPage() {
 		runtime.state?.current_turn,
 		Boolean(token && runtime.state),
 	);
+	// A BAN_ACTION order in this turn's list is a ban on this team, right now.
+	// Orders are fetched per turn, so the window is already correct.
+	const bannedActionCodes = useMemo(() => {
+		const banned = new Map<string, number | null>();
+		for (const order of ordersResource.orders) {
+			if (order.order_type !== "BAN_ACTION") continue;
+			const code = order.payload.action_code;
+			if (typeof code !== "string") continue;
+			const duration = order.payload.duration;
+			banned.set(code, typeof duration === "number" ? duration : null);
+		}
+		return banned;
+	}, [ordersResource.orders]);
+
+	const blackMarket = usePlayerBlackMarket(
+		api,
+		Boolean(token && runtime.state),
+		runtime.state?.current_turn ?? null,
+		runtime.context?.gameState,
+	);
+
 	const aiLevelResource = useAiAssistantLevel({
 		token,
 		context: "player",
@@ -310,6 +374,18 @@ export default function PlayerDashboardPage() {
 	const arenaActionCatalog = useMemo(
 		() => buildArenaActionCatalog(runtime.context?.actions ?? []),
 		[runtime.context?.actions],
+	);
+	const actionNameByCode = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const entry of arenaActionCatalog) {
+			const label = entry.nameFa ?? entry.name;
+			if (label) map.set(entry.code, label);
+		}
+		return map;
+	}, [arenaActionCatalog]);
+	const resolveActionName = useCallback(
+		(code: string) => actionNameByCode.get(code) ?? formatActionCodeFa(code),
+		[actionNameByCode],
 	);
 	const playerAiLevel =
 		aiLevelResource.status === "ready"
@@ -771,7 +847,7 @@ export default function PlayerDashboardPage() {
 														</Badge>
 													</div>
 													<p className="mt-3 text-sm text-slate-300">
-														{orderDetailFa(order)}
+														{orderDetailFa(order, resolveActionName)}
 													</p>
 												</div>
 											))
@@ -967,6 +1043,7 @@ export default function PlayerDashboardPage() {
 										teamMembers={teamMembers}
 										actionBusy={actionBusy}
 										actionCatalog={arenaActionCatalog}
+										bannedActionCodes={bannedActionCodes}
 										loading={stepsResource.loading}
 										error={stepsResource.error}
 										onVote={voteStep}
@@ -976,7 +1053,17 @@ export default function PlayerDashboardPage() {
 							</div>
 
 							<aside className="space-y-5">
-								<PlayerMoveInsight
+												<PlayerBlackMarket
+									status={blackMarket.status}
+									items={blackMarket.items}
+									message={blackMarket.message}
+									busyCode={blackMarket.busyCode}
+									credits={runtime.state?.credits ?? null}
+									resolveActionName={resolveActionName}
+									onPurchase={blackMarket.purchase}
+									resolveItemId={blackMarket.resolveItemId}
+								/>
+				<PlayerMoveInsight
 									events={events.events}
 									steps={stepsResource.steps}
 									myTeamId={

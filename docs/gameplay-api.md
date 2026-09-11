@@ -75,6 +75,8 @@ that to resolve who is calling (`apps/web/server/communication/auth.ts`).
 | GET | `/client/player/orders?turn=` | `OrderView[]` |
 | GET | `/client/player/ai/level` | `PlayerAiLevelResponse` |
 | POST | `/client/player/ai/purchase` | `PlayerAiPurchaseResponse` |
+| GET | `/client/player/black-market` | `BlackMarketItemView[]` — **live** |
+| POST | `/client/player/black-market/{itemCode}/purchase` | `BlackMarketPurchaseResponse` — **not implemented yet** |
 
 ### Government
 
@@ -311,6 +313,21 @@ do the same join rather than trusting `StepView` alone.**
 
 When adding a screen, assume any optional field may be absent and render
 something meaningful without it.
+
+---
+
+## 8b. Black market — proposed, not built
+
+Two endpoints are declared on `GameClientApi` and consumed by a mounted player
+panel, but **no server implements them**. The panel stays hidden while they
+return 404.
+
+Full specification, field semantics and error codes:
+`docs/black-market-contract.md`.
+
+Until then, the only black-market data a player can reach is
+`gameState.blackMarketItems` from `/client/game_state`, which lacks Persian
+names, descriptions and availability, and identifies its target by numeric id.
 
 ---
 
