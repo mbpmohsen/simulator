@@ -14,7 +14,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
-import { motion } from "framer-motion";
 import {
 	LoaderCircle,
 	RefreshCw,
@@ -233,9 +232,8 @@ export default function EquilibriumComparison({
 			</CardHeader>
 			<CardContent className="space-y-5">
 				<p className="text-sm leading-7 text-slate-400">
-					نوار پررنگ نشان می‌دهد هر تیم واقعاً چه نسبتی از حرکت‌ها را بازی کرده
-					است و نشانهٔ خط‌چین نشان می‌دهد نظریهٔ بازی چه نسبتی را بهینه
-					می‌داند.
+					نوار پررنگ نشان می‌دهد هر تیم واقعاً چه نسبتی از حرکت‌ها را بازی کرده است
+					و نشانهٔ خط‌چین نشان می‌دهد نظریهٔ بازی چه نسبتی را بهینه می‌داند.
 				</p>
 
 				{error && (
@@ -247,16 +245,15 @@ export default function EquilibriumComparison({
 				{!loading && !plan && (
 					<div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-slate-400">
 						برنامهٔ بازی در دسترس نیست. سرور نقطهٔ پایانی برای خواندن برنامهٔ
-						منتشرشده ندارد، پس این مقایسه از برنامه‌ای استفاده می‌کند که در
-						«پیکربندی بازی» باز کرده‌اید. ابتدا آن صفحه را در همین زبانه باز
-						کنید و سپس به این‌جا برگردید.
+						منتشرشده ندارد، پس این مقایسه از برنامه‌ای استفاده می‌کند که در «تنظیم
+						بازی» باز کرده‌اید. ابتدا آن صفحه را در همین زبانه باز کنید و سپس به
+						این‌جا برگردید.
 					</div>
 				)}
 
 				{!loading && equilibrium && !equilibrium.solvable && (
 					<div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-						تعادل برای این برنامه قابل محاسبه نیست، پس مقایسه‌ای در دسترس
-						نیست.
+						تعادل برای این برنامه قابل محاسبه نیست، پس مقایسه‌ای در دسترس نیست.
 					</div>
 				)}
 
@@ -271,15 +268,25 @@ export default function EquilibriumComparison({
 					{comparisons.map((side) => {
 						const accent =
 							side.kind === "attack"
-								? { bar: "bg-rose-400", text: "text-rose-200", ring: "border-rose-400/25" }
-								: { bar: "bg-sky-400", text: "text-sky-200", ring: "border-sky-400/25" };
+								? {
+										bar: "bg-rose-400",
+										text: "text-rose-200",
+										ring: "border-rose-400/25",
+									}
+								: {
+										bar: "bg-sky-400",
+										text: "text-sky-200",
+										ring: "border-sky-400/25",
+									};
 						return (
 							<div
 								key={side.teamId}
 								className={`rounded-2xl border bg-slate-950/55 p-4 ${accent.ring}`}
 							>
 								<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-									<div className={`flex items-center gap-2 font-black ${accent.text}`}>
+									<div
+										className={`flex items-center gap-2 font-black ${accent.text}`}
+									>
 										{side.kind === "attack" ? (
 											<Swords className="size-4" />
 										) : (
@@ -291,61 +298,63 @@ export default function EquilibriumComparison({
 										<Badge className="border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
 											{side.matched.toLocaleString("fa-IR")} حرکت
 										</Badge>
-										{side.matched > 0 && <Badge
-											className={`border px-2.5 py-1 text-[11px] ${
-												side.divergence <= 0.15
-													? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
-													: side.divergence <= 0.35
-														? "border-amber-400/25 bg-amber-400/10 text-amber-200"
-														: "border-rose-400/25 bg-rose-400/10 text-rose-200"
-											}`}
-										>
-											فاصله تا بهینه {fa(side.divergence * 100, 0)}٪
-										</Badge>}
+										{side.matched > 0 && (
+											<Badge
+												className={`border px-2.5 py-1 text-[11px] ${
+													side.divergence <= 0.15
+														? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+														: side.divergence <= 0.35
+															? "border-amber-400/25 bg-amber-400/10 text-amber-200"
+															: "border-rose-400/25 bg-rose-400/10 text-rose-200"
+												}`}
+											>
+												فاصله تا بهینه {fa(side.divergence * 100, 0)}٪
+											</Badge>
+										)}
 									</div>
 								</div>
 
 								{side.matched === 0 ? (
 									<div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.08] p-3 text-sm leading-7 text-amber-100">
 										هیچ‌کدام از {side.unmatched.toLocaleString("fa-IR")} حرکت این
-										تیم در برنامهٔ بارگذاری‌شده وجود ندارد. این بازی با
-										پیکربندی دیگری اجرا شده است، پس مقایسه‌ای معنا ندارد.
+										تیم در برنامهٔ بارگذاری‌شده وجود ندارد. این بازی با پیکربندی
+										دیگری اجرا شده است، پس مقایسه‌ای معنا ندارد.
 									</div>
 								) : (
-								<div className="space-y-3.5">
-									{side.rows.map((row) => (
-										<div key={row.code} className="space-y-1.5">
-											<div className="flex items-baseline justify-between gap-3">
-												<span className="truncate text-sm">{row.label}</span>
-												<span
-													dir="ltr"
-													className="shrink-0 font-mono text-xs tabular-nums text-slate-400"
-												>
-													{fa(row.actual * 100, 0)}٪ / {fa(row.optimal * 100, 0)}٪
-												</span>
+									<div className="space-y-3.5">
+										{side.rows.map((row) => (
+											<div key={row.code} className="space-y-1.5">
+												<div className="flex items-baseline justify-between gap-3">
+													<span className="truncate text-sm">{row.label}</span>
+													<span
+														dir="ltr"
+														className="shrink-0 font-mono text-xs tabular-nums text-slate-400"
+													>
+														{fa(row.actual * 100, 0)}٪ /{" "}
+														{fa(row.optimal * 100, 0)}٪
+													</span>
+												</div>
+												<div className="relative h-2.5 overflow-hidden rounded-full bg-white/5">
+													<div
+														className={`absolute inset-y-0 right-0 transition-[width] duration-300 motion-reduce:transition-none ${accent.bar}`}
+														style={{ width: `${row.actual * 100}%` }}
+													/>
+													<span
+														className="absolute inset-y-0 w-0 border-r-2 border-dashed border-slate-200/70"
+														style={{ right: `${row.optimal * 100}%` }}
+														aria-hidden="true"
+													/>
+												</div>
 											</div>
-											<div className="relative h-2.5 overflow-hidden rounded-full bg-white/5">
-												<motion.div
-													className={`absolute inset-y-0 right-0 ${accent.bar}`}
-													initial={false}
-													animate={{ width: `${row.actual * 100}%` }}
-													transition={{ duration: 0.4, ease: "easeOut" }}
-												/>
-												<span
-													className="absolute inset-y-0 w-0 border-r-2 border-dashed border-slate-200/70"
-													style={{ right: `${row.optimal * 100}%` }}
-													aria-hidden="true"
-												/>
-											</div>
-										</div>
-									))}
-									{side.unmatched > 0 && (
-										<p className="pt-1 text-[11px] leading-5 text-amber-300/80">
-											{side.unmatched.toLocaleString("fa-IR")} حرکت دیگر از
-											کنش‌هایی بود که در این برنامه نیستند و در محاسبه نیامده‌اند.
-										</p>
-									)}
-								</div>
+										))}
+										{side.unmatched > 0 && (
+											<p className="pt-1 text-[11px] leading-5 text-amber-300/80">
+												{side.unmatched.toLocaleString("fa-IR")} حرکت دیگر از
+												کنش‌هایی بود که در این برنامه نیستند و در محاسبه
+												نیامده‌اند.
+											</p>
+										)}
+									</div>
 								)}
 							</div>
 						);
@@ -353,9 +362,9 @@ export default function EquilibriumComparison({
 				</div>
 
 				<p className="text-xs leading-6 text-slate-600">
-					نسبت‌های بهینه از برنامهٔ بارگذاری‌شده در «پیکربندی بازی» محاسبه
-					می‌شوند، نه از سروری که این بازی روی آن اجرا شده است. اگر آن برنامه با
-					چیزی که واقعاً منتشر شده فرق داشته باشد، مقایسه معتبر نیست.
+					نسبت‌های بهینه از برنامهٔ بارگذاری‌شده در «تنظیم بازی» محاسبه می‌شوند، نه
+					از سروری که این بازی روی آن اجرا شده است. اگر آن برنامه با چیزی که
+					واقعاً منتشر شده فرق داشته باشد، مقایسه معتبر نیست.
 				</p>
 			</CardContent>
 		</Card>

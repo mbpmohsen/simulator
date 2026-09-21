@@ -170,20 +170,24 @@ response.
 `apps/admin` never reaches the game server from the server side — the browser
 talks to it directly with an admin token.
 
-It does have two API routes, `/api/attack-data` and `/api/prepared-catalog`, but
-both only read MITRE ATT&CK catalogue files from local disk with `fs`. Neither
-calls the game server, so neither is affected by the reachability problem in §8.
+It has no API routes of its own.
 
 ```
 /admin/game-plan            draft lives in React state only
   → load from: default scenario | demo scenario | published plan | file
-  → edit through CollectionEditor (raw JSON per record)
-  → validateDefaultGamePlanClientSide(draft)     packages/api/game-plan/validation.ts
+  → edit in two workspaces                      apps/admin/src/components/builder/
+      کنش‌ها            actions, counters matrix, black market
+      اهداف و سناریوها  goal → subject → sub-subject → scenario tree;
+                    checklist steps as a moves × uses grid
+    structural edits (create linked child, cascade remove, rename id with its
+    references, lane scaffold)                   packages/api/game-plan/structure.ts
+    raw JSON per record stays available behind «ویرایش JSON»
+  → validateDefaultGamePlanClientSide(draft)     re-run live on every edit
   → GameServerApi.configureAll(draft)
       POST /admin/configure_all
 ```
 
-Nothing reaches the server until «اعتبارسنجی و انتشار». Editing the JSON on disk
+Nothing reaches the server until «بررسی و انتشار». Editing the JSON on disk
 changes nothing in a running game — the plan must be republished.
 
 Contract reference: `docs/game-plan-model.md`.
@@ -205,13 +209,14 @@ It reads only `teams`, `actions` and `action_counters`. The subject tree,
 invisible to it. Government **action bans** are modelled, via
 `buildEquilibriumWithout`.
 
-It appears in three places:
+It appears in one place: `/analytics`, comparing what teams actually played
+against the optimum.
 
-- the «تعادل بازی» builder tab, with ban toggles
-- every action card in the builder, as an equilibrium-weight chip and a dominated
-  warning — **the only check that catches a plan which validates cleanly but is
-  unplayable**
-- `/analytics`, comparing what teams actually played against the optimum
+The builder no longer shows it. The «تعادل بازی» tab and the per-action weight
+chips were removed from the admin by decision. That leaves no check in the UI
+that catches a plan which validates cleanly but has a dominated move; after
+changing action numbers, run `packages/api/game-plan/equilibrium.test.ts` or
+call `buildEquilibrium` directly.
 
 Formulas: `docs/equilibrium-formulas.html`.
 

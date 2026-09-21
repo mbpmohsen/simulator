@@ -35,10 +35,7 @@ import {
 	ReactFlow,
 } from "@xyflow/react";
 import {
-	Activity,
 	AlertTriangle,
-	BarChart3,
-	BookOpen,
 	Box,
 	Download,
 	Footprints,
@@ -54,7 +51,6 @@ import {
 	Target,
 	Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	getActiveGameId,
@@ -76,7 +72,7 @@ const NODE_LABEL: Record<GamePlanGraphNode["type"], string> = {
 	scenarioNode: "سناریو",
 	stepNode: "گام",
 	actionNode: "کنش",
-	counterNode: "ضدکنش",
+	counterNode: "مقابله",
 	effectNode: "اثر",
 	governmentNode: "دولت",
 	marketItemNode: "بازار سیاه",
@@ -306,19 +302,17 @@ export default function CurrentPublishedFlowPage() {
 				<div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
 					<div>
 						<div className="flex items-center gap-2 text-xs text-cyan-300">
-							<GitBranch className="size-4" /> نمای خواندنی و منتشرشده
+							<GitBranch className="size-4" /> فقط خواندنی
 						</div>
-						<h1 className="mt-2 text-2xl font-black">
-							نقشه پیکربندی فعلی بازی
-						</h1>
+						<h1 className="mt-2 text-2xl font-black">نسخهٔ منتشرشدهٔ بازی</h1>
 						<p className="mt-1 text-sm text-slate-500">
-							نمای خواندنی از هدف‌ها، موضوع‌ها، سناریوها، گام‌ها و اثرهای منتشرشده
+							هدف‌ها، موضوع‌ها، سناریوها، گام‌ها و اثرهایی که الان روی سرور است
 						</p>
 						<div className="mt-2 flex flex-wrap gap-2">
 							<Badge variant="outline">
 								منبع:{" "}
 								{source === "server"
-									? "گراف سرور"
+									? "از سرور"
 									: source === "plan"
 										? "برنامه منتشرشده"
 										: "بدون داده"}
@@ -334,29 +328,6 @@ export default function CurrentPublishedFlowPage() {
 						</div>
 					</div>
 					<div className="flex flex-wrap gap-2">
-						<Button asChild variant="outline">
-							<Link href="/admin/game-plan">ویرایش در سازنده بازی</Link>
-						</Button>
-						<Button asChild variant="outline">
-							<Link href="/admin/game-plan/graph">
-								<Route className="size-4" /> سازنده گراف
-							</Link>
-						</Button>
-						<Button asChild variant="outline">
-							<Link href="/monitoring">
-								<Activity className="size-4" /> مانیتورینگ
-							</Link>
-						</Button>
-						<Button asChild variant="outline">
-							<Link href="/analytics">
-								<BarChart3 className="size-4" /> آنالیتیکس
-							</Link>
-						</Button>
-						<Button asChild variant="outline">
-							<Link href="/docs">
-								<BookOpen className="size-4" /> راهنما
-							</Link>
-						</Button>
 						<Button onClick={() => void load()}>
 							<RefreshCw className="size-4" /> به‌روزرسانی
 						</Button>
@@ -476,7 +447,7 @@ export default function CurrentPublishedFlowPage() {
 				</div>
 				<aside className="space-y-4 overflow-y-auto bg-slate-950/55 p-4">
 					<div className="flex items-center justify-between">
-						<h2 className="font-black">جزئیات گره</h2>
+						<h2 className="font-black">جزئیات مورد</h2>
 						<Button
 							size="sm"
 							variant="outline"
@@ -524,12 +495,12 @@ export default function CurrentPublishedFlowPage() {
 						</div>
 					) : (
 						<p className="text-sm leading-7 text-slate-500">
-							برای بررسی داده و ارتباط‌ها یک گره را انتخاب کنید.
+							برای بررسی داده و ارتباط‌ها یک مورد را انتخاب کنید.
 						</p>
 					)}
 					<div>
 						<div className="mb-2 flex items-center justify-between">
-							<h2 className="font-black">هشدارهای اعتبارسنجی</h2>
+							<h2 className="font-black">مشکلات پیدا‌شده</h2>
 							<Badge
 								className={
 									warnings.length

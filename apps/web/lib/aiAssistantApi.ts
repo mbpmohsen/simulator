@@ -46,9 +46,9 @@ type AiAssistantClient = Pick<
 	"getPlayerAiLevel" | "purchasePlayerAiLevel"
 >;
 
-const unavailableMessage = "دستیار هوش مصنوعی برای این بازی فعال نیست.";
+const unavailableMessage = "دستیار هوشمند برای این بازی فعال نیست.";
 export const governmentAiEndpointRequiredMessage =
-	"برای استفاده دولت از دستیار هوش مصنوعی، endpoint سطح دستیار دولت لازم است.";
+	"برای استفاده دولت از دستیار هوشمند، endpoint سطح دستیار دولت لازم است.";
 
 export const createAiAssistantApi = (
 	token: string,
@@ -72,7 +72,7 @@ export const createAiAssistantApi = (
 			} catch (error) {
 				const parsed = parseRuntimeApiError(
 					error,
-					"دریافت وضعیت دستیار هوش مصنوعی ممکن نشد.",
+					"دریافت وضعیت دستیار هوشمند ممکن نشد.",
 				);
 				if (
 					parsed.status === 404 &&
@@ -108,7 +108,7 @@ export const createAiAssistantApi = (
 			} catch (error) {
 				const parsed = parseRuntimeApiError(
 					error,
-					"خرید ارتقا دستیار هوش مصنوعی ناموفق بود.",
+					"خرید ارتقا دستیار هوشمند ناموفق بود.",
 				);
 				if (
 					context === "government" &&

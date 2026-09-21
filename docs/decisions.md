@@ -8,6 +8,26 @@ from the working history, so their dates are approximate.
 
 ---
 
+## 2026-09-21 — The admin builder is a tree, and the admin is one app
+
+**Decision.** The 16-tab builder became 7 tabs. Goals → scenarios are edited as
+one tree; actions, counters and the black market as one screen. The equilibrium
+tab and its per-action chips were removed. Monitoring and analytics moved behind
+the same sign-in as the builder and share one navigation bar. The unreachable v1
+screens (`/configuration`, `/game`), their dialogs, store, MITRE API routes and
+the 153 MB `apps/admin/data` folder were set aside for deletion, along with 17
+dependencies and `framer-motion`.
+
+**Context.** Parents were linked by hand-typed ids, deleting a parent orphaned its
+children silently, and errors appeared only at publish. About 40% of the admin
+source was unreachable. Monitoring and analytics each had their own password form.
+
+**Consequence.** Nothing in the UI now flags a dominated move — run the
+equilibrium tests after changing action numbers. The published-plan graph
+(`/admin/current-flow`) is the only graph view; the per-subject graph page is gone.
+
+---
+
 ## 2026-09-03 — Rich summary cards in the plan builder, JSON editor kept
 
 **Decision.** Each collection in the game-plan builder shows a per-collection

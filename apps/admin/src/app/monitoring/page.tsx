@@ -26,19 +26,14 @@ import {
 	Activity,
 	AlertTriangle,
 	Ban,
-	BarChart3,
 	Bell,
-	BookOpen,
 	CheckCircle2,
 	Eye,
 	FileClock,
 	Filter,
 	Gauge,
-	GitBranch,
 	History,
 	LayoutDashboard,
-	Lock,
-	LogOut,
 	Pause,
 	Play,
 	Radio,
@@ -46,14 +41,11 @@ import {
 	RotateCcw,
 	Send,
 	ShieldAlert,
-	ShieldCheck,
-	SlidersHorizontal,
 	Sparkles,
 	Trash2,
 	Users,
 	Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const BASE_URL =
@@ -358,10 +350,7 @@ const extractEvents = (response: unknown): MonitoringEvent[] => {
 };
 
 export default function AdminMonitoringPage() {
-	const [adminPassword, setAdminPassword] = useState("");
 	const [adminToken, setAdminToken] = useState("");
-	const [authError, setAuthError] = useState<string | null>(null);
-	const [isAuthLoading, setIsAuthLoading] = useState(false);
 
 	const [gameState, setGameState] = useState<Record<string, unknown> | null>(
 		null,
@@ -512,7 +501,7 @@ export default function AdminMonitoringPage() {
 				}
 			} catch (error) {
 				setControlError(
-					resolveApiErrorMessage(error, "داده‌های مانیتورینگ به‌روزرسانی نشد."),
+					resolveApiErrorMessage(error, "داده‌های پایش به‌روزرسانی نشد."),
 				);
 			} finally {
 				if (!background) setIsLoading(false);
@@ -660,39 +649,6 @@ export default function AdminMonitoringPage() {
 		};
 	}, [api, autoRefresh, gameId]);
 
-	const loginAdmin = async () => {
-		setAuthError(null);
-		setIsAuthLoading(true);
-		try {
-			const result = await createGameServerApi({
-				baseURL: BASE_URL,
-			}).adminLogin({
-				password: adminPassword,
-			});
-			const data = unwrapData<{ token?: string }>(result);
-			if (!data?.token) throw new Error("توکن مدیر برگردانده نشد.");
-			localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
-			setAdminToken(data.token);
-			setAdminPassword("");
-		} catch (error) {
-			setAuthError(resolveApiErrorMessage(error, "ورود مدیر ناموفق بود."));
-		} finally {
-			setIsAuthLoading(false);
-		}
-	};
-
-	const logoutAdmin = () => {
-		localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-		setAdminToken("");
-		setGameState(null);
-		setReadiness(null);
-		setEventStatus(null);
-		setEvents([]);
-		setDirectives([]);
-		setActiveDirectives([]);
-		setStreamConnected(false);
-	};
-
 	const runControl = async (
 		operation: () => Promise<unknown>,
 		successMessage: string,
@@ -757,16 +713,16 @@ export default function AdminMonitoringPage() {
 	const pointThreshold = getNumber(game, "pointThreshold") ?? 0;
 
 	return (
-		<div className="min-h-screen bg-[radial-gradient(circle_at_14%_10%,rgba(8,145,178,0.24),transparent_28%),radial-gradient(circle_at_88%_16%,rgba(190,18,60,0.18),transparent_30%),linear-gradient(145deg,#05070a_0%,#111827_44%,#06080d_100%)] text-slate-100">
+		<div className="min-h-screen bg-[#070b17] text-slate-100">
 			<div className="mx-auto max-w-[1680px] px-4 py-5 md:px-7">
 				<header className="flex flex-col gap-4 border-b border-slate-800 pb-5 lg:flex-row lg:items-center lg:justify-between">
 					<div>
 						<div className="flex items-center gap-2 text-xs text-cyan-300">
 							<LayoutDashboard className="h-4 w-4" />
-							مانیتورینگ مدیر
+							پایش بازی
 						</div>
 						<h1 className="mt-2 text-2xl font-black tracking-tight md:text-4xl">
-							کنسول عملیات بازی
+							وضعیت زندهٔ بازی
 						</h1>
 						<div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-300">
 							<Badge
@@ -785,45 +741,6 @@ export default function AdminMonitoringPage() {
 						</div>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							asChild
-							variant="outline"
-							className="border-slate-600 bg-slate-950/30 text-slate-100"
-						>
-							<Link href="/admin/game-plan">
-								<SlidersHorizontal className="h-4 w-4" />
-								پیکربندی
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-violet-600 bg-violet-950/30 text-violet-100"
-						>
-							<Link href="/admin/current-flow">
-								<GitBranch className="h-4 w-4" />
-								نقشه فعلی
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-slate-600 bg-slate-950/30 text-slate-100"
-						>
-							<Link href="/docs">
-								<BookOpen className="h-4 w-4" /> راهنما
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-emerald-600 bg-emerald-950/30 text-emerald-100"
-						>
-							<Link href="/analytics">
-								<BarChart3 className="h-4 w-4" />
-								آنالیتیکس
-							</Link>
-						</Button>
 						<Button
 							onClick={() => void refreshAll()}
 							disabled={!api || isLoading}
@@ -974,7 +891,7 @@ export default function AdminMonitoringPage() {
 								</div>
 							</CardHeader>
 							<CardContent>
-								<ScrollArea className="h-[520px] pr-3">
+								<ScrollArea dir="rtl" className="h-[520px] pr-3">
 									<div className="space-y-2">
 										{filteredEvents.length === 0 ? (
 											<div className="rounded-lg border border-slate-800 bg-slate-900/60 p-5 text-sm text-slate-400">
@@ -1158,7 +1075,7 @@ export default function AdminMonitoringPage() {
 											<div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
 												پیکربندی‌شده
 											</div>
-											<ScrollArea className="h-[250px] pr-3">
+											<ScrollArea dir="rtl" className="h-[250px] pr-3">
 												<div className="space-y-2">
 													{directives.map((directive) => (
 														<div
@@ -1206,62 +1123,6 @@ export default function AdminMonitoringPage() {
 					</div>
 
 					<aside className="space-y-5">
-						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-base text-cyan-100">
-									<Lock className="h-4 w-4" />
-									نشست مدیر
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-3">
-								{adminToken ? (
-									<div className="space-y-3">
-										<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/25 p-3 text-sm text-emerald-100">
-											<div className="flex items-center gap-2">
-												<ShieldCheck className="h-4 w-4" />
-												احراز هویت شد
-											</div>
-										</div>
-										<Button
-											variant="outline"
-											className="w-full border-slate-600 text-slate-100"
-											onClick={logoutAdmin}
-										>
-											<LogOut className="h-4 w-4" />
-											خروج
-										</Button>
-									</div>
-								) : (
-									<div className="space-y-3">
-										<div className="space-y-2">
-											<Label>رمز مدیر</Label>
-											<Input
-												type="password"
-												value={adminPassword}
-												onChange={(event) =>
-													setAdminPassword(event.target.value)
-												}
-												className="border-slate-700 bg-slate-900/80 text-slate-100"
-											/>
-										</div>
-										<Button
-											onClick={() => void loginAdmin()}
-											disabled={isAuthLoading || !adminPassword.trim()}
-											className="w-full bg-cyan-700 text-white hover:bg-cyan-600"
-										>
-											<ShieldCheck className="h-4 w-4" />
-											{isAuthLoading ? "در حال ورود..." : "ورود"}
-										</Button>
-										{authError ? (
-											<div className="rounded border border-rose-500/40 bg-rose-950/30 p-2 text-xs text-rose-100">
-												{authError}
-											</div>
-										) : null}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-
 						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-amber-100">

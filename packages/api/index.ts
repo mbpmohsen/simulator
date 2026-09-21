@@ -8,6 +8,7 @@ export * from "./game-plan/government-catalog";
 export * from "./game-plan/graph";
 export * from "./game-plan/localization";
 export * from "./game-plan/runtime";
+export * from "./game-plan/structure";
 export * from "./game-plan/validation";
 export * from "./game-server/router";
 export type * from "./game-server/types";

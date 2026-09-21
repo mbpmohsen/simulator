@@ -30,7 +30,7 @@ export const useAiAssistantConfig = ({
 			setError(
 				configError instanceof Error
 					? configError.message
-					: "دریافت تنظیمات دستیار هوش مصنوعی ممکن نشد.",
+					: "دریافت تنظیمات دستیار هوشمند ممکن نشد.",
 			);
 		} finally {
 			setLoading(false);

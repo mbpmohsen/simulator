@@ -12,7 +12,6 @@ import {
 } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import { AnimatePresence, motion } from "framer-motion";
 import {
 	AlertTriangle,
 	Bot,
@@ -139,19 +138,19 @@ export default function AiAssistantLevels({
 			setGameId(response.game_id);
 			setNotice({
 				tone: "success",
-				text: "نردبان دستیار هوشمند از سرور دریافت شد.",
+				text: "سطح‌های دستیار هوشمند از سرور دریافت شد.",
 			});
 		} catch (error) {
 			const parsed = parseApiError(
 				error,
-				"دریافت نردبان دستیار هوشمند ممکن نشد.",
+				"دریافت سطح‌های دستیار هوشمند ممکن نشد.",
 			);
 			if (parsed.status === 404 && parsed.code === "AI_CONFIG_NOT_SET") {
 				setRows(cloneDefaultRows());
 				setGameId(null);
 				setNotice({
 					tone: "info",
-					text: "تنظیمات دستیار هوش مصنوعی هنوز ثبت نشده است؛ از مقدار پیشنهادی شروع کنید.",
+					text: "تنظیمات دستیار هوشمند هنوز ثبت نشده است؛ از مقدار پیشنهادی شروع کنید.",
 				});
 			} else {
 				setNotice({ tone: "error", text: parsed.message });
@@ -262,12 +261,12 @@ export default function AiAssistantLevels({
 			setGameId(response.game_id);
 			setNotice({
 				tone: "success",
-				text: "نردبان دستیار هوشمند ذخیره شد.",
+				text: "سطح‌های دستیار هوشمند ذخیره شد.",
 			});
 		} catch (error) {
 			const parsed = parseApiError(
 				error,
-				"ذخیره نردبان دستیار هوشمند ناموفق بود.",
+				"ذخیره سطح‌های دستیار هوشمند ناموفق بود.",
 			);
 			setNotice({ tone: "error", text: parsed.message });
 			if (parsed.status === 401 || parsed.status === 403) logout();
@@ -282,8 +281,8 @@ export default function AiAssistantLevels({
 				<div className="flex flex-wrap items-start gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/[0.08] p-4 text-sm leading-7 text-amber-100">
 					<AlertTriangle className="mt-1 size-4 shrink-0" />
 					<span>
-						برخلاف بقیهٔ زبانه‌ها، این بخش پیش‌نویس نیست. «ذخیره» بلافاصله روی
-						سرور اعمال می‌شود و ربطی به دکمهٔ «انتشار» ندارد.
+						برخلاف بقیهٔ بخش‌ها، این بخش پیش‌نویس نیست. «ذخیره» بلافاصله روی سرور
+						اعمال می‌شود و ربطی به دکمهٔ «انتشار» ندارد.
 					</span>
 				</div>
 			)}
@@ -305,37 +304,31 @@ export default function AiAssistantLevels({
 				</div>
 			)}
 
-			<AnimatePresence>
-				{notice && (
-					<motion.div
-						initial={{ opacity: 0, y: -8, scale: 0.98 }}
-						animate={{ opacity: 1, y: 0, scale: 1 }}
-						exit={{ opacity: 0, y: -8 }}
-						className={`flex items-start gap-3 rounded-2xl border p-4 text-sm ${
-							notice.tone === "success"
-								? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-								: notice.tone === "error"
-									? "border-rose-400/20 bg-rose-500/10 text-rose-100"
-									: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100"
-						}`}
-					>
-						{notice.tone === "success" ? (
-							<CheckCircle2 className="mt-0.5 size-5 shrink-0" />
-						) : (
-							<AlertTriangle className="mt-0.5 size-5 shrink-0" />
-						)}
-						<span>{notice.text}</span>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			{notice && (
+				<div
+					className={`flex items-start gap-3 rounded-2xl border p-4 text-sm ${
+						notice.tone === "success"
+							? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
+							: notice.tone === "error"
+								? "border-rose-400/20 bg-rose-500/10 text-rose-100"
+								: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100"
+					}`}
+				>
+					{notice.tone === "success" ? (
+						<CheckCircle2 className="mt-0.5 size-5 shrink-0" />
+					) : (
+						<AlertTriangle className="mt-0.5 size-5 shrink-0" />
+					)}
+					<span>{notice.text}</span>
+				</div>
+			)}
 
 			<Card className="border-white/10 bg-slate-950/60 text-slate-100 backdrop-blur-xl">
 				<CardHeader className="gap-4 border-b border-white/10">
 					<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 						<div>
 							<CardTitle className="flex items-center gap-2 text-lg">
-								<Bot className="size-5 text-cyan-300" /> تنظیمات دستیار هوش
-								مصنوعی
+								<Bot className="size-5 text-cyan-300" /> تنظیمات دستیار هوشمند
 							</CardTitle>
 							<p className="mt-2 text-sm text-slate-400">
 								شماره سطح‌ها در رابط کاربری خودکار و پیوسته نگه داشته می‌شود.
@@ -376,7 +369,7 @@ export default function AiAssistantLevels({
 								) : (
 									<Save className="size-4" />
 								)}
-								ذخیره تنظیمات دستیار هوش مصنوعی
+								ذخیره تنظیمات دستیار هوشمند
 							</Button>
 						</div>
 					</div>

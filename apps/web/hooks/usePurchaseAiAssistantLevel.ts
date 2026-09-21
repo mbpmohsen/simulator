@@ -33,7 +33,7 @@ export const usePurchaseAiAssistantLevel = ({
 			const message =
 				purchaseError instanceof Error
 					? purchaseError.message
-					: "خرید ارتقا دستیار هوش مصنوعی ناموفق بود.";
+					: "خرید ارتقا دستیار هوشمند ناموفق بود.";
 			setError(message);
 			throw new Error(message);
 		} finally {

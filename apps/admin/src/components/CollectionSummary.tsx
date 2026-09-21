@@ -1,6 +1,5 @@
 "use client";
 
-import { buildEquilibrium } from "@workspace/trpc";
 import { Badge } from "@workspace/ui/components/badge";
 import {
 	Coins,
@@ -22,20 +21,14 @@ import type { ReactNode } from "react";
 /**
  * Turns one raw plan entity into the handful of facts worth showing on a card.
  *
- * The builder screen edits eight different collections through a single generic
- * editor, so everything here is a lookup keyed by collection with a plain
- * fallback - an unrecognised collection still renders, just without chips.
+ * Used by every inspector in the builder, so everything here is a lookup keyed
+ * by collection with a plain fallback - an unrecognised collection still
+ * renders, just without chips.
  */
 
 export type SummaryTone = "attack" | "defense" | "market" | "structure";
 
-export type ChipTone =
-	| "cost"
-	| "chance"
-	| "points"
-	| "value"
-	| "meta"
-	| "warn";
+export type ChipTone = "cost" | "chance" | "points" | "value" | "meta" | "warn";
 
 export interface SummaryChip {
 	icon: ReactNode;
@@ -95,16 +88,6 @@ export interface SummaryLookups {
 	actionKind: (code: string | null) => "attack" | "defense" | null;
 	titleOf: (collection: string, id: string | null) => string | null;
 	stepCount: (scenarioId: string | null) => number;
-	/**
-	 * The solved game, not a heuristic. Comparing raw expected values misses the
-	 * counter structure entirely - two moves can have different expected points
-	 * and still both be worth playing, because they counter different things.
-	 */
-	equilibrium: {
-		solvable: boolean;
-		weight: (code: string | null) => number | null;
-		dominated: (code: string | null) => boolean;
-	};
 }
 
 export const buildSummaryLookups = (plan: unknown): SummaryLookups => {
@@ -133,26 +116,11 @@ export const buildSummaryLookups = (plan: unknown): SummaryLookups => {
 		const step = rec(raw);
 		const scenarioId = step && str(step.scenario_id);
 		if (scenarioId) {
-			stepsByScenario.set(scenarioId, (stepsByScenario.get(scenarioId) ?? 0) + 1);
+			stepsByScenario.set(
+				scenarioId,
+				(stepsByScenario.get(scenarioId) ?? 0) + 1,
+			);
 		}
-	}
-
-	// A draft can be mid-edit and unsolvable; that is normal, not an error.
-	const weights = new Map<string, { weight: number; dominated: boolean }>();
-	let solvable = false;
-	try {
-		const eq = buildEquilibrium(p as never);
-		solvable = eq.solvable;
-		if (eq.solvable) {
-			for (const strategy of [...eq.attacks, ...eq.defenses]) {
-				weights.set(strategy.move.code, {
-					weight: strategy.weight,
-					dominated: strategy.dominated,
-				});
-			}
-		}
-	} catch {
-		solvable = false;
 	}
 
 	return {
@@ -173,11 +141,6 @@ export const buildSummaryLookups = (plan: unknown): SummaryLookups => {
 		},
 		stepCount: (scenarioId) =>
 			scenarioId ? (stepsByScenario.get(scenarioId) ?? 0) : 0,
-		equilibrium: {
-			solvable,
-			weight: (code) => (code ? (weights.get(code)?.weight ?? null) : null),
-			dominated: (code) => (code ? (weights.get(code)?.dominated ?? false) : false),
-		},
 	};
 };
 
@@ -208,12 +171,17 @@ export const describeEntity = (
 	const chips: SummaryChip[] = [];
 	const badges: string[] = [];
 	let tone: SummaryTone = "structure";
-	let warning: string | null = null;
+	const warning: string | null = null;
 
 	switch (collectionKey) {
 		case "actions": {
 			const kind = str(item.type);
-			tone = kind === "defense" ? "defense" : kind === "attack" ? "attack" : "structure";
+			tone =
+				kind === "defense"
+					? "defense"
+					: kind === "attack"
+						? "attack"
+						: "structure";
 			const typeLabel = localized(item, "type");
 			if (typeLabel) badges.push(typeLabel);
 
@@ -224,7 +192,9 @@ export const describeEntity = (
 			const cooldown = num(stats?.cooldown_turns);
 
 			if (cost !== null)
-				chips.push(chip(<Coins className={ICON} />, `هزینه ${fa(cost)}`, "cost"));
+				chips.push(
+					chip(<Coins className={ICON} />, `هزینه ${fa(cost)}`, "cost"),
+				);
 			if (probability !== null)
 				chips.push(
 					chip(
@@ -249,27 +219,13 @@ export const describeEntity = (
 				);
 			}
 
-			// What the solver actually says about this move, rather than a guess
-			// from its numbers alone.
-			if (lookups.equilibrium.solvable) {
-				const weight = lookups.equilibrium.weight(code);
-				if (weight !== null) {
-					chips.push(
-						chip(
-							<Sparkles className={ICON} />,
-							`سهم در تعادل ${fa(weight * 100)}٪`,
-							lookups.equilibrium.dominated(code) ? "warn" : "value",
-						),
-					);
-				}
-				if (lookups.equilibrium.dominated(code)) {
-					warning =
-						"این حرکت در تعادل بازی وزن صفر می‌گیرد؛ یک تیم منطقی هرگز آن را انتخاب نمی‌کند. امتیاز، شانس موفقیت یا ضدکنش‌هایش را بازنگری کنید.";
-				}
-			}
 			if (cooldown !== null && cooldown > 0)
 				chips.push(
-					chip(<Layers className={ICON} />, `${fa(cooldown)} نوبت انتظار`, "meta"),
+					chip(
+						<Layers className={ICON} />,
+						`فاصلهٔ تکرار ${fa(cooldown)} نوبت`,
+						"meta",
+					),
 				);
 			break;
 		}
@@ -281,7 +237,9 @@ export const describeEntity = (
 
 			const cost = num(item.cost);
 			if (cost !== null)
-				chips.push(chip(<Coins className={ICON} />, `هزینه ${fa(cost)}`, "cost"));
+				chips.push(
+					chip(<Coins className={ICON} />, `هزینه ${fa(cost)}`, "cost"),
+				);
 
 			const effect = rec(item.effect);
 			const effectValue = num(effect?.value);
@@ -315,7 +273,9 @@ export const describeEntity = (
 				);
 
 			const availability = rec(item.availability);
-			const from = num(availability?.start_turn ?? availability?.available_from_turn);
+			const from = num(
+				availability?.start_turn ?? availability?.available_from_turn,
+			);
 			if (from !== null)
 				chips.push(
 					chip(<ListOrdered className={ICON} />, `از نوبت ${fa(from)}`, "meta"),
@@ -326,7 +286,12 @@ export const describeEntity = (
 		case "scenario_steps": {
 			const actionCode = str(item.action_code);
 			const kind = lookups.actionKind(actionCode);
-			tone = kind === "defense" ? "defense" : kind === "attack" ? "attack" : "structure";
+			tone =
+				kind === "defense"
+					? "defense"
+					: kind === "attack"
+						? "attack"
+						: "structure";
 
 			const order = num(item.order);
 			if (order !== null)
@@ -353,7 +318,11 @@ export const describeEntity = (
 			const effects = arr(item.on_success).length;
 			if (effects > 0)
 				chips.push(
-					chip(<Sparkles className={ICON} />, `${fa(effects)} اثر موفقیت`, "points"),
+					chip(
+						<Sparkles className={ICON} />,
+						`${fa(effects)} اثر موفقیت`,
+						"points",
+					),
 				);
 
 			const deps = arr(item.depends_on).length;
@@ -379,11 +348,11 @@ export const describeEntity = (
 				);
 
 			const parent = lookups.titleOf("sub_subjects", str(item.sub_subject_id));
-			if (parent)
-				chips.push(chip(<Link2 className={ICON} />, parent, "meta"));
+			if (parent) chips.push(chip(<Link2 className={ICON} />, parent, "meta"));
 
 			const risk = localized(item, "risk_level");
-			if (risk) chips.push(chip(<Gauge className={ICON} />, `ریسک ${risk}`, "warn"));
+			if (risk)
+				chips.push(chip(<Gauge className={ICON} />, `ریسک ${risk}`, "warn"));
 			break;
 		}
 
@@ -404,13 +373,19 @@ export const describeEntity = (
 			const criticality = num(item.criticality);
 			if (criticality !== null)
 				chips.push(
-					chip(<TriangleAlert className={ICON} />, `حساسیت ${fa(criticality)}`, "warn"),
+					chip(
+						<TriangleAlert className={ICON} />,
+						`حساسیت ${fa(criticality)}`,
+						"warn",
+					),
 				);
 			const goal = lookups.titleOf("goals", str(item.goal_id));
 			if (goal) chips.push(chip(<Target className={ICON} />, goal, "meta"));
 			const target = num(item.target_team_id);
 			if (target !== null)
-				chips.push(chip(<Swords className={ICON} />, `تیم هدف ${target}`, "meta"));
+				chips.push(
+					chip(<Swords className={ICON} />, `تیم هدف ${target}`, "meta"),
+				);
 			break;
 		}
 
@@ -437,7 +412,8 @@ export const describeEntity = (
 			for (const raw of effects.slice(0, 3)) {
 				const effect = rec(raw);
 				const type = str(effect?.type);
-				if (type) chips.push(chip(<Sparkles className={ICON} />, type, "points"));
+				if (type)
+					chips.push(chip(<Sparkles className={ICON} />, type, "points"));
 			}
 			break;
 		}
@@ -503,7 +479,9 @@ export function EntitySummaryCard({ summary }: { summary: EntitySummary }) {
 			/>
 			<div className="min-w-0 flex-1">
 				<div className="flex min-w-0 items-center gap-1.5">
-					<span className="line-clamp-1 text-sm font-bold">{summary.title}</span>
+					<span className="line-clamp-1 text-sm font-bold">
+						{summary.title}
+					</span>
 					{summary.badges.slice(0, 1).map((badge) => (
 						<span
 							key={badge}
@@ -526,7 +504,7 @@ export function EntitySummaryCard({ summary }: { summary: EntitySummary }) {
 	);
 }
 
-/** Expanded form, shown above the JSON editor so you see what you are editing. */
+/** Expanded form, shown at the top of an inspector. */
 export function EntitySummaryHeader({ summary }: { summary: EntitySummary }) {
 	return (
 		<div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">

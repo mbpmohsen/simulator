@@ -34,10 +34,8 @@ import {
 	TabsTrigger,
 } from "@workspace/ui/components/tabs";
 import {
-	Activity,
 	AlertTriangle,
 	BarChart3,
-	BookOpen,
 	Calculator,
 	CheckCircle2,
 	Clock,
@@ -45,18 +43,12 @@ import {
 	Download,
 	FileClock,
 	Gauge,
-	GitBranch,
 	ImageIcon,
-	LogOut,
 	Radio,
 	RefreshCw,
-	ShieldCheck,
-	SlidersHorizontal,
 	Target,
-	Zap,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EquilibriumComparison from "@/components/EquilibriumComparison";
 
@@ -695,7 +687,7 @@ const AnalyticsPlotCard = ({
 			{imageUrl ? (
 				<Image
 					src={imageUrl}
-					alt={`نمودار آنالیتیکس ${plot.teamName ?? "تیم"}`}
+					alt={`نمودار تحلیل ${plot.teamName ?? "تیم"}`}
 					width={960}
 					height={540}
 					unoptimized
@@ -725,10 +717,7 @@ const AnalyticsPlotCard = ({
 };
 
 export default function AdminAnalyticsPage() {
-	const [adminPassword, setAdminPassword] = useState("");
 	const [adminToken, setAdminToken] = useState("");
-	const [authError, setAuthError] = useState<string | null>(null);
-	const [isAuthLoading, setIsAuthLoading] = useState(false);
 
 	const [catalogGames, setCatalogGames] = useState<AdminGameCatalogEntry[]>([]);
 	const [activeGameId, setActiveGameId] = useState<string | null>(null);
@@ -850,11 +839,11 @@ export default function AdminAnalyticsPage() {
 			setActiveGameId(nextActiveGameId);
 			setSelectedGameId((current) => current || preferredGameId);
 			setManualGameId((current) => current || preferredGameId);
-			setStatusMessage(`${games.length} بازی در کاتالوگ آنالیتیکس پیدا شد.`);
+			setStatusMessage(`${games.length} بازی در فهرست تحلیل‌ها پیدا شد.`);
 		} catch (err) {
 			setCatalogGames([]);
 			setActiveGameId(null);
-			setError(resolveApiErrorMessage(err, "کاتالوگ آنالیتیکس در دسترس نیست."));
+			setError(resolveApiErrorMessage(err, "فهرست تحلیل‌ها در دسترس نیست."));
 		} finally {
 			setIsCatalogLoading(false);
 		}
@@ -879,41 +868,6 @@ export default function AdminAnalyticsPage() {
 		setSummaries((current) => mergeSummary(current, summaryFromDetail(data)));
 		setStatusMessage(`تحلیل زنده نوبت ${turn} دریافت شد.`);
 	}, []);
-
-	const loginAdmin = async () => {
-		setIsAuthLoading(true);
-		setAuthError(null);
-		setError(null);
-		try {
-			const result = await createGameServerApi({
-				baseURL: BASE_URL,
-			}).adminLogin({
-				password: adminPassword,
-			});
-			const data = unwrapData<{ token?: string }>(result);
-			if (!data?.token) throw new Error("توکن مدیر برگردانده نشد.");
-			localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, data.token);
-			setAdminToken(data.token);
-			setAdminPassword("");
-			setStatusMessage("نشست مدیر متصل شد.");
-		} catch (err) {
-			setAuthError(resolveApiErrorMessage(err, "ورود مدیر ناموفق بود."));
-		} finally {
-			setIsAuthLoading(false);
-		}
-	};
-
-	const logoutAdmin = () => {
-		localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-		setAdminToken("");
-		setCatalogGames([]);
-		setSelectedGameId("");
-		setManualGameId("");
-		setSummaries([]);
-		setDetail(null);
-		setStreamState("idle");
-		streamSeqRef.current = 0;
-	};
 
 	useEffect(() => {
 		const storedToken = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
@@ -977,7 +931,7 @@ export default function AdminAnalyticsPage() {
 				if (!cancelled && !controller.signal.aborted) {
 					setStreamState("error");
 					setError(
-						resolveApiErrorMessage(err, "جریان زنده آنالیتیکس در دسترس نیست."),
+						resolveApiErrorMessage(err, "جریان زندهٔ تحلیل در دسترس نیست."),
 					);
 				}
 			}
@@ -992,16 +946,16 @@ export default function AdminAnalyticsPage() {
 	}, [api, ingestAnalyticsEvent, liveEnabled, selectedGameId]);
 
 	return (
-		<div dir="rtl" className="min-h-screen bg-[#070a0f] text-slate-100">
+		<div dir="rtl" className="min-h-screen bg-[#070b17] text-slate-100">
 			<div className="mx-auto max-w-[1680px] px-4 py-5 md:px-7">
 				<header className="flex flex-col gap-4 border-b border-slate-800 pb-5 lg:flex-row lg:items-center lg:justify-between">
 					<div>
 						<div className="flex items-center gap-2 text-xs text-emerald-300">
 							<BarChart3 className="h-4 w-4" />
-							آنالیتیکس مدیر
+							تحلیل بازی
 						</div>
 						<h1 className="mt-2 text-2xl font-black tracking-tight md:text-4xl">
-							کنسول ریاضیات بازی
+							تحلیل نوبت‌به‌نوبت
 						</h1>
 						<div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-300">
 							<Badge
@@ -1031,45 +985,6 @@ export default function AdminAnalyticsPage() {
 						</div>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							asChild
-							variant="outline"
-							className="border-slate-600 bg-slate-950/30 text-slate-100"
-						>
-							<Link href="/admin/game-plan">
-								<SlidersHorizontal className="h-4 w-4" />
-								پیکربندی
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-violet-600 bg-violet-950/30 text-violet-100"
-						>
-							<Link href="/admin/current-flow">
-								<GitBranch className="h-4 w-4" />
-								نقشه فعلی
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-slate-600 bg-slate-950/30 text-slate-100"
-						>
-							<Link href="/docs">
-								<BookOpen className="h-4 w-4" /> راهنما
-							</Link>
-						</Button>
-						<Button
-							asChild
-							variant="outline"
-							className="border-cyan-600 bg-cyan-950/30 text-cyan-100"
-						>
-							<Link href="/monitoring">
-								<Activity className="h-4 w-4" />
-								مانیتورینگ
-							</Link>
-						</Button>
 						<Button
 							onClick={() => void loadCatalog()}
 							disabled={!api || isCatalogLoading}
@@ -1129,57 +1044,6 @@ export default function AdminAnalyticsPage() {
 						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-slate-100">
-									<ShieldCheck className="h-4 w-4 text-emerald-300" />
-									نشست مدیر
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								{adminToken ? (
-									<div className="space-y-3">
-										<div className="rounded-lg border border-emerald-500/40 bg-emerald-950/20 p-3 text-sm text-emerald-100">
-											متصل
-										</div>
-										<Button
-											variant="outline"
-											onClick={logoutAdmin}
-											className="w-full border-slate-600 bg-slate-950/30 text-slate-100"
-										>
-											<LogOut className="h-4 w-4" />
-											خروج
-										</Button>
-									</div>
-								) : (
-									<div className="space-y-3">
-										<div className="space-y-2">
-											<Label>رمز مدیر</Label>
-											<Input
-												type="password"
-												value={adminPassword}
-												onChange={(event) =>
-													setAdminPassword(event.target.value)
-												}
-												className="border-slate-700 bg-slate-900 text-slate-100"
-											/>
-										</div>
-										<Button
-											onClick={() => void loginAdmin()}
-											disabled={isAuthLoading || !adminPassword.trim()}
-											className="w-full bg-emerald-700 text-white hover:bg-emerald-600"
-										>
-											<Zap className="h-4 w-4" />
-											{isAuthLoading ? "در حال اتصال..." : "ورود"}
-										</Button>
-										{authError ? (
-											<div className="text-sm text-rose-300">{authError}</div>
-										) : null}
-									</div>
-								)}
-							</CardContent>
-						</Card>
-
-						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-base text-slate-100">
 									<Database className="h-4 w-4 text-cyan-300" />
 									کاتالوگ بازی
 								</CardTitle>
@@ -1233,7 +1097,7 @@ export default function AdminAnalyticsPage() {
 								<div className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/60 p-3">
 									<div>
 										<div className="text-sm font-semibold text-slate-100">
-											جریان زنده آنالیتیکس
+											جریان زندهٔ تحلیل
 										</div>
 										<div
 											className="mt-1 font-mono text-xs text-slate-500"
@@ -1286,7 +1150,7 @@ export default function AdminAnalyticsPage() {
 										به‌روزرسانی
 									</Button>
 								</div>
-								<ScrollArea className="h-[420px] pr-3">
+								<ScrollArea dir="rtl" className="h-[420px] pr-3">
 									<div className="space-y-2">
 										{summaries.map((summary) => {
 											const active = selectedTurn === summary.turn;
@@ -1673,7 +1537,7 @@ export default function AdminAnalyticsPage() {
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base text-slate-100">
 									<BarChart3 className="h-4 w-4 text-cyan-300" />
-									نمای کاتالوگ آنالیتیکس
+									فهرست تحلیل‌ها
 								</CardTitle>
 							</CardHeader>
 							<CardContent>

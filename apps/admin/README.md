@@ -17,49 +17,51 @@ Needs `NEXT_PUBLIC_CLIENT_URL` pointing at the Python game server. Copy
 
 ## Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/admin/game-plan` | The scenario builder — 16 tabs, described below |
-| `/admin/game-plan/graph` | The whole plan as one node graph |
-| `/admin/ai` | AI assistant level ladder (also a tab in the builder) |
-| `/admin/current-flow` | The published plan as a readable flow |
-| `/monitoring` | «کنسول عملیات بازی» — live event stream, team readiness, active orders, game control |
-| `/analytics` | Turn results, and actual play against optimal play |
-| `/game`, `/configuration`, `/game-plan` | Older screens, superseded by the above |
-| `/docs` | Facilitator documentation |
+Every route below sits behind one sign-in (`AdminShell` = `AdminAuthGate` +
+`AdminNav`) and shares one navigation bar.
+
+| Route | Nav label | Purpose |
+| --- | --- | --- |
+| `/admin/game-plan` | تنظیم بازی | The scenario builder — 7 tabs, described below |
+| `/admin/current-flow` | نسخهٔ منتشرشده | The published plan as a read-only graph |
+| `/monitoring` | پایش بازی | Live event stream, team readiness, active orders, game control |
+| `/analytics` | تحلیل بازی | Turn results, and actual play against optimal play |
+| `/admin/ai` | دستیار هوشمند | AI assistant levels (also a tab in the builder) |
+| `/docs` | راهنما | Facilitator documentation |
 
 ---
 
 ## The builder
 
 `/admin/game-plan` edits a **draft** in browser state. Nothing reaches the server
-until «اعتبارسنجی و انتشار». Load a starting point from the default scenario, the
+until «بررسی و انتشار». Load a starting point from the default scenario, the
 demo scenario, the currently published plan, or a file.
 
-Sixteen tabs, in four groups:
+Seven tabs:
 
-**Structure** — نمای کلی · اعضای تیم‌ها · اهداف · موضوع‌ها · زیرموضوع‌ها ·
-سناریوها · گام‌ها
+نمای کلی · اعضای تیم‌ها · کنش‌ها · اهداف و سناریوها · تنظیمات پیشرفته ·
+بررسی و انتشار · دستیار هوشمند
 
-**Moves** — کنش‌ها · تعادل بازی · بازار سیاه
+- **کنش‌ها** (`components/builder/Arsenal.tsx`) — actions as forms, the
+  attack × defence counter matrix, and the black market.
+- **اهداف و سناریوها** (`components/builder/CampaignMap.tsx`) — the goal →
+  subject → sub-subject → scenario tree with an inspector. Children are created
+  from their parent, removal shows and cascades what goes with it, and renaming
+  an id rewrites every reference. Checklist scenarios edit their steps as a
+  action × uses grid (`StepGrid.tsx`).
+- **تنظیمات پیشرفته** — governments and event visibility (read-only) and impact
+  rules.
 
-**Layers** — دولت‌ها · قوانین اثرگذاری · نمایش رویدادها
+Structural edits live in `packages/api/game-plan/structure.ts` and are tested in
+`structure.test.ts`. Validation re-runs on every edit and is always visible in a
+status bar; each issue links to the item it is about.
 
-**Output** — گراف بازی · اعتبارسنجی و انتشار · دستیار هوشمند
+Raw JSON is still available for every record, behind a «ویرایش JSON» button.
 
-Eight of these are collections edited through one generic `CollectionEditor`: a
-searchable list on one side, and on the other a summary card plus a raw JSON
-`<Textarea>`.
-
-> **The JSON textarea is the editor, not a preview.** There are no field-level
-> inputs — saving runs `JSON.parse`. The summary cards above it were added to
-> make the values readable, not to replace it.
-
-`CollectionSummary.tsx` builds those cards per collection: cost, probability,
-points, and — for actions — the **equilibrium weight** from `buildEquilibrium`,
-with a warning when the solver reports a move as dominated. That warning is the
-only thing catching a plan that validates cleanly but is unplayable, because
-validation does not check it.
+> **No equilibrium check in the builder.** It was removed by decision. After
+> changing action numbers, run `packages/api/game-plan/equilibrium.test.ts` or
+> call `buildEquilibrium` directly — nothing in the UI will flag a dominated
+> move.
 
 ---
 
@@ -98,5 +100,5 @@ its own.
 - `docs/game-plan-model.md` — every field of the contract the builder produces
 - `docs/demo-scenario.md` — why the demo numbers are what they are, and the
   checklist for changing them
-- `docs/equilibrium-formulas.html` — what «تعادل بازی» computes
+- `docs/equilibrium-formulas.html` — the equilibrium formulas used by «تحلیل بازی»
 - `docs/deployment.md` — environment variables

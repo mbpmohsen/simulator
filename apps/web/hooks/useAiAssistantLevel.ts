@@ -17,7 +17,7 @@ interface UseAiAssistantLevelOptions {
 const initialState: AiAssistantLevelState = {
 	status: "error",
 	level: null,
-	message: "وضعیت دستیار هوش مصنوعی هنوز دریافت نشده است.",
+	message: "وضعیت دستیار هوشمند هنوز دریافت نشده است.",
 };
 
 export const useAiAssistantLevel = ({

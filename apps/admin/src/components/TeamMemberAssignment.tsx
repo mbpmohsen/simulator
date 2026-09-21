@@ -21,7 +21,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { motion } from "framer-motion";
 import {
 	Crown,
 	LoaderCircle,
@@ -199,7 +198,7 @@ export default function TeamMemberAssignment({
 						</div>
 						<p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
 							هر کاربر فقط در یک تیم قرار می‌گیرد. تیم‌های دولتی دقیقاً یک عضو
-							دارند و همان کاربر به‌عنوان اپراتور دولت ثبت می‌شود.
+							دارند و همان کاربر به‌عنوان کاربر دولت ثبت می‌شود.
 						</p>
 					</div>
 					<div className="flex flex-wrap gap-2">
@@ -258,12 +257,7 @@ export default function TeamMemberAssignment({
 						return assignment === undefined || assignment === teamIndex;
 					});
 					return (
-						<motion.div
-							key={team.id ?? `${team.name}-${teamIndex}`}
-							initial={{ opacity: 0, y: 12 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: Math.min(teamIndex * 0.06, 0.3) }}
-						>
+						<div key={team.id ?? `${team.name}-${teamIndex}`}>
 							<Card
 								className={`h-full text-slate-100 ${government ? "border-amber-400/20 bg-amber-500/[0.06]" : "border-white/10 bg-slate-950/55"}`}
 							>
@@ -417,7 +411,7 @@ export default function TeamMemberAssignment({
 									</div>
 								</CardContent>
 							</Card>
-						</motion.div>
+						</div>
 					);
 				})}
 			</div>

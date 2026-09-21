@@ -1,6 +1,5 @@
-import { vazirmatn } from "@/styles/fonts";
-
 import type { Metadata } from "next";
+import { vazirmatn } from "@/styles/fonts";
 import "@workspace/ui/globals.css";
 
 import { Providers } from "@/components/providers";
@@ -17,11 +16,14 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="fa" suppressHydrationWarning dir="rtl" className={vazirmatn.className}>
+		<html
+			lang="fa"
+			suppressHydrationWarning
+			dir="rtl"
+			className={vazirmatn.className}
+		>
 			<body className="antialiased">
-				<Providers>
-					{children}
-				</Providers>
+				<Providers>{children}</Providers>
 			</body>
 		</html>
 	);

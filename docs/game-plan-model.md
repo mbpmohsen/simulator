@@ -394,7 +394,7 @@ Tuning notes and the checklist for changing these numbers:
 ## 13. Editing a plan by hand
 
 1. Edit `apps/admin/public/data/demo-game-plan.json`, or load it in the builder.
-2. Run `validateDefaultGamePlanClientSide` — the builder's «اعتبارسنجی و انتشار»
+2. Run `validateDefaultGamePlanClientSide` — the builder's «بررسی و انتشار»
    tab does this.
 3. Re-solve and confirm no move is dominated — see `docs/demo-scenario.md` §7.
 4. **Publish.** Editing the JSON changes nothing in a running game.

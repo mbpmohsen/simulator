@@ -35,3 +35,6 @@ npm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+# Files set aside for deletion - delete this folder by hand
+_to_delete/
