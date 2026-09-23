@@ -18,10 +18,37 @@ export type GameEventsStatus =
 	| "error";
 
 export interface GameEventsState {
+	/** Events worth showing a person. Sync traffic is filtered out. */
 	events: GameEvent[];
 	status: GameEventsStatus;
 	error: string | null;
+	/**
+	 * Seq of the latest GAME_STATE_SNAPSHOT. The snapshot is a periodic ping: it
+	 * means nothing to a player, but pages use it as a cue to re-read state.
+	 */
+	snapshotSeq: number;
+	/**
+	 * The latest snapshot's payload. It is never rendered as an event, but it
+	 * carries fields the REST endpoints leave out - the phase clock among them.
+	 */
+	snapshot: Record<string, unknown> | null;
 }
+
+/**
+ * Connection and sync traffic. It is never shown in a feed, and it is kept
+ * out of `events` for two more reasons: it would fill the 100-event buffer and
+ * push out real events, and as the newest event it would hide the real one
+ * that pages react to (a step resolving, a turn ending).
+ */
+const SYNC_EVENT_TYPES = new Set([
+	"GAME_STATE_SNAPSHOT",
+	"USER_HEARTBEAT",
+	"USER_STREAM_CONNECTED",
+	"USER_STREAM_DISCONNECTED",
+]);
+
+export const isSyncGameEvent = (event: Pick<GameEvent, "type">): boolean =>
+	SYNC_EVENT_TYPES.has(String(event.type).toUpperCase());
 
 const mergeEvents = (
 	current: GameEvent[],
@@ -44,6 +71,8 @@ export const useGameEvents = (
 		events: [],
 		status: "idle",
 		error: null,
+		snapshotSeq: 0,
+		snapshot: null,
 	});
 	const sinceRef = useRef(0);
 
@@ -53,6 +82,8 @@ export const useGameEvents = (
 			events: [],
 			status: gameId && token ? (enabled ? "connecting" : "ended") : "idle",
 			error: null,
+			snapshotSeq: 0,
+			snapshot: null,
 		});
 		if (!gameId || !token || !enabled) return;
 
@@ -70,9 +101,29 @@ export const useGameEvents = (
 				sinceRef.current,
 				...events.map((event) => event.seq),
 			);
+			const visible = events.filter((event) => !isSyncGameEvent(event));
+			let snapshotPayload: Record<string, unknown> | null = null;
+			const snapshotSeq = events.reduce((max, event) => {
+				if (String(event.type).toUpperCase() !== "GAME_STATE_SNAPSHOT") {
+					return max;
+				}
+				if (event.seq >= max) {
+					snapshotPayload = event.payload as Record<string, unknown>;
+				}
+				return Math.max(max, event.seq);
+			}, 0);
+			if (visible.length === 0 && snapshotSeq === 0) return;
 			setState((current) => ({
 				...current,
-				events: mergeEvents(current.events, events),
+				events:
+					visible.length > 0
+						? mergeEvents(current.events, visible)
+						: current.events,
+				snapshotSeq: Math.max(current.snapshotSeq, snapshotSeq),
+				snapshot:
+					snapshotSeq >= current.snapshotSeq && snapshotPayload
+						? snapshotPayload
+						: current.snapshot,
 				status: terminal ? "ended" : current.status,
 				error: terminal ? null : current.error,
 			}));

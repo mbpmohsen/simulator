@@ -27,21 +27,25 @@ import {
 	Radio,
 	Scale,
 	ShieldAlert,
+	ShieldHalf,
 	Sparkles,
+	Swords,
+	Target,
+	TrendingUp,
 	Trophy,
 	Users,
 	Vote,
-	ShieldHalf,
-	Swords,
 	XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { MoveResult } from "@/lib/moveResults";
 import { playClickSound } from "@/lib/playClickSound";
 import { playNotificationSound } from "@/lib/playNotificationSound";
 import {
 	formatActionCodeFa,
 	formatPhaseFa,
 	formatStepStatusFa,
+	persianOrNull,
 } from "@/lib/runtimeTranslationsFa";
 
 /**
@@ -73,6 +77,10 @@ interface ScenarioVotingArenaProps {
 	actionCatalog?: ArenaActionInfo[];
 	/** action_code -> remaining turns, from this turn's government orders. */
 	bannedActionCodes?: Map<string, number | null>;
+	/** action_code -> what happened to that move in the turn being played. */
+	turnResults?: Map<string, MoveResult>;
+	/** Sub-subject id -> its Persian title, for naming the site that was hit. */
+	resolveSiteName?: (siteId: string) => string | null;
 	loading?: boolean;
 	error?: string | null;
 	onVote: (stepId: string) => Promise<boolean>;
@@ -195,6 +203,8 @@ export function ScenarioVotingArena({
 	actionBusy,
 	actionCatalog,
 	bannedActionCodes,
+	turnResults,
+	resolveSiteName,
 	loading = false,
 	error,
 	onVote,
@@ -243,11 +253,14 @@ export function ScenarioVotingArena({
 			// Persian first, then any English name, then a readable form of the code.
 			// The steps endpoint may omit names entirely, so the game-state catalog
 			// backs it up and a bare action code can never reach the screen.
+			// Persian only. The server's catalogue carries an English display
+			// name, and showing it would put Latin text on a Persian card; the
+			// code's Persian form is the better fallback.
 			const pick = (
 				...values: Array<string | null | undefined>
 			): string | null => {
 				for (const value of values) {
-					const text = value?.trim();
+					const text = persianOrNull(value);
 					if (text && text !== "—" && text !== code) return text;
 				}
 				return null;
@@ -276,10 +289,7 @@ export function ScenarioVotingArena({
 						| "failed",
 				}));
 			const nextStep = open.find((step) => step.available) ?? open[0] ?? null;
-			const cost = firstNumber(
-				...ordered.map((step) => step.cost),
-				info?.cost,
-			);
+			const cost = firstNumber(...ordered.map((step) => step.cost), info?.cost);
 			const probability = firstNumber(
 				...ordered.map((step) => step.probability),
 				info?.probability,
@@ -298,7 +308,8 @@ export function ScenarioVotingArena({
 				history,
 				lastOutcome: history[history.length - 1]?.outcome ?? null,
 				required: ordered.some((step) => step.required),
-				status: nextStep?.status ?? ordered[ordered.length - 1]?.status ?? "locked",
+				status:
+					nextStep?.status ?? ordered[ordered.length - 1]?.status ?? "locked",
 				cost,
 				probability,
 				points,
@@ -555,8 +566,8 @@ export function ScenarioVotingArena({
 						{equalExpectedValue ? (
 							<>
 								اگر فقط به «ارزش مورد انتظار» نگاه کنید، هر سه حرکت تقریباً
-								یکسان‌اند: حرکت ارزان تقریباً همیشه می‌گیرد ولی کم می‌ارزد و
-								حرکت گران کم می‌گیرد ولی زیاد می‌ارزد. پس آنچه تعیین‌کننده است،
+								یکسان‌اند: حرکت ارزان تقریباً همیشه می‌گیرد ولی کم می‌ارزد و حرکت
+								گران کم می‌گیرد ولی زیاد می‌ارزد. پس آنچه تعیین‌کننده است،
 								<span className="font-bold text-slate-200">
 									{" "}
 									انتخاب تیم مقابل است
@@ -567,9 +578,9 @@ export function ScenarioVotingArena({
 						) : (
 							<>
 								حرکت ارزان‌تر شانس بیشتری دارد ولی کمتر می‌ارزد و حرکت گران‌تر
-								برعکس. اگر هر نوبت یک حرکت را تکرار کنید، حریف شما را می‌خواند
-								و دقیقاً همان را خنثی می‌کند؛ پس جابه‌جا شدن میان حرکت‌ها
-								بخشی از بازی است.
+								برعکس. اگر هر نوبت یک حرکت را تکرار کنید، حریف شما را می‌خواند و
+								دقیقاً همان را خنثی می‌کند؛ پس جابه‌جا شدن میان حرکت‌ها بخشی از بازی
+								است.
 							</>
 						)}
 					</div>
@@ -578,6 +589,11 @@ export function ScenarioVotingArena({
 				<div className="grid gap-3">
 					{groups.map((group, index) => {
 						const nextStep = group.nextStep;
+						const turnResult = turnResults?.get(group.code) ?? null;
+						const turnResultSite =
+							turnResult?.siteId && resolveSiteName
+								? resolveSiteName(turnResult.siteId)
+								: null;
 						const exhausted = group.remaining === 0;
 						const submitted =
 							submittedStepId !== null &&
@@ -740,10 +756,76 @@ export function ScenarioVotingArena({
 													<p className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-6 text-orange-200/80">
 														<Ban className="mt-1 size-3 shrink-0" />
 														<span>
-															دولت این حرکت را ممنوع کرده است؛ تا پایان
-															ممنوعیت قابل انتخاب نیست.
+															دولت این حرکت را ممنوع کرده است؛ تا پایان ممنوعیت
+															قابل انتخاب نیست.
 														</span>
 													</p>
+												)}
+
+												{turnResult && (
+													<motion.div
+														initial={
+															reduceMotion
+																? false
+																: { opacity: 0, y: 6, scale: 0.98 }
+														}
+														animate={{ opacity: 1, y: 0, scale: 1 }}
+														transition={{
+															type: "spring",
+															stiffness: 300,
+															damping: 22,
+														}}
+														className={`mt-3 rounded-xl border px-3 py-2.5 ${turnResult.success ? "border-emerald-400/35 bg-emerald-500/[0.12]" : "border-orange-400/30 bg-orange-500/[0.10]"}`}
+													>
+														<div
+															className={`flex items-center gap-1.5 text-xs font-black ${turnResult.success ? "text-emerald-200" : "text-orange-200"}`}
+														>
+															{turnResult.success ? (
+																<CheckCircle2 className="size-3.5" />
+															) : (
+																<XCircle className="size-3.5" />
+															)}
+															نتیجهٔ همین نوبت:{" "}
+															{turnResult.success
+																? "این حرکت گرفت"
+																: "این حرکت نگرفت"}
+														</div>
+														<div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+															{turnResultSite && (
+																<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/20 px-2 py-0.5 text-slate-300">
+																	<Target className="size-3" /> روی{" "}
+																	{turnResultSite}
+																</span>
+															)}
+															{turnResult.success &&
+																turnResult.progress !== null && (
+																	<span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-emerald-100">
+																		<TrendingUp className="size-3" />{" "}
+																		{faNumber(turnResult.progress)} واحد پیشرفت
+																	</span>
+																)}
+															{turnResult.success &&
+																turnResult.points !== null &&
+																turnResult.points > 0 && (
+																	<span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-400/20 bg-violet-400/10 px-2 py-0.5 text-violet-100">
+																		<Trophy className="size-3" />{" "}
+																		{faNumber(turnResult.points)} امتیاز گرفتید
+																	</span>
+																)}
+															{!turnResult.success && group.cost !== null && (
+																<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-amber-100">
+																	<Coins className="size-3" />{" "}
+																	{faNumber(group.cost)} اعتبار خرج شد
+																</span>
+															)}
+															{turnResult.subjectProgress !== null && (
+																<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2 py-0.5 text-slate-400">
+																	پیشرفت کل مأموریت{" "}
+																	{faNumber(turnResult.subjectProgress)}٪
+																</span>
+															)}
+														</div>
+													</motion.div>
 												)}
 
 												{group.history.length > 0 && (
@@ -785,16 +867,18 @@ export function ScenarioVotingArena({
 									</button>
 
 									<div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
-										{locked && nextStep && (votingOpen || group.status === "locked") && (
-											<Button
-												variant="outline"
-												onClick={() => void onInspectLocks(nextStep.id)}
-												disabled={actionBusy !== null}
-												className="border-white/10 bg-white/5 text-slate-300"
-											>
-												<LockKeyhole className="size-4" /> دلیل قفل
-											</Button>
-										)}
+										{locked &&
+											nextStep &&
+											(votingOpen || group.status === "locked") && (
+												<Button
+													variant="outline"
+													onClick={() => void onInspectLocks(nextStep.id)}
+													disabled={actionBusy !== null}
+													className="border-white/10 bg-white/5 text-slate-300"
+												>
+													<LockKeyhole className="size-4" /> دلیل قفل
+												</Button>
+											)}
 
 										{exhausted ? (
 											<div

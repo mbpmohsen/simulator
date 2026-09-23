@@ -507,6 +507,11 @@ export default function GovernmentDashboardPage() {
 	const selectedTeamId = selectedTeam?.team_id ?? null;
 	const refreshOverview = runtime.refresh;
 	const refreshOrders = ordersResource.refresh;
+	// The periodic snapshot is not shown, but it still keeps the overview fresh.
+	const snapshotSeq = events.snapshotSeq;
+	useEffect(() => {
+		if (snapshotSeq > 0) void refreshOverview();
+	}, [snapshotSeq, refreshOverview]);
 	useEffect(() => {
 		if (latestEventSeq === 0) return;
 		if (

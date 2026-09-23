@@ -1,5 +1,6 @@
 "use client";
 
+import type { BlackMarketItemView } from "@workspace/trpc";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -20,7 +21,6 @@ import {
 	Timer,
 	TriangleAlert,
 } from "lucide-react";
-import type { BlackMarketItemView } from "@workspace/trpc";
 import type { BlackMarketStatus } from "@/hooks/usePlayerBlackMarket";
 
 interface PlayerBlackMarketProps {
@@ -146,8 +146,7 @@ export default function PlayerBlackMarket({
 					const blocked = item.available === false;
 					const busy = busyCode === item.code;
 					const idKnown = resolveItemId(item) !== null;
-					const canBuy =
-						!blocked && affordable && idKnown && busyCode === null;
+					const canBuy = !blocked && affordable && idKnown && busyCode === null;
 					const remaining =
 						typeof item.max_purchases === "number"
 							? item.max_purchases - (item.purchases_used ?? 0)
@@ -178,7 +177,7 @@ export default function PlayerBlackMarket({
 							</div>
 
 							{description && (
-								<p className="mt-2 text-[11px] leading-6 text-slate-400">
+								<p className="mt-2 line-clamp-2 text-[11px] leading-6 text-slate-400">
 									{description}
 								</p>
 							)}
@@ -197,8 +196,8 @@ export default function PlayerBlackMarket({
 								)}
 								{typeof item.duration_turns === "number" && (
 									<span className="inline-flex items-center gap-1 rounded-md border border-white/8 bg-white/[0.03] px-1.5 py-0.5 text-[10px] tabular-nums text-slate-300">
-										<Timer className="size-3" />{" "}
-										{faNumber(item.duration_turns)} نوبت
+										<Timer className="size-3" /> {faNumber(item.duration_turns)}{" "}
+										نوبت
 									</span>
 								)}
 								{remaining !== null && (

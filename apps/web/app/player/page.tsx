@@ -26,28 +26,26 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@workspace/ui/components/card";
-import { Progress } from "@workspace/ui/components/progress";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+	Activity,
 	AlertTriangle,
 	BookOpen,
-	CheckCircle2,
-	ChevronLeft,
+	Bot,
 	Clock3,
 	Coins,
 	Crosshair,
 	Gauge,
-	GitBranch,
 	LoaderCircle,
 	LogOut,
+	MessagesSquare,
 	RefreshCw,
 	ScrollText,
 	ShieldAlert,
-	Swords,
-	Target,
+	Store,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AiAssistantUpgradePanel } from "@/components/v2/ai/AiAssistantUpgradePanel";
 import { SubjectAiButton } from "@/components/v2/ai/SubjectAiButton";
@@ -56,14 +54,19 @@ import { CommunicationPanel } from "@/components/v2/CommunicationPanel";
 import { GameEventFeed } from "@/components/v2/GameEventFeed";
 import { GameFinishedResult } from "@/components/v2/GameFinishedResult";
 import { LockReasonsDialog } from "@/components/v2/LockReasonsDialog";
+import { PhaseGuide } from "@/components/v2/player/PhaseGuide";
 import PlayerBlackMarket from "@/components/v2/player/PlayerBlackMarket";
 import PlayerMoveInsight from "@/components/v2/player/PlayerMoveInsight";
 import type { ArenaActionInfo } from "@/components/v2/player/ScenarioVotingArena";
 import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena";
+import { SideRail } from "@/components/v2/player/SideRail";
+import { TargetBoard } from "@/components/v2/player/TargetBoard";
+import { TurnRevealOverlay } from "@/components/v2/player/TurnRevealOverlay";
 import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
 import { useLockReasons } from "@/hooks/useLockReasons";
+import { usePhaseCountdown } from "@/hooks/usePhaseCountdown";
 import { usePlayerBlackMarket } from "@/hooks/usePlayerBlackMarket";
 import { usePlayerOrders } from "@/hooks/usePlayerOrders";
 import { usePlayerScenarios } from "@/hooks/usePlayerScenarios";
@@ -73,16 +76,20 @@ import { usePurchaseAiAssistantLevel } from "@/hooks/usePurchaseAiAssistantLevel
 import { useScenarioSteps } from "@/hooks/useScenarioSteps";
 import { parseRuntimeApiError } from "@/lib/apiErrorParser";
 import { createCommunicationService } from "@/lib/communicationService";
+import type { MoveResult } from "@/lib/moveResults";
+import {
+	buildMoveResults,
+	incomingMoveForTurn,
+	resultsForTurn,
+} from "@/lib/moveResults";
 import { createPlayerRuntimeApi } from "@/lib/playerRuntimeApi";
 import {
 	formatActionCodeFa,
-	formatExecutionModeFa,
 	formatOrderTypeFa,
 	formatPhaseFa,
-	formatScenarioTypeFa,
 	getLocalized,
 	isGamePhase,
-	translateSubjectStatusFa,
+	persianOrNull,
 } from "@/lib/runtimeTranslationsFa";
 import type { SubjectRuntimeProgress } from "@/lib/subjectAiInsightGenerator";
 import { useAuthStore } from "@/store/auth.store";
@@ -90,12 +97,15 @@ import { useAuthStore } from "@/store/auth.store";
 const orderDetailFa = (
 	order: OrderView,
 	actionName?: (code: string) => string,
+	subjectName?: (id: string) => string | null,
 ): string => {
 	const payload = order.payload;
 	const subjectId = payload.subject_id;
 	const actionCode = payload.action_code;
 	const amount = payload.amount;
-	if (typeof subjectId === "string") return `موضوع: ${subjectId}`;
+	// The order carries a plan id; a player must never be shown one.
+	if (typeof subjectId === "string")
+		return `روی «${subjectName?.(subjectId) ?? "موضوع واگذارشده"}» کار کنید`;
 	if (typeof actionCode === "string")
 		return `کنش: ${actionName?.(actionCode) ?? actionCode}`;
 	if (typeof amount === "number")
@@ -117,6 +127,20 @@ const readPlayerTeamId = (player: PlayerSchema): number | null => {
 
 const readPlayerLeaderFlag = (player: PlayerSchema): boolean =>
 	player.isLeader === true || player.is_leader === true;
+
+/**
+ * The action's identity. Some payloads put the code in `code` and an English
+ * label in `name`; older ones put the code in `name`. Reading `name` blindly
+ * meant every lookup by action code missed and the screen fell back to a
+ * transliterated code.
+ */
+const actionCodeOf = (action: ActionSchema): string => {
+	const raw = action as unknown as Record<string, unknown>;
+	const code = raw.code ?? raw.actionCode ?? raw.action_code;
+	return typeof code === "string" && code.trim().length > 0
+		? code.trim()
+		: action.name;
+};
 
 const actionTypeFromCode = (code: string): "attack" | "defense" =>
 	code.toUpperCase().startsWith("DEF_") ? "defense" : "attack";
@@ -142,7 +166,8 @@ const readActionText = (
 ): string | null => {
 	for (const key of keys) {
 		const value = source[key];
-		if (typeof value === "string" && value.trim().length > 0) return value.trim();
+		if (typeof value === "string" && value.trim().length > 0)
+			return value.trim();
 	}
 	return null;
 };
@@ -163,25 +188,28 @@ const buildArenaActionCatalog = (
 	const counterpart = (
 		action: ActionSchema,
 	): { name: string | null; relation: "countered-by" | "counters" | null } => {
-		const id = readActionNumber(
-			action as unknown as Record<string, unknown>,
-			["counterActionId", "counter_action_id"],
-		);
+		const id = readActionNumber(action as unknown as Record<string, unknown>, [
+			"counterActionId",
+			"counter_action_id",
+		]);
 		const other = id === null ? undefined : byId.get(id);
 		if (!other) return { name: null, relation: null };
 		const raw = other as unknown as Record<string, unknown>;
+		// Persian name if the server sent one, else Persian built from the code.
 		const name =
-			readActionText(raw, [
-				"displayNameFa",
-				"display_name_fa",
-				"nameFa",
-				"name_fa",
-			]) ?? readActionText(raw, ["displayName", "display_name", "name"]);
+			persianOrNull(
+				readActionText(raw, [
+					"displayNameFa",
+					"display_name_fa",
+					"nameFa",
+					"name_fa",
+				]),
+			) ?? formatActionCodeFa(actionCodeOf(other));
 		// Derive the direction from the two categories rather than assuming what
 		// the field means: a defence named on an attack neutralises it, and an
 		// attack named on a defence is the thing that defence stops.
-		const mine = actionTypeFromCode(action.name);
-		const theirs = actionTypeFromCode(other.name);
+		const mine = actionTypeFromCode(actionCodeOf(action));
+		const theirs = actionTypeFromCode(actionCodeOf(other));
 		const relation =
 			mine === theirs ? null : mine === "attack" ? "countered-by" : "counters";
 		return { name, relation };
@@ -191,16 +219,20 @@ const buildArenaActionCatalog = (
 		const raw = action as unknown as Record<string, unknown>;
 		const counter = counterpart(action);
 		return {
-			code: action.name,
+			code: actionCodeOf(action),
 			counterName: counter.name,
 			counterRelation: counter.relation,
-			name: readActionText(raw, ["displayName", "display_name", "name"]),
-			nameFa: readActionText(raw, [
-				"displayNameFa",
-				"display_name_fa",
-				"nameFa",
-				"name_fa",
-			]),
+			name: persianOrNull(
+				readActionText(raw, ["displayName", "display_name", "name"]),
+			),
+			nameFa: persianOrNull(
+				readActionText(raw, [
+					"displayNameFa",
+					"display_name_fa",
+					"nameFa",
+					"name_fa",
+				]),
+			),
 			cost: readActionNumber(raw, ["cost"]),
 			probability: readActionNumber(raw, [
 				"probability",
@@ -384,7 +416,20 @@ export default function PlayerDashboardPage() {
 		return map;
 	}, [arenaActionCatalog]);
 	const resolveActionName = useCallback(
-		(code: string) => actionNameByCode.get(code) ?? formatActionCodeFa(code),
+		(code: string) => {
+			const known = actionNameByCode.get(code);
+			if (known) return known;
+			// Moves on the other side are missing from this team's catalogue, and
+			// transliterating their code puts English on a Persian screen. Name
+			// them by the one thing the code does tell us.
+			const localized = formatActionCodeFa(code);
+			if (/[a-z]/i.test(localized)) {
+				return actionTypeFromCode(code) === "defense"
+					? "یک حرکت دفاعی"
+					: "یک حرکت تهاجمی";
+			}
+			return localized;
+		},
 		[actionNameByCode],
 	);
 	const playerAiLevel =
@@ -455,6 +500,114 @@ export default function PlayerDashboardPage() {
 	const stateFinished = isGameFinished(gameState?.game);
 	const events = useGameEvents(gameId, token, !stateFinished);
 	const terminalEventReceived = events.events.some(isTerminalGameEvent);
+
+	// What each move did this turn, read from the resolved-step events. The
+	// steps endpoint only carries a status; these events carry the site that was
+	// hit, the progress it moved and the points it paid.
+	const turnResults = useMemo(
+		() => resultsForTurn(events.events, runtime.state?.current_turn ?? null),
+		[events.events, runtime.state?.current_turn],
+	);
+	const siteNames = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const subject of subjects) {
+			for (const sub of subject.sub_subjects) {
+				map.set(sub.id, getLocalized(sub.title, sub.title_fa));
+			}
+		}
+		return map;
+	}, [subjects]);
+	const resolveSiteName = useCallback(
+		(siteId: string) => siteNames.get(siteId) ?? null,
+		[siteNames],
+	);
+	const resolveSubjectName = useCallback(
+		(subjectId: string) => {
+			const subject = subjects.find((item) => item.id === subjectId);
+			return subject ? getLocalized(subject.title, subject.title_fa) : null;
+		},
+		[subjects],
+	);
+	// Every result this team has had on each target, for the board's dots.
+	const outcomesBySite = useMemo(() => {
+		const map = new Map<
+			string,
+			Array<{ turn: number | null; success: boolean }>
+		>();
+		for (const result of buildMoveResults(events.events)) {
+			if (!result.siteId) continue;
+			const list = map.get(result.siteId) ?? [];
+			list.push({ turn: result.turn, success: result.success });
+			map.set(result.siteId, list);
+		}
+		return map;
+	}, [events.events]);
+
+	// The reveal beat: the newest result of the turn, shown once, after both
+	// teams have already locked and nothing can change the vote.
+	const [revealedSeq, setRevealedSeq] = useState<number | null>(null);
+	const newestResult = useMemo(() => {
+		let newest: MoveResult | null = null;
+		for (const result of turnResults.values()) {
+			if (!newest || result.seq > newest.seq) newest = result;
+		}
+		return newest;
+	}, [turnResults]);
+	const opponentMove = useMemo(
+		() =>
+			incomingMoveForTurn(events.events, runtime.state?.current_turn ?? null),
+		[events.events, runtime.state?.current_turn],
+	);
+	// Results already in the history when the screen opened are not news: prime
+	// the reveal with the newest one so only a fresh result opens it.
+	const revealPrimed = useRef(false);
+	useEffect(() => {
+		if (revealPrimed.current || !newestResult) return;
+		revealPrimed.current = true;
+		setRevealedSeq(newestResult.seq);
+	}, [newestResult]);
+	const countdown = usePhaseCountdown(
+		phase,
+		runtime.state?.current_turn ?? null,
+		gameState,
+		events.events,
+		events.snapshot,
+	);
+	const hasActiveTarget = Boolean(
+		selectedScenarioId ?? runtime.state?.active_scenario_id,
+	);
+	// `me.hasVoted` comes from the game-state snapshot; treat it as optional.
+	const hasVotedThisTurn = useMemo(() => {
+		const me = (gameState as Record<string, unknown> | null)?.me as
+			| Record<string, unknown>
+			| undefined;
+		return me?.hasVoted === true;
+	}, [gameState]);
+	const votingStage = phase === "VOTING" || phase === "CALCULATION";
+	const eventNameResolvers = useMemo(
+		() => ({
+			subject: resolveSubjectName,
+			site: resolveSiteName,
+			action: resolveActionName,
+		}),
+		[resolveSubjectName, resolveSiteName, resolveActionName],
+	);
+	const totalTurns = (() => {
+		const game = (gameState as Record<string, unknown> | null)?.game as
+			| Record<string, unknown>
+			| undefined;
+		const value = game?.totalTurns;
+		return typeof value === "number" && Number.isFinite(value) ? value : null;
+	})();
+	const revealedMoveInfo = useMemo(
+		() =>
+			newestResult
+				? (arenaActionCatalog.find(
+						(entry) => entry.code === newestResult.actionCode,
+					) ?? null)
+				: null,
+		[arenaActionCatalog, newestResult],
+	);
 	useIncomingOrderNotifications({
 		events: events.events,
 		status: events.status,
@@ -536,6 +689,12 @@ export default function PlayerDashboardPage() {
 	const refreshOrders = ordersResource.refresh;
 	const refreshSteps = stepsResource.refresh;
 	const refreshAi = aiLevelResource.refresh;
+
+	// The periodic snapshot is not shown, but it still keeps the board fresh.
+	const snapshotSeq = events.snapshotSeq;
+	useEffect(() => {
+		if (snapshotSeq > 0) void refreshRuntime();
+	}, [snapshotSeq, refreshRuntime]);
 
 	useEffect(() => {
 		if (latestEventSeq === 0) return;
@@ -670,6 +829,164 @@ export default function PlayerDashboardPage() {
 		);
 	}
 
+	const ordersBlock = (
+		<Card className="border-white/10 bg-slate-950/55 text-slate-100">
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2 text-base">
+					<ScrollText className="size-5 text-amber-300" /> دستورات دولت
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="grid gap-3 md:grid-cols-2">
+				{ordersResource.error && (
+					<div className="col-span-full text-sm text-rose-300">
+						{ordersResource.error}
+					</div>
+				)}
+				{ordersResource.orders.length === 0 ? (
+					<div className="col-span-full rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
+						برای این نوبت دستوری صادر نشده است.
+					</div>
+				) : (
+					ordersResource.orders.map((order, index) => (
+						<div
+							key={`${order.turn}-${order.government_team_id}-${index}`}
+							className="rounded-2xl border border-amber-400/15 bg-amber-500/5 p-4"
+						>
+							<div className="flex items-center justify-between gap-2">
+								<Badge className="bg-amber-500/15 text-amber-200">
+									{formatOrderTypeFa(order.order_type)}
+								</Badge>
+								<Badge
+									className={
+										forcedOrder(order.order_type, order.forced)
+											? "bg-rose-500/15 text-rose-200"
+											: "bg-cyan-500/15 text-cyan-200"
+									}
+								>
+									{forcedOrder(order.order_type, order.forced)
+										? "اجباری"
+										: "راهنمایی"}
+								</Badge>
+							</div>
+							<p className="mt-3 text-sm text-slate-300">
+								{orderDetailFa(order, resolveActionName, resolveSubjectName)}
+							</p>
+						</div>
+					))
+				)}
+			</CardContent>
+		</Card>
+	);
+
+	const targetBoardFull = (
+		<TargetBoard
+			subjects={subjects}
+			selectedSubjectId={selectedSubjectId}
+			selectedSubSubjectId={selectedSubSubjectId}
+			activeSubSubjectId={runtime.state?.active_sub_subject_id ?? null}
+			onPick={(subjectId, subSubjectId) => {
+				setSelectedSubjectId(subjectId);
+				setSelectedSubSubjectId(subSubjectId);
+				setSelectedScenarioId(null);
+			}}
+			scenarios={scenariosResource.scenarios}
+			scenariosLoading={scenariosResource.loading}
+			scenariosError={scenariosResource.error}
+			activeScenarioId={selectedScenarioId}
+			canActivate={canSelectScenario(phase)}
+			busyScenarioId={actionBusy}
+			onActivate={(scenarioId) => void selectScenario(scenarioId)}
+			outcomesBySite={outcomesBySite}
+			aiSlot={
+				selectedSubject ? (
+					<SubjectAiButton
+						aiLevel={playerAiLevel}
+						loading={aiLevelResource.loading}
+						disabledMessage={playerAiDisabledMessage}
+						onClick={() => openAiInsight(selectedSubject)}
+						variant="text"
+					/>
+				) : null
+			}
+		/>
+	);
+
+	const targetBoardCompact = (
+		<TargetBoard
+			compact
+			subjects={subjects}
+			selectedSubjectId={selectedSubjectId}
+			selectedSubSubjectId={selectedSubSubjectId}
+			activeSubSubjectId={runtime.state?.active_sub_subject_id ?? null}
+			onPick={(subjectId, subSubjectId) => {
+				setSelectedSubjectId(subjectId);
+				setSelectedSubSubjectId(subSubjectId);
+				setSelectedScenarioId(null);
+			}}
+			scenarios={scenariosResource.scenarios}
+			scenariosLoading={scenariosResource.loading}
+			scenariosError={scenariosResource.error}
+			activeScenarioId={selectedScenarioId}
+			canActivate={canSelectScenario(phase)}
+			busyScenarioId={actionBusy}
+			onActivate={(scenarioId) => void selectScenario(scenarioId)}
+			outcomesBySite={outcomesBySite}
+			aiSlot={
+				selectedSubject ? (
+					<SubjectAiButton
+						aiLevel={playerAiLevel}
+						loading={aiLevelResource.loading}
+						disabledMessage={playerAiDisabledMessage}
+						onClick={() => openAiInsight(selectedSubject)}
+						variant="text"
+					/>
+				) : null
+			}
+		/>
+	);
+
+	const arenaBlock = selectedScenarioId && (
+		<ScenarioVotingArena
+			steps={stepsResource.steps}
+			phase={phase}
+			currentTurn={runtime.state?.current_turn ?? null}
+			gameId={gameId}
+			scenarioId={selectedScenarioId}
+			currentUserId={user?.id ?? null}
+			teamMembers={teamMembers}
+			actionBusy={actionBusy}
+			actionCatalog={arenaActionCatalog}
+			bannedActionCodes={bannedActionCodes}
+			turnResults={turnResults}
+			resolveSiteName={resolveSiteName}
+			loading={stepsResource.loading}
+			error={stepsResource.error}
+			onVote={voteStep}
+			onInspectLocks={locks.inspect}
+		/>
+	);
+
+	const revealBlock = newestResult && (
+		<TurnRevealOverlay
+			open={revealedSeq !== newestResult.seq}
+			turn={newestResult.turn ?? runtime.state?.current_turn ?? null}
+			result={newestResult}
+			moveName={resolveActionName(newestResult.actionCode)}
+			siteName={
+				newestResult.siteId ? resolveSiteName(newestResult.siteId) : null
+			}
+			probability={revealedMoveInfo?.probability ?? null}
+			cost={revealedMoveInfo?.cost ?? null}
+			counterName={revealedMoveInfo?.counterName ?? null}
+			counterRelation={revealedMoveInfo?.counterRelation ?? null}
+			opponent={opponentMove}
+			opponentMoveName={
+				opponentMove ? resolveActionName(opponentMove.actionCode) : null
+			}
+			onClose={() => setRevealedSeq(newestResult.seq)}
+		/>
+	);
+
 	return (
 		<main className="relative min-h-screen overflow-hidden bg-[#070b17] text-slate-100 [background-image:radial-gradient(circle_at_10%_0%,rgba(8,145,178,.16),transparent_25%),radial-gradient(circle_at_85%_10%,rgba(124,58,237,.12),transparent_22%)]">
 			<motion.div
@@ -742,7 +1059,7 @@ export default function PlayerDashboardPage() {
 					</div>
 				) : (
 					<div className="space-y-5">
-						<section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+						<section className="grid gap-3 sm:grid-cols-3">
 							{[
 								{
 									label: "نوبت جاری",
@@ -762,31 +1079,6 @@ export default function PlayerDashboardPage() {
 									icon: Coins,
 									className: "border-amber-400/20 bg-amber-500/10",
 								},
-								{
-									label: "موضوع فعال",
-									value: selectedSubject
-										? getLocalized(
-												selectedSubject.title,
-												selectedSubject.title_fa,
-											)
-										: "انتخاب نشده",
-									icon: Target,
-									className: "border-cyan-400/20 bg-cyan-500/10",
-								},
-								{
-									label: "مسیر فعال",
-									value:
-										scenariosResource.scenarios.find(
-											(item) => item.id === selectedScenarioId,
-										)?.title_fa ??
-										scenariosResource.scenarios.find(
-											(item) => item.id === selectedScenarioId,
-										)?.title ??
-										selectedScenarioId ??
-										"انتخاب نشده",
-									icon: Swords,
-									className: "border-violet-400/20 bg-violet-500/10",
-								},
 							].map((metric) => {
 								const Icon = metric.icon;
 								return (
@@ -805,314 +1097,140 @@ export default function PlayerDashboardPage() {
 							})}
 						</section>
 
-						<section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+						<section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
 							<div className="space-y-5">
-								<Card className="border-white/10 bg-slate-950/55 text-slate-100">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2 text-base">
-											<ScrollText className="size-5 text-amber-300" /> دستورات
-											دولت
-										</CardTitle>
-									</CardHeader>
-									<CardContent className="grid gap-3 md:grid-cols-2">
-										{ordersResource.error && (
-											<div className="col-span-full text-sm text-rose-300">
-												{ordersResource.error}
-											</div>
-										)}
-										{ordersResource.orders.length === 0 ? (
-											<div className="col-span-full rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
-												برای این نوبت دستوری صادر نشده است.
-											</div>
-										) : (
-											ordersResource.orders.map((order, index) => (
-												<div
-													key={`${order.turn}-${order.government_team_id}-${index}`}
-													className="rounded-2xl border border-amber-400/15 bg-amber-500/5 p-4"
-												>
-													<div className="flex items-center justify-between gap-2">
-														<Badge className="bg-amber-500/15 text-amber-200">
-															{formatOrderTypeFa(order.order_type)}
-														</Badge>
-														<Badge
-															className={
-																forcedOrder(order.order_type, order.forced)
-																	? "bg-rose-500/15 text-rose-200"
-																	: "bg-cyan-500/15 text-cyan-200"
-															}
-														>
-															{forcedOrder(order.order_type, order.forced)
-																? "اجباری"
-																: "راهنمایی"}
-														</Badge>
-													</div>
-													<p className="mt-3 text-sm text-slate-300">
-														{orderDetailFa(order, resolveActionName)}
-													</p>
-												</div>
-											))
-										)}
-									</CardContent>
-								</Card>
+								<PhaseGuide
+									phase={phase}
+									turn={runtime.state?.current_turn ?? null}
+									totalTurns={totalTurns}
+									secondsLeft={countdown.secondsLeft}
+									totalSeconds={countdown.totalSeconds}
+									hasTarget={hasActiveTarget}
+									hasVoted={hasVotedThisTurn}
+								/>
 
-								<Card className="border-white/10 bg-slate-950/55 text-slate-100">
-									<CardHeader>
-										<CardTitle className="flex items-center gap-2 text-base">
-											<Target className="size-5 text-cyan-300" /> موضوع‌های
-											واگذارشده به تیم شما
-										</CardTitle>
-									</CardHeader>
-									<CardContent className="grid gap-3 lg:grid-cols-2">
-										{subjects.map((subject) => (
-											<motion.button
-												type="button"
-												key={subject.id}
-												onClick={() => {
-													setSelectedSubjectId(subject.id);
-													setSelectedSubSubjectId(
-														subject.sub_subjects[0]?.id ?? null,
-													);
-													setSelectedScenarioId(null);
-												}}
-												whileHover={{ y: -4 }}
-												className={`rounded-2xl border p-4 text-right ${selectedSubjectId === subject.id ? "border-cyan-400/40 bg-cyan-500/10" : "border-white/8 bg-white/[0.03]"}`}
-											>
-												<div className="flex items-start justify-between gap-3">
-													<div>
-														<div className="font-black">
-															{getLocalized(subject.title, subject.title_fa)}
-														</div>
-														<div className="mt-1 text-xs text-slate-500">
-															{subject.subject_type}
-														</div>
-													</div>
-													<Badge
-														className={
-															subject.status === "stalled"
-																? "bg-orange-500/15 text-orange-200"
-																: subject.status === "completed"
-																	? "bg-emerald-500/15 text-emerald-200"
-																	: "bg-cyan-500/15 text-cyan-200"
-														}
-													>
-														{translateSubjectStatusFa(subject.status)}
-													</Badge>
-												</div>
-												<div className="mt-4 flex justify-between text-xs">
-													<span className="text-slate-500">پیشرفت</span>
-													<strong>
-														{subject.progress_percent.toLocaleString("fa-IR")}٪
-													</strong>
-												</div>
-												<Progress
-													value={subject.progress_percent}
-													className="mt-2"
-												/>
-												<div className="mt-3 flex flex-wrap gap-1.5">
-													{subject.sub_subjects.map((sub) => (
-														<span
-															key={sub.id}
-															className={`rounded-lg px-2 py-1 text-[10px] ${sub.completed ? "bg-emerald-500/10 text-emerald-200" : "bg-white/5 text-slate-400"}`}
-														>
-															{getLocalized(sub.title, sub.title_fa)} ·{" "}
-															{sub.progress_share}٪ {sub.completed && "✓"}
-														</span>
-													))}
-												</div>
-											</motion.button>
-										))}
-									</CardContent>
-								</Card>
+								{revealBlock}
 
-								{selectedSubject && (
-									<Card className="border-white/10 bg-slate-950/55 text-slate-100">
-										<CardHeader>
-											<CardTitle className="flex items-center justify-between gap-2 text-base">
-												<span className="flex items-center gap-2">
-													<GitBranch className="size-5 text-violet-300" />{" "}
-													انتخاب مسیر
-												</span>
-												<SubjectAiButton
-													aiLevel={playerAiLevel}
-													loading={aiLevelResource.loading}
-													disabledMessage={playerAiDisabledMessage}
-													onClick={() => openAiInsight(selectedSubject)}
-													variant="text"
-												/>
-											</CardTitle>
-										</CardHeader>
-										<CardContent>
-											<p className="mb-3 text-xs leading-6 text-slate-400">
-												ابتدا هدف این نوبت را انتخاب کنید، سپس مسیر آن را فعال
-												کنید. «سهم» نشان می‌دهد پیشرفت روی آن هدف چقدر در
-												پیشرفت کل موضوع اثر می‌گذارد.
-											</p>
-											<div className="mb-4 flex flex-wrap gap-2">
-												{selectedSubject.sub_subjects.map((sub) => {
-													const isActive =
-														runtime.state?.active_sub_subject_id === sub.id;
-													return (
-														<button
-															key={sub.id}
-															type="button"
-															onClick={() => {
-																setSelectedSubSubjectId(sub.id);
-																setSelectedScenarioId(null);
-															}}
-															className={`rounded-xl border px-3 py-2 text-right text-sm ${selectedSubSubjectId === sub.id ? "border-violet-400/40 bg-violet-500/10 text-violet-100" : "border-white/10 bg-white/[0.03] text-slate-400"}`}
-														>
-															<span className="flex items-center gap-1.5 font-bold">
-																{getLocalized(sub.title, sub.title_fa)}
-																{sub.completed && (
-																	<CheckCircle2 className="size-3.5 text-emerald-300" />
-																)}
-															</span>
-															<span className="mt-0.5 block text-[11px] text-slate-500">
-																سهم {formatNumberFa(sub.progress_share)}٪
-																{isActive ? " · مسیر فعال تیم" : ""}
-																{sub.stalled ? " · متوقف" : ""}
-															</span>
-														</button>
-													);
-												})}
-											</div>
-											{scenariosResource.error && (
-												<p className="mb-3 text-sm text-rose-300">
-													{scenariosResource.error}
-												</p>
-											)}
-											<div className="grid gap-3 lg:grid-cols-2">
-												{scenariosResource.scenarios.map((scenario) => (
-													<div
-														key={scenario.id}
-														className={`rounded-2xl border p-4 ${selectedScenarioId === scenario.id ? "border-violet-400/40 bg-violet-500/10" : "border-white/8 bg-white/[0.03]"}`}
-													>
-														<h3 className="font-black">
-															{getLocalized(scenario.title, scenario.title_fa)}
-														</h3>
-														<div className="mt-2 flex gap-2">
-															<Badge variant="secondary">
-																{formatScenarioTypeFa(scenario.scenario_type)}
-															</Badge>
-															<Badge variant="secondary">
-																{formatExecutionModeFa(scenario.execution_mode)}
-															</Badge>
-															<SubjectAiButton
-																aiLevel={playerAiLevel}
-																loading={aiLevelResource.loading}
-																disabledMessage={playerAiDisabledMessage}
-																onClick={() => openAiInsight(selectedSubject)}
-															/>
-														</div>
-														<Button
-															onClick={() => void selectScenario(scenario.id)}
-															disabled={
-																!canSelectScenario(phase) || actionBusy !== null
-															}
-															className="mt-4 w-full bg-violet-400 text-slate-950 hover:bg-violet-300"
-														>
-															{actionBusy === `scenario-${scenario.id}` ? (
-																<LoaderCircle className="size-4 animate-spin" />
-															) : (
-																<ChevronLeft className="size-4" />
-															)}
-															{selectedScenarioId === scenario.id
-																? "مسیر فعال"
-																: "انتخاب این مسیر"}
-														</Button>
-													</div>
-												))}
-											</div>
-											{!canSelectScenario(phase) && (
-												<p className="mt-3 text-xs text-amber-300">
-													انتخاب مسیر فقط در فاز «انتخاب مسیر» ممکن است.
-												</p>
-											)}
-										</CardContent>
-									</Card>
-								)}
-
-								{selectedScenarioId && (
-									<ScenarioVotingArena
-										steps={stepsResource.steps}
-										phase={phase}
-										currentTurn={runtime.state?.current_turn ?? null}
-										gameId={gameId}
-										scenarioId={selectedScenarioId}
-										currentUserId={user?.id ?? null}
-										teamMembers={teamMembers}
-										actionBusy={actionBusy}
-										actionCatalog={arenaActionCatalog}
-										bannedActionCodes={bannedActionCodes}
-										loading={stepsResource.loading}
-										error={stepsResource.error}
-										onVote={voteStep}
-										onInspectLocks={locks.inspect}
-									/>
+								{/* In the deciding phases the move cards lead and the
+								    target folds to one line; before that, the target is
+								    the decision. */}
+								{votingStage ? (
+									<>
+										{targetBoardCompact}
+										{arenaBlock}
+										{ordersBlock}
+									</>
+								) : (
+									<>
+										{ordersBlock}
+										{targetBoardFull}
+										{arenaBlock}
+									</>
 								)}
 							</div>
 
-							<aside className="space-y-5">
-												<PlayerBlackMarket
-									status={blackMarket.status}
-									items={blackMarket.items}
-									message={blackMarket.message}
-									busyCode={blackMarket.busyCode}
-									credits={runtime.state?.credits ?? null}
-									resolveActionName={resolveActionName}
-									onPurchase={blackMarket.purchase}
-									resolveItemId={blackMarket.resolveItemId}
-								/>
-				<PlayerMoveInsight
-									events={events.events}
-									steps={stepsResource.steps}
-									myTeamId={
-										runtime.state?.team_id ?? runtime.context?.teamId ?? null
-									}
-								/>
-								<AiAssistantUpgradePanel
-									level={
-										aiLevelResource.status === "ready"
-											? aiLevelResource.level
-											: null
-									}
-									loading={aiLevelResource.loading}
-									purchasing={purchaseAiLevelResource.purchasing}
-									error={
-										purchaseAiLevelResource.error ??
-										(aiLevelResource.status === "error"
-											? aiLevelResource.message
-											: null)
-									}
-									unavailableMessage={
-										aiLevelResource.status === "unconfigured"
-											? aiLevelResource.message
-											: null
-									}
-									isLeader={isTeamLeader}
-									onPurchase={() => void purchaseAiLevel()}
-									onRefresh={() => void aiLevelResource.refresh()}
-								/>
-								<GameEventFeed
-									events={events.events}
-									status={events.status}
-									error={events.error}
-								/>
-								<CommunicationPanel
-									service={communicationService}
-									gameId={gameId ?? "active-game"}
-									senderUserId={user?.id ?? 0}
-									senderRole={
-										runtime.context?.role === "GOVERNMENT"
-											? "BOTH"
-											: (runtime.context?.role ?? "BOTH")
-									}
-									senderTeamId={runtime.state?.team_id ?? 0}
-									senderSideId={runtime.context?.sideId ?? undefined}
-									phase={phase}
-									relatedScenarioId={selectedScenarioId}
-								/>
-							</aside>
+							<SideRail
+								tabs={[
+									{
+										key: "events",
+										label: "رویدادها",
+										icon: ScrollText,
+										counter: events.events.length,
+										content: (
+											<GameEventFeed
+												events={events.events}
+												status={events.status}
+												error={events.error}
+												resolveNames={eventNameResolvers}
+											/>
+										),
+									},
+									{
+										key: "chat",
+										label: "گفت‌وگو",
+										icon: MessagesSquare,
+										content: (
+											<CommunicationPanel
+												service={communicationService}
+												gameId={gameId ?? "active-game"}
+												senderUserId={user?.id ?? 0}
+												senderRole={
+													runtime.context?.role === "GOVERNMENT"
+														? "BOTH"
+														: (runtime.context?.role ?? "BOTH")
+												}
+												senderTeamId={runtime.state?.team_id ?? 0}
+												senderSideId={runtime.context?.sideId ?? undefined}
+												phase={phase}
+												relatedScenarioId={selectedScenarioId}
+											/>
+										),
+									},
+									{
+										key: "market",
+										label: "بازار",
+										icon: Store,
+										content: (
+											<PlayerBlackMarket
+												status={blackMarket.status}
+												items={blackMarket.items}
+												message={blackMarket.message}
+												busyCode={blackMarket.busyCode}
+												credits={runtime.state?.credits ?? null}
+												resolveActionName={resolveActionName}
+												onPurchase={blackMarket.purchase}
+												resolveItemId={blackMarket.resolveItemId}
+											/>
+										),
+									},
+									{
+										key: "pattern",
+										label: "الگو",
+										icon: Activity,
+										content: (
+											<PlayerMoveInsight
+												events={events.events}
+												steps={stepsResource.steps}
+												myTeamId={
+													runtime.state?.team_id ??
+													runtime.context?.teamId ??
+													null
+												}
+											/>
+										),
+									},
+									{
+										key: "ai",
+										label: "دستیار",
+										icon: Bot,
+										content: (
+											<AiAssistantUpgradePanel
+												level={
+													aiLevelResource.status === "ready"
+														? aiLevelResource.level
+														: null
+												}
+												loading={aiLevelResource.loading}
+												purchasing={purchaseAiLevelResource.purchasing}
+												error={
+													purchaseAiLevelResource.error ??
+													(aiLevelResource.status === "error"
+														? aiLevelResource.message
+														: null)
+												}
+												unavailableMessage={
+													aiLevelResource.status === "unconfigured"
+														? aiLevelResource.message
+														: null
+												}
+												isLeader={isTeamLeader}
+												onPurchase={() => void purchaseAiLevel()}
+												onRefresh={() => void aiLevelResource.refresh()}
+											/>
+										),
+									},
+								]}
+							/>
 						</section>
 					</div>
 				)}

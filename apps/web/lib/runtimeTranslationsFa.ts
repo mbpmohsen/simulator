@@ -129,7 +129,17 @@ export const translateEventTypeFa = (type: string): string =>
  * from the payload; keep the server text only when it is already Persian, so no
  * detail is lost and no English reaches the player.
  */
-const describeEventFa = (event: GameEvent): string | null => {
+export interface EventNameResolvers {
+	/** Plan ids in an event payload must be shown as the titles players know. */
+	subject?: (id: string) => string | null;
+	site?: (id: string) => string | null;
+	action?: (code: string) => string | null;
+}
+
+const describeEventFa = (
+	event: GameEvent,
+	names?: EventNameResolvers,
+): string | null => {
 	const payload = event.payload as Record<string, unknown>;
 	const asString = (value: unknown): string | null =>
 		typeof value === "string" && value.trim() ? value : null;
@@ -140,15 +150,21 @@ const describeEventFa = (event: GameEvent): string | null => {
 			if (!orderType) return null;
 			const label = formatOrderTypeFa(orderType as GovernmentOrderType);
 			const subject = asString(payload.subject_id);
-			return subject
-				? `دولت دستور «${label}» را برای «${subject}» صادر کرد.`
+			const subjectName = subject ? (names?.subject?.(subject) ?? null) : null;
+			return subjectName
+				? `دولت دستور «${label}» را برای «${subjectName}» صادر کرد.`
 				: `دولت دستور «${label}» را صادر کرد.`;
 		}
 		case "SCENARIO_STEP_RESOLVED": {
 			const code = asString(payload.action_code);
 			if (!code) return null;
 			const outcome = payload.result === "success" ? "موفق بود" : "ناموفق بود";
-			return `کنش «${formatActionCodeFa(code)}» ${outcome}.`;
+			const move = names?.action?.(code) ?? formatActionCodeFa(code);
+			const siteId = asString(payload.sub_subject_id);
+			const site = siteId ? (names?.site?.(siteId) ?? null) : null;
+			return site
+				? `حرکت «${move}» روی «${site}» ${outcome}.`
+				: `حرکت «${move}» ${outcome}.`;
 		}
 		case "WINNER_DECLARED":
 			return "برندهٔ بازی مشخص شد.";
@@ -169,11 +185,18 @@ const describeEventFa = (event: GameEvent): string | null => {
 	}
 };
 
-export const eventMessageFa = (event: GameEvent): string => {
+export const eventMessageFa = (
+	event: GameEvent,
+	names?: EventNameResolvers,
+): string => {
+	// A sentence we build from the payload beats the server's, because only we
+	// can turn its ids into the names the player sees elsewhere.
+	const built = describeEventFa(event, names);
+	if (built) return built;
 	const message = event.payload.message;
 	if (typeof message === "string" && CONTAINS_PERSIAN.test(message))
 		return message;
-	return describeEventFa(event) ?? "رویداد تازه‌ای در بازی ثبت شد.";
+	return "رویداد تازه‌ای در بازی ثبت شد.";
 };
 
 export interface LockReasonDisplay {
@@ -196,6 +219,10 @@ export const orderTypeNeedsSubject = (type: GovernmentOrderType): boolean =>
 
 const ACTION_TOKEN_FA: Record<string, string> = {
 	ATK: "تهاجمی",
+	BLACKOUT: "قطعی",
+	BUDGET: "بودجه",
+	CONTAIN: "مهار",
+	COVER: "پوشش",
 	DEF: "دفاعی",
 	ABUSE: "سوءاستفاده",
 	ACCESS: "دسترسی",
@@ -228,7 +255,9 @@ const ACTION_TOKEN_FA: Record<string, string> = {
 	DEGRADATION: "کاهش کیفیت",
 	DELAY: "تأخیر",
 	DEPENDENCY: "وابستگی",
+	DISRUPT: "اختلال",
 	DISRUPTION: "اختلال",
+	DOSSIER: "پرونده",
 	DRILL: "مانور",
 	DUAL: "دوگانه",
 	EMERGENCY: "اضطراری",
@@ -239,6 +268,7 @@ const ACTION_TOKEN_FA: Record<string, string> = {
 	FATIGUE: "خستگی",
 	FREEZE: "توقف",
 	FRICTION: "اصطکاک",
+	HARDEN: "سخت‌سازی",
 	HARDENING: "سخت‌سازی",
 	IDENTITY: "هویت",
 	INCIDENT: "رخداد",
@@ -258,6 +288,7 @@ const ACTION_TOKEN_FA: Record<string, string> = {
 	NETWORK: "شبکه",
 	NOTIFICATION: "اعلان",
 	OPERATOR: "اپراتور",
+	OUTAGE: "قطع خدمت",
 	OVERLOAD: "اضافه‌بار",
 	PARTY: "طرف",
 	PATH: "مسیر",
@@ -268,6 +299,7 @@ const ACTION_TOKEN_FA: Record<string, string> = {
 	PRIORITIZATION: "اولویت‌بندی",
 	PRIVILEGE: "سطح دسترسی",
 	PRIVILEGED: "دارای دسترسی ویژه",
+	PROBE: "کاوش",
 	PROCESS: "فرایند",
 	PUBLIC: "عمومی",
 	QUEUE: "صف",
@@ -293,12 +325,30 @@ const ACTION_TOKEN_FA: Record<string, string> = {
 	TELEMETRY: "تله‌متری",
 	TEST: "آزمون",
 	THIRD: "شخص ثالث",
+	TOKEN: "ژتون",
 	TRIAGE: "اولویت‌بندی رخداد",
 	TRUST: "اعتماد",
 	VALIDATION: "اعتبارسنجی",
 	VENDOR: "فروشنده",
 	VERIFICATION: "راستی‌آزمایی",
+	VOUCHER: "کوپن",
 	WORKFLOW: "گردش کار",
+};
+
+/**
+ * Persian text, or nothing.
+ *
+ * The server's action catalogue carries an English display name and drops the
+ * plan's `name_fa`, so taking "the first non-empty name" puts English on a
+ * Persian screen. A Latin string is treated as missing, which sends the caller
+ * to `formatActionCodeFa` - Persian built from the code's own words.
+ */
+export const persianOrNull = (
+	value: string | null | undefined,
+): string | null => {
+	const text = value?.trim();
+	if (!text) return null;
+	return /[\u0600-\u06FF]/.test(text) ? text : null;
 };
 
 export const formatActionCodeFa = (code: string): string =>

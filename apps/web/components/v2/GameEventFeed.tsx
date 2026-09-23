@@ -14,6 +14,7 @@ import {
 	ShieldAlert,
 } from "lucide-react";
 import type { GameEventsStatus } from "@/hooks/useGameEvents";
+import type { EventNameResolvers } from "@/lib/runtimeTranslationsFa";
 import {
 	eventMessageFa,
 	translateEventTypeFa,
@@ -32,10 +33,13 @@ export function GameEventFeed({
 	events,
 	status,
 	error,
+	resolveNames,
 }: {
 	events: GameEvent[];
 	status: GameEventsStatus;
 	error?: string | null;
+	/** Turns ids in an event payload into the names shown elsewhere. */
+	resolveNames?: EventNameResolvers;
 }) {
 	return (
 		<Card className="border-white/10 bg-slate-950/55 text-slate-100">
@@ -70,7 +74,7 @@ export function GameEventFeed({
 						{error}
 					</div>
 				)}
-				<div className="max-h-[430px] space-y-3 overflow-y-auto pl-1">
+				<div className="space-y-3">
 					{events.length === 0 && (
 						<div className="rounded-2xl border border-dashed border-white/10 p-9 text-center text-sm text-slate-500">
 							<Activity className="mx-auto mb-3 size-8 text-slate-700" />
@@ -111,7 +115,7 @@ export function GameEventFeed({
 											</span>
 										</div>
 										<p className="mt-1 text-sm leading-7 text-slate-300">
-											{eventMessageFa(event)}
+											{eventMessageFa(event, resolveNames)}
 										</p>
 									</div>
 								</div>
