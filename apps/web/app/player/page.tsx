@@ -62,6 +62,7 @@ import { ScenarioVotingArena } from "@/components/v2/player/ScenarioVotingArena"
 import { SideRail } from "@/components/v2/player/SideRail";
 import { TargetBoard } from "@/components/v2/player/TargetBoard";
 import { TurnRevealOverlay } from "@/components/v2/player/TurnRevealOverlay";
+import { VulnerabilityBanner } from "@/components/v2/player/VulnerabilityBanner";
 import { useAiAssistantLevel } from "@/hooks/useAiAssistantLevel";
 import { useGameEvents } from "@/hooks/useGameEvents";
 import { useIncomingOrderNotifications } from "@/hooks/useIncomingOrderNotifications";
@@ -79,6 +80,7 @@ import { createCommunicationService } from "@/lib/communicationService";
 import type { MoveResult } from "@/lib/moveResults";
 import {
 	buildMoveResults,
+	buildVulnerabilities,
 	incomingMoveForTurn,
 	resultsForTurn,
 } from "@/lib/moveResults";
@@ -199,6 +201,7 @@ const buildArenaActionCatalog = (
 		const name =
 			persianOrNull(
 				readActionText(raw, [
+					"displayName_fa",
 					"displayNameFa",
 					"display_name_fa",
 					"nameFa",
@@ -227,6 +230,7 @@ const buildArenaActionCatalog = (
 			),
 			nameFa: persianOrNull(
 				readActionText(raw, [
+					"displayName_fa",
 					"displayNameFa",
 					"display_name_fa",
 					"nameFa",
@@ -558,6 +562,13 @@ export default function PlayerDashboardPage() {
 			incomingMoveForTurn(events.events, runtime.state?.current_turn ?? null),
 		[events.events, runtime.state?.current_turn],
 	);
+	// A successful attack leaves its target open to the same move at 100 % until
+	// it is repaired. The server pushes no state for this, so it is folded out
+	// of the resolution stream.
+	const vulnerabilities = useMemo(
+		() => buildVulnerabilities(events.events),
+		[events.events],
+	);
 	// Results already in the history when the screen opened are not news: prime
 	// the reveal with the newest one so only a fresh result opens it.
 	const revealPrimed = useRef(false);
@@ -566,6 +577,27 @@ export default function PlayerDashboardPage() {
 		revealPrimed.current = true;
 		setRevealedSeq(newestResult.seq);
 	}, [newestResult]);
+	/**
+	 * The imaginary length of one turn - «ماه» and the like - so a turn reads as
+	 * a chapter of a story rather than a counter. It arrives on the REST game
+	 * state and on the SSE snapshot; either will do, and when neither has it
+	 * (an older server) nothing is shown rather than a guessed unit.
+	 */
+	const timeUnitName = useMemo(() => {
+		const fromRest = gameState?.game?.timeUnit?.name;
+		if (typeof fromRest === "string" && fromRest.trim()) return fromRest.trim();
+		const snapshotGame = events.snapshot?.game;
+		const unit =
+			snapshotGame && typeof snapshotGame === "object"
+				? (snapshotGame as Record<string, unknown>).timeUnit
+				: null;
+		const name =
+			unit && typeof unit === "object"
+				? (unit as Record<string, unknown>).name
+				: null;
+		return typeof name === "string" && name.trim() ? name.trim() : null;
+	}, [gameState, events.snapshot]);
+
 	const countdown = usePhaseCountdown(
 		phase,
 		runtime.state?.current_turn ?? null,
@@ -825,6 +857,9 @@ export default function PlayerDashboardPage() {
 				refreshing={runtime.loading}
 				onRefresh={() => void runtime.refresh()}
 				onExit={exitPlayer}
+				token={token}
+				resolveSiteName={resolveSiteName}
+				resolveSubjectName={resolveSubjectName}
 			/>
 		);
 	}
@@ -977,8 +1012,11 @@ export default function PlayerDashboardPage() {
 			}
 			probability={revealedMoveInfo?.probability ?? null}
 			cost={revealedMoveInfo?.cost ?? null}
-			counterName={revealedMoveInfo?.counterName ?? null}
-			counterRelation={revealedMoveInfo?.counterRelation ?? null}
+			counterName={
+				newestResult.counterActionCode
+					? resolveActionName(newestResult.counterActionCode)
+					: (revealedMoveInfo?.counterName ?? null)
+			}
 			opponent={opponentMove}
 			opponentMoveName={
 				opponentMove ? resolveActionName(opponentMove.actionCode) : null
@@ -1107,9 +1145,15 @@ export default function PlayerDashboardPage() {
 									totalSeconds={countdown.totalSeconds}
 									hasTarget={hasActiveTarget}
 									hasVoted={hasVotedThisTurn}
+									timeUnitName={timeUnitName}
 								/>
 
 								{revealBlock}
+
+								<VulnerabilityBanner
+									vulnerabilities={vulnerabilities}
+									resolveActionName={resolveActionName}
+								/>
 
 								{/* In the deciding phases the move cards lead and the
 								    target folds to one line; before that, the target is

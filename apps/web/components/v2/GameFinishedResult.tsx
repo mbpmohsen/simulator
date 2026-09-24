@@ -19,7 +19,13 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { GameReportDecisive } from "@/components/v2/GameReportDecisive";
+import { GameReportScorecard } from "@/components/v2/GameReportScorecard";
+import { GameReportTimeline } from "@/components/v2/GameReportTimeline";
+import { useGameHistory } from "@/hooks/useGameHistory";
+import { buildGameSummary, readVulnerabilities } from "@/lib/gameSummary";
 import { playGameFinishedSound } from "@/lib/playNotificationSound";
+import { formatActionCodeFa, persianOrNull } from "@/lib/runtimeTranslationsFa";
 
 export interface GameFinishedResultProps {
 	state: GameStateData;
@@ -28,6 +34,14 @@ export interface GameFinishedResultProps {
 	refreshing?: boolean;
 	onRefresh: () => void;
 	onExit?: () => void;
+	/**
+	 * Auth token for reading the full event history. Without it the verdict and
+	 * the two side cards still render; only the detailed report is left out.
+	 */
+	token?: string | null;
+	/** Plan names the game state does not carry. Optional — never guessed. */
+	resolveSiteName?: (siteId: string) => string | null;
+	resolveSubjectName?: (subjectId: string) => string | null;
 }
 
 const numberFa = (value: number): string => value.toLocaleString("fa-IR");
@@ -39,6 +53,9 @@ export function GameFinishedResult({
 	refreshing = false,
 	onRefresh,
 	onExit,
+	token,
+	resolveSiteName,
+	resolveSubjectName,
 }: GameFinishedResultProps) {
 	const conclusion = useMemo(() => buildGameConclusion(state), [state]);
 	const announced = useRef(false);
@@ -54,6 +71,73 @@ export function GameFinishedResult({
 		: conclusion.currentSideOutcome === "win"
 			? "سمت شما پیروز شد"
 			: `پیروزی ${winnerName ?? "سمت برنده"}`;
+
+	// The live event buffer keeps only the last hundred events, so the report
+	// re-reads the history from the start rather than trusting what is in memory.
+	const history = useGameHistory(
+		state.game.gameId,
+		token ?? null,
+		Boolean(token),
+	);
+	const summary = useMemo(
+		() =>
+			buildGameSummary(history.events, {
+				totalTurns: state.game.totalTurns,
+				pointThreshold: state.game.pointThreshold,
+			}),
+		[history.events, state.game.totalTurns, state.game.pointThreshold],
+	);
+
+	const actionNameByCode = useMemo(() => {
+		const map = new Map<string, string>();
+		for (const action of state.actions ?? []) {
+			const raw = action as unknown as Record<string, unknown>;
+			const pick = (key: string): string | null => {
+				const value = raw[key];
+				return typeof value === "string" && value.trim() ? value.trim() : null;
+			};
+			const name =
+				persianOrNull(pick("displayName_fa")) ??
+				persianOrNull(pick("displayNameFa")) ??
+				persianOrNull(pick("display_name_fa")) ??
+				persianOrNull(pick("name_fa")) ??
+				persianOrNull(pick("displayName")) ??
+				pick("displayName");
+			if (name) map.set(action.name, name);
+		}
+		return map;
+	}, [state.actions]);
+
+	/** Persian for any action code; never the raw code. */
+	const resolveActionName = useMemo(
+		() => (code: string) =>
+			actionNameByCode.get(code) ?? formatActionCodeFa(code),
+		[actionNameByCode],
+	);
+	const resolveSite = useMemo(
+		() => (siteId: string) => resolveSiteName?.(siteId) ?? null,
+		[resolveSiteName],
+	);
+	const resolveSubject = useMemo(
+		() => (subjectId: string) => resolveSubjectName?.(subjectId) ?? null,
+		[resolveSubjectName],
+	);
+
+	const myTeam = useMemo(() => {
+		const teamId = state.clientContext?.currentTeamId ?? null;
+		return teamId === null
+			? null
+			: (state.teams.find((team) => team.id === teamId) ?? null);
+	}, [state.clientContext, state.teams]);
+	const openVulnerabilities = useMemo(
+		() => readVulnerabilities(myTeam?.vulnerabilities),
+		[myTeam],
+	);
+	const timeUnitName =
+		typeof state.game.timeUnit?.name === "string" &&
+		state.game.timeUnit.name.trim()
+			? state.game.timeUnit.name.trim()
+			: null;
 
 	useEffect(() => {
 		if (announced.current) return;
@@ -242,6 +326,72 @@ export function GameFinishedResult({
 						);
 					})}
 				</section>
+
+				{token && (
+					<section className="mt-8 border-t border-white/10 pt-6">
+						<div className="flex flex-wrap items-end justify-between gap-3">
+							<div>
+								<h2 className="text-lg font-black">گزارش کامل بازی</h2>
+								<p className="mt-1 text-xs leading-6 text-slate-400">
+									نوبت‌به‌نوبت، از دید تیم شما: چه بازی شد، تاس چه آورد، و هر
+									امتیاز از کجا آمد.
+								</p>
+							</div>
+							{history.truncated && (
+								<span className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-2 py-1 text-[11px] text-amber-100">
+									تاریخچه طولانی بود و بخشی از ابتدای آن خوانده نشد.
+								</span>
+							)}
+						</div>
+
+						{history.loading ? (
+							<div className="mt-4 flex items-center gap-3 rounded-lg border border-white/10 bg-[#0d121c] p-4 text-sm text-slate-400">
+								<LoaderCircle className="size-4 animate-spin" /> در حال بازخوانی
+								تاریخچهٔ بازی…
+							</div>
+						) : history.error ? (
+							<div className="mt-4 rounded-lg border border-white/10 bg-[#0d121c] p-4 text-sm text-slate-400">
+								{history.error}
+							</div>
+						) : summary.empty ? (
+							<div className="mt-4 rounded-lg border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-sm text-slate-500">
+								رویدادی برای تیم شما در این بازی ثبت نشده است.
+							</div>
+						) : (
+							<div className="mt-4 space-y-5">
+								{summary.decisive && (
+									<GameReportDecisive
+										decisive={summary.decisive}
+										resolveActionName={resolveActionName}
+										resolveSiteName={resolveSite}
+										timeUnitName={timeUnitName}
+									/>
+								)}
+
+								<GameReportScorecard
+									scorecard={summary.scorecard}
+									resolveActionName={resolveActionName}
+									resolveSiteName={resolveSite}
+									openVulnerabilities={openVulnerabilities}
+								/>
+
+								<div>
+									<h3 className="mb-3 text-sm font-black text-slate-200">
+										نوبت‌به‌نوبت
+									</h3>
+									<GameReportTimeline
+										turns={summary.turns}
+										resolveActionName={resolveActionName}
+										resolveSiteName={resolveSite}
+										resolveSubjectName={resolveSubject}
+										timeUnitName={timeUnitName}
+										decisiveTurn={summary.decisive?.turn ?? null}
+									/>
+								</div>
+							</div>
+						)}
+					</section>
+				)}
 
 				<footer className="mt-6 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-500">
 					<CheckCircle2 className="size-4 text-emerald-300" /> نتیجه نهایی ثبت

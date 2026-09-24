@@ -5,11 +5,15 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
 	CheckCircle2,
 	Coins,
+	Dices,
 	Gauge,
+	ShieldAlert,
+	ShieldCheck,
 	ShieldHalf,
 	Swords,
 	Target,
 	TrendingUp,
+	TriangleAlert,
 	Trophy,
 	X,
 	XCircle,
@@ -17,6 +21,25 @@ import {
 import { useEffect, useState } from "react";
 import type { IncomingMove, MoveResult } from "@/lib/moveResults";
 import { playNotificationSound } from "@/lib/playNotificationSound";
+import {
+	type OutcomeTone,
+	outcomeWordingFa,
+} from "@/lib/runtimeTranslationsFa";
+
+/** Semantic colour for a verdict, separate from the card accent. */
+const TONE_BOX: Record<OutcomeTone, string> = {
+	success: "border-emerald-400/30 bg-emerald-500/[0.10]",
+	failure: "border-orange-400/30 bg-orange-500/[0.09]",
+	blocked: "border-sky-400/30 bg-sky-500/[0.10]",
+	neutral: "border-cyan-400/25 bg-cyan-500/[0.08]",
+};
+
+const TONE_TEXT: Record<OutcomeTone, string> = {
+	success: "text-emerald-200",
+	failure: "text-orange-200",
+	blocked: "text-sky-200",
+	neutral: "text-cyan-200",
+};
 
 /**
  * The beat between locking a decision and finding out what it did.
@@ -25,9 +48,13 @@ import { playNotificationSound } from "@/lib/playNotificationSound";
  * result has arrived and nothing here can influence the vote that produced it.
  *
  * It shows three things in order: the move this team played, the move the
- * opponent played, and how it went. The opponent half is honest about what the
- * server actually sends - the defending team is told the attacker's move, and
- * the attacking team is told nothing, so it says so instead of guessing.
+ * opponent played, and how it went.
+ *
+ * Since the 2026-09-24 server both sides are told what the other played - the
+ * defender through `role: "target"`, the attacker through `role: "counterparty"`
+ * - and every resolution carries the probability actually rolled, the roll, and
+ * the counter that gated it. The verdict is worded from `outcomeReason`, never
+ * from the bare success flag: a defence that never rolled is not a failure.
  */
 
 export interface TurnRevealProps {
@@ -41,9 +68,8 @@ export interface TurnRevealProps {
 	/** Base success chance of that move, from the action catalogue. */
 	probability: number | null;
 	cost: number | null;
-	/** The move on the other side tied to this one, already localized. */
+	/** Persian name of the counter the server says gated this move, if any. */
 	counterName: string | null;
-	counterRelation: "countered-by" | "counters" | null;
 	/** The opponent's move, when the server reports it to this team. */
 	opponent: IncomingMove | null;
 	/** Persian name of the opponent's move. */
@@ -66,7 +92,6 @@ export function TurnRevealOverlay({
 	probability,
 	cost,
 	counterName,
-	counterRelation,
 	opponent,
 	opponentMoveName,
 	onClose,
@@ -106,12 +131,14 @@ export function TurnRevealOverlay({
 	}, [open, onClose]);
 
 	const success = result.success;
-	// The defence that could have blunted this move, when the opponent played it.
-	const counteredByOpponent =
-		counterRelation === "countered-by" &&
-		counterName !== null &&
-		opponent !== null &&
-		opponentMoveName === counterName;
+	const verdict = outcomeWordingFa(result.outcomeReason, success);
+	const opponentVerdict = outcomeWordingFa(
+		opponent?.outcomeReason,
+		opponent?.success === true,
+	);
+	// No longer a guess: the server names the counter that gated this move and
+	// says whether its gate rolled through.
+	const gated = result.counterActionCode !== null;
 
 	return (
 		<AnimatePresence>
@@ -173,10 +200,21 @@ export function TurnRevealOverlay({
 											<Target className="size-3" /> روی {siteName}
 										</span>
 									)}
-									{probability !== null && (
-										<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 text-slate-300">
-											<Gauge className="size-3" /> شانس پایه{" "}
-											{faNumber(probability)}٪
+									{(result.appliedProbability ?? probability) !== null && (
+										<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 tabular-nums text-slate-300">
+											<Gauge className="size-3" /> شانس{" "}
+											{faNumber(
+												Math.round(
+													(result.appliedProbability ?? probability) as number,
+												),
+											)}
+											٪
+										</span>
+									)}
+									{result.roll !== null && (
+										<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 tabular-nums text-slate-300">
+											<Dices className="size-3" /> تاس{" "}
+											{faNumber(Math.round(result.roll))}
 										</span>
 									)}
 								</div>
@@ -200,19 +238,35 @@ export function TurnRevealOverlay({
 										</div>
 										<div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
 											<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 text-slate-300">
-												<Swords className="size-3" />{" "}
-												{opponent.success ? "برایشان گرفت" : "برایشان نگرفت"}
+												<Swords className="size-3" />
+												{opponent.role === "target"
+													? "روی تیم شما"
+													: "در زمین خودشان"}
 											</span>
+											<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 text-slate-300">
+												{opponentVerdict.label}
+											</span>
+											{opponent.appliedProbability !== null && (
+												<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/25 px-2 py-0.5 tabular-nums text-slate-300">
+													<Gauge className="size-3" /> شانس{" "}
+													{faNumber(Math.round(opponent.appliedProbability))}٪
+												</span>
+											)}
+											{opponent.guardActive && (
+												<span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-cyan-100">
+													<ShieldCheck className="size-3" /> سدشان برقرار بود
+												</span>
+											)}
 										</div>
 									</>
 								) : (
 									<>
 										<div className="mt-1 text-base font-black text-slate-400">
-											نامشخص
+											حرکتی گزارش نشد
 										</div>
 										<p className="mt-2 text-[11px] leading-6 text-slate-500">
-											سرور حرکت حریف را به تیم شما گزارش نمی‌دهد. تا وقتی این
-											گزارش اضافه نشود، این نیمه خالی می‌ماند.
+											این نوبت چیزی از سمت حریف به تیم شما نرسید — یا حرکتی
+											نکردند، یا حرکتشان به تیم شما مربوط نبود.
 										</p>
 									</>
 								)}
@@ -223,18 +277,25 @@ export function TurnRevealOverlay({
 							initial={reduceMotion ? false : { opacity: 0, y: 10 }}
 							animate={stage >= 3 ? { opacity: 1, y: 0 } : {}}
 							transition={{ type: "spring", stiffness: 280, damping: 22 }}
-							className={`mt-4 rounded-2xl border p-4 ${success ? "border-emerald-400/30 bg-emerald-500/[0.10]" : "border-orange-400/30 bg-orange-500/[0.09]"}`}
+							className={`mt-4 rounded-2xl border p-4 ${TONE_BOX[verdict.tone]}`}
 						>
 							<div
-								className={`flex items-center gap-2 text-lg font-black ${success ? "text-emerald-200" : "text-orange-200"}`}
+								className={`flex items-center gap-2 text-lg font-black ${TONE_TEXT[verdict.tone]}`}
 							>
-								{success ? (
+								{verdict.tone === "success" ? (
 									<CheckCircle2 className="size-5" />
+								) : verdict.tone === "blocked" ? (
+									<ShieldAlert className="size-5" />
+								) : verdict.tone === "neutral" ? (
+									<ShieldCheck className="size-5" />
 								) : (
 									<XCircle className="size-5" />
 								)}
-								{success ? "گرفت" : "نگرفت"}
+								{verdict.label}
 							</div>
+							<p className="mt-1 text-xs leading-6 text-slate-300">
+								{verdict.detail}
+							</p>
 
 							<div className="mt-2 flex flex-wrap gap-2 text-[11px]">
 								{success && result.progress !== null && (
@@ -250,11 +311,15 @@ export function TurnRevealOverlay({
 										امتیاز
 									</span>
 								)}
-								{!success && cost !== null && (
-									<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-1 text-amber-100">
-										<Coins className="size-3" /> {faNumber(cost)} اعتبار خرج شد
-									</span>
-								)}
+								{!success &&
+									cost !== null &&
+									result.outcomeReason !== "INSUFFICIENT_CREDITS" &&
+									result.outcomeReason !== "INVALID" && (
+										<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-1 text-amber-100">
+											<Coins className="size-3" /> {faNumber(cost)} اعتبار خرج
+											شد
+										</span>
+									)}
 								{result.subjectProgress !== null && (
 									<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2 py-1 text-slate-400">
 										پیشرفت کل مأموریت {faNumber(result.subjectProgress)}٪
@@ -262,15 +327,57 @@ export function TurnRevealOverlay({
 								)}
 							</div>
 
-							{counteredByOpponent && (
+							{/* The counter is a gate, not a discount: it rolls before the
+							    move and either stops it outright or lets it through at
+							    full strength. Showing both numbers is the only way the
+							    player learns that. */}
+							{gated && (
 								<p className="mt-3 flex items-start gap-1.5 text-[11px] leading-6 text-sky-100/80">
 									<ShieldHalf className="mt-1 size-3 shrink-0 text-sky-300" />
 									<span>
-										حریف دقیقاً همان حرکتی را انتخاب کرد که جلوی این یکی را
-										می‌گیرد. دفعهٔ بعد جای دیگری را امتحان کنید.
+										حریف پادکنش این حرکت را بازی کرده بود
+										{counterName ? ` («${counterName}»)` : ""}
+										{result.counterEffectiveness !== null && (
+											<>
+												{" "}
+												(شانس سدکردن{" "}
+												{faNumber(Math.round(result.counterEffectiveness))}٪
+												{result.counterRoll !== null && (
+													<>، تاسش {faNumber(Math.round(result.counterRoll))}</>
+												)}
+												)
+											</>
+										)}
+										.{" "}
+										{result.blockedByCounter
+											? "سد گرفت و حرکت شما اصلاً تاس نریخت."
+											: "سد نگرفت، پس حرکت شما با شانس کامل خودش رفت."}
 									</span>
 								</p>
 							)}
+
+							{result.outcomeReason === "TARGET_VULNERABLE" && (
+								<p className="mt-3 flex items-start gap-1.5 text-[11px] leading-6 text-amber-100/90">
+									<TriangleAlert className="mt-1 size-3 shrink-0 text-amber-300" />
+									<span>
+										هدف از ضربهٔ قبلی هنوز ترمیم نشده بود، پس این حرکت بدون تاس
+										نشست. تا وقتی ترمیم نکنند، همین حرکت باز هم با اطمینان کامل
+										می‌گیرد.
+									</span>
+								</p>
+							)}
+
+							{result.guardActive &&
+								result.guardsAgainstActionCode !== null &&
+								result.outcomeReason === "NOTHING_TO_REPAIR" && (
+									<p className="mt-3 flex items-start gap-1.5 text-[11px] leading-6 text-cyan-100/85">
+										<ShieldCheck className="mt-1 size-3 shrink-0 text-cyan-300" />
+										<span>
+											این دفاع تمام نوبت سد بود؛ فقط چیزی برای ترمیم وجود نداشت.
+											«ناموفق» نبود.
+										</span>
+									</p>
+								)}
 						</motion.div>
 
 						<div className="mt-4 flex justify-end">

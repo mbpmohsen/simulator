@@ -23,7 +23,37 @@ export interface PhaseGuideProps {
 	hasTarget: boolean;
 	/** True once this player's vote is in. */
 	hasVoted: boolean;
+	/**
+	 * The imaginary length of one turn, as the game was configured
+	 * (`game_config.time_unit`). One turn is exactly one unit, so turn 2 is the
+	 * second month when the unit is «ماه». Purely narrative - it has nothing to
+	 * do with the countdown beside it, which is wall-clock seconds.
+	 */
+	timeUnitName?: string | null;
 }
+
+/** «نوبت ۲ از ۶» becomes «ماه دوم» beside it, for the first few ordinals. */
+const ORDINAL_FA = [
+	"اول",
+	"دوم",
+	"سوم",
+	"چهارم",
+	"پنجم",
+	"ششم",
+	"هفتم",
+	"هشتم",
+	"نهم",
+	"دهم",
+	"یازدهم",
+	"دوازدهم",
+];
+
+const storyLabel = (turn: number, unitName: string): string => {
+	const ordinal = ORDINAL_FA[turn - 1];
+	return ordinal
+		? `${unitName} ${ordinal}`
+		: `${unitName} ${turn.toLocaleString("fa-IR")}`;
+};
 
 const faNumber = (value: number): string => value.toLocaleString("fa-IR");
 
@@ -65,6 +95,7 @@ export function PhaseGuide({
 	totalSeconds,
 	hasTarget,
 	hasVoted,
+	timeUnitName,
 }: PhaseGuideProps) {
 	const reduceMotion = useReducedMotion();
 	const Icon = PHASE_ICON[phase] ?? Clock3;
@@ -94,6 +125,11 @@ export function PhaseGuide({
 								<span className="tabular-nums">
 									نوبت {faNumber(turn)}
 									{totalTurns ? ` از ${faNumber(totalTurns)}` : ""}
+								</span>
+							)}
+							{turn !== null && timeUnitName && (
+								<span className="rounded-md border border-white/10 bg-black/25 px-1.5 py-0.5 text-[11px] text-slate-300">
+									{storyLabel(turn, timeUnitName)}
 								</span>
 							)}
 						</div>

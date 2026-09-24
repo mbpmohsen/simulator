@@ -3,6 +3,7 @@
   "game_config": {
     "num_turns": 6,
     "point_threshold": 5,
+    "time_unit": "month",
     "turn_duration_seconds": 110,
     "selection_phase_duration": 40,
     "voting_phase_duration": 40,

@@ -14,6 +14,8 @@
 		"dist",
 		"game-plan/ai-assistant-ui.test.ts",
 		"game-plan/runtime-ui.test.ts",
+		"game-plan/resolution-ui.test.ts",
+		"game-plan/game-summary.test.ts",
 		"game-plan/communication-server.test.ts",
 		"game-plan/government-catalog-ui.test.ts"
 	]

@@ -59,6 +59,7 @@ throughout, so omitting it means English text on a Persian screen.
 {
   num_turns: number                 // required
   point_threshold: number           // required
+  time_unit: TimeUnitKey            // required since 2026-09-24
   turn_duration_seconds?: number
   selection_phase_duration?: number
   voting_phase_duration?: number
@@ -67,6 +68,33 @@ throughout, so omitting it means English text on a Persian screen.
   victory_conditions?: Record<string, unknown>
 }
 ```
+
+### `time_unit` — required, and it breaks old payloads
+
+`time_unit` is the imaginary length of one turn: one turn is exactly one unit,
+so with `"month"` turn 1 is month 1. It is **required** by
+`POST /admin/configure_all`; a payload that worked before 2026-09-24 now fails
+with a `422` on `body → game_config → time_unit`.
+
+The allowed keys come from `GET /admin/time-units`, shortest to longest:
+
+| key | name |
+|---|---|
+| `minute` | دقیقه |
+| `hour` | ساعت |
+| `day` | روز |
+| `week` | هفته |
+| `month` | ماه |
+
+`name` is the Persian label and the only name a unit has. Render `name`, submit
+`key`, and never re-sort the catalog — its order is meaningful. The builder
+edits this in **تنظیمات پیشرفته**; `validateDefaultGamePlanClientSide` raises
+`MISSING_TIME_UNIT` / `UNKNOWN_TIME_UNIT` before publish so the admin never has
+to read a raw 422. The `200` response echoes `time_unit: { key, name }`.
+
+> **This is not `turn_duration_seconds`.** One is a story label, the other is
+> the wall-clock budget for a phase. They are deliberately kept apart in the
+> builder so nobody reads «ماه» as a real countdown.
 
 `voting_config` and `victory_conditions` are typed as open records — **nothing
 validates their contents**. The demo uses:
@@ -181,6 +209,17 @@ attackerValue = (probability / 100) × (1 − effectiveness / 100) × points
 ```
 
 Full derivation in `docs/equilibrium-formulas.html`.
+
+> **The engine does not apply this as a multiplier.** The server confirmed on
+> 2026-09-24 that a counter is an independent **gate rolled before the attack**:
+> it blocks outright with probability `effectiveness`, and otherwise the attack
+> rolls at its *unmodified* probability. The two descriptions give the same
+> expected value —
+> `P(success) = (1 − e/100) × (p/100)` either way — so the solver's payoff matrix
+> is correct as written. Only the *player-facing* story differs, and the
+> difference matters: a counter does not shave a few points off the odds, it
+> either stops the move or lets it through at full strength.
+> See `docs/resolution-model.md` §3.
 
 ---
 
@@ -352,6 +391,9 @@ accepts use these.
 - every effect `target` is a known id
 - **all 66 required visibility event types are present**
 - `visibility_config.cross_side_result` exists
+- **`game_config.time_unit` is present and is one of the catalog keys** — the
+  server requires it, and catching it here means the admin sees a Persian issue
+  they can click rather than a 422 at publish time
 
 **It does not check:**
 

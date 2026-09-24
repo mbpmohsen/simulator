@@ -175,6 +175,12 @@ export default function GovernmentDashboardPage() {
 	const catalogResource = useGovernmentCatalog(api, Boolean(token), gameId);
 	const catalog = catalogResource.catalog;
 	const turn = runtime.context?.currentTurn ?? undefined;
+	/** «ماه» and the like, when the game declared one. Never guessed. */
+	const timeUnitName =
+		typeof runtime.context?.gameState?.game?.timeUnit?.name === "string" &&
+		runtime.context.gameState.game.timeUnit.name.trim()
+			? runtime.context.gameState.game.timeUnit.name.trim()
+			: null;
 	const ordersResource = useGovernmentOrders(
 		api,
 		turn,
@@ -596,6 +602,7 @@ export default function GovernmentDashboardPage() {
 				refreshing={runtime.loading}
 				onRefresh={() => void runtime.refresh()}
 				onExit={exitGovernment}
+				token={token}
 			/>
 		);
 	}
@@ -632,6 +639,16 @@ export default function GovernmentDashboardPage() {
 							{runtime.context?.currentPhase && (
 								<Badge className="border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-cyan-200">
 									{formatPhaseFa(runtime.context.currentPhase)}
+								</Badge>
+							)}
+							{turn !== undefined && (
+								<Badge className="border border-white/10 bg-white/5 px-3 py-2 text-slate-200 tabular-nums">
+									نوبت {turn.toLocaleString("fa-IR")}
+									{/* One turn is exactly one configured unit, so the
+									    government reads the same story clock the teams do. */}
+									{timeUnitName
+										? ` · ${timeUnitName} ${turn.toLocaleString("fa-IR")}`
+										: ""}
 								</Badge>
 							)}
 							<Button

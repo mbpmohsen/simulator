@@ -16,7 +16,8 @@
 > client expects, which is not the same as a guarantee about what the server
 > sends. See [Fields you cannot rely on](#fields-you-cannot-rely-on).
 >
-> Written 2026-09-04.
+> Written 2026-09-04. Sections 7b and 7c and the naming notes in §8 added
+> 2026-09-24, after the server answered `docs/backend-requests.md`.
 
 ---
 
@@ -294,6 +295,43 @@ non-negative.
 
 ---
 
+## 7b. The game's time unit
+
+`data.game` in `GET /client/game_state` carries the imaginary length of one
+turn, as the admin configured it:
+
+```json
+"timeUnit": { "key": "month", "name": "ماه" }
+```
+
+One turn is exactly one unit, so turn 2 is the second month. `name` is the
+Persian label and the **only** name a unit has — there is no English name and no
+`name_fa` sibling. It is also on the `game` block of `GAME_STATE_SNAPSHOT`, so a
+client driven purely by SSE never needs the REST call. Games configured before
+the field existed report `{"key": "day", "name": "روز"}`.
+
+This is **display only**. It has nothing to do with `turn_duration_seconds`,
+which is the wall-clock budget for a phase — the two must never be shown as one
+thing. The player screen renders it beside the turn counter («نوبت ۲ از ۶ · ماه
+دوم») and the phase countdown stays in seconds.
+
+The admin picks it from `GET /admin/time-units` and must send
+`game_config.time_unit` on every `configure_all`; see `docs/game-plan-model.md`
+§1.
+
+---
+
+## 7c. Reading a resolved turn
+
+Resolution events are the one part of the contract where the obvious reading is
+wrong: a defence reporting `success: false` may have done its whole job. What
+each role receives, what `outcomeReason` means, how the counter gate works and
+how standing vulnerabilities are derived are all in
+**`docs/resolution-model.md`**. Read it before building any screen that shows an
+outcome.
+
+---
+
 ## 8. Fields you cannot rely on
 
 Everything marked optional above is optional **in the TypeScript type**, and the
@@ -310,6 +348,19 @@ The one that has actually caused a bug:
 against the action catalogue from `/client/game_state`, which always carries
 `name`, `cost` and `probability`. **Any new screen that renders step data should
 do the same join rather than trusting `StepView` alone.**
+
+A second one, found 2026-09-24 and easy to repeat:
+
+> **`displayName_fa` and `display_name_fa` are different keys.** The server
+> sends `displayName_fa` on `/client/game_state` actions and `name_fa` inside
+> `GAME_STATE_SNAPSHOT.availableActions`. A reader that looks only for
+> `display_name_fa` finds nothing and silently falls back to English. The
+> player page reads all four spellings.
+
+Related: in `blackMarketItems`, **`name` is an identity key, not a label** —
+often the raw code (`BM_RED_RECON_DOSSIER`). Purchases and active effects are
+stored against it, so the server keeps it and sends `displayName` /
+`displayName_fa` alongside. Render those, never `name`.
 
 When adding a screen, assume any optional field may be absent and render
 something meaningful without it.
@@ -340,6 +391,8 @@ names, descriptions and availability, and identifies its target by numeric id.
   apply to step voting has not been verified.
 - `GET /government/catalog` — the response is typed `unknown` in the client and
   reshaped by `packages/api/game-plan/government-catalog.ts`.
-- The SSE stream is documented in `docs/backend-integration.md` §15 and is
-  believed current, but the v2 event payloads (`SCENARIO_STEP_RESOLVED` and its
-  siblings) are not covered there.
+- The SSE stream itself is documented in `docs/backend-integration.md` §15. The
+  v2 resolution payloads — `TEAM_ACTION_RESOLVED` in its three roles,
+  `SCENARIO_STEP_RESOLVED`, the counter gate and standing vulnerabilities — are
+  covered in **`docs/resolution-model.md`**. Other v2 event payloads are still
+  undocumented.

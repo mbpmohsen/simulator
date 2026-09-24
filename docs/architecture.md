@@ -127,13 +127,27 @@ GameClientApi.votePlayerStep(stepId)      packages/api/game-client/router.ts
 ────────────────────────────────────────────  Python engine
       votes tallied · majority reached · dice rolled · effects applied
 ────────────────────────────────────────────
-      ↓  SCENARIO_STEP_RESOLVED
-useGameEvents  →  PlayerMoveInsight, the arena's result block, the event feed
+      ↓  SCENARIO_STEP_RESOLVED  +  TEAM_ACTION_RESOLVED (actor/target/counterparty)
+useGameEvents
+      ↓  moveResults.ts pairs them into one MoveResult
+TurnRevealOverlay · the arena's result block · VulnerabilityBanner · the feed
 ```
 
 The frontend never learns the outcome from the vote response. That returns only
 `{ ok, scenario_id, step_id, action_code, category }` — an acknowledgement, not a
 result. **The result arrives asynchronously as an event.**
+
+### Two events per resolution, and neither is enough alone
+
+`SCENARIO_STEP_RESOLVED` knows the site and the progress effects;
+`TEAM_ACTION_RESOLVED` knows the turn, the points, and the whole story of the
+roll — the probability actually used, what came up, the counter that gated it,
+and an `outcomeReason`. `apps/web/lib/moveResults.ts` pairs them on the action
+code within eight sequence numbers and is the only place either event is read.
+
+**Wording an outcome from the `success` flag alone is a bug**, not a shortcut: a
+defence that had nothing to repair reports `success: false` and was guarding the
+whole turn. `docs/resolution-model.md` is the contract.
 
 ### Cards are grouped, steps are not
 

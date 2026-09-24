@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ActionDurations from "@/components/ActionDurations";
 import EquilibriumComparison from "@/components/EquilibriumComparison";
 
 const BASE_URL =
@@ -1532,6 +1533,8 @@ export default function AdminAnalyticsPage() {
 						</Card>
 
 						<EquilibriumComparison api={api} gameId={selectedGameId} />
+
+						<ActionDurations api={api} gameId={selectedGameId} />
 
 						<Card className="border-slate-800 bg-slate-950/72 text-slate-100">
 							<CardHeader>

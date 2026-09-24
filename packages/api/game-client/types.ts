@@ -26,6 +26,12 @@ export interface GameInfo {
 	currentPhase?: string | null;
 	turnStatus?: string | null;
 	phaseStatus?: string | null;
+	/**
+	 * The imaginary length of one turn, as the game was configured. One turn is
+	 * exactly one unit. `name` is the Persian label and the only name a unit
+	 * has. Display only - unrelated to `turn_duration_seconds`.
+	 */
+	timeUnit?: { key: string; name: string } | null;
 	serverTime: number;
 	[key: string]: unknown;
 }

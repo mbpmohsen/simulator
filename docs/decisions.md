@@ -8,6 +8,64 @@ from the working history, so their dates are approximate.
 
 ---
 
+## 2026-09-24 — Outcomes are worded from `outcomeReason`, never from `success`
+
+**Decision.** Every screen that shows a resolution reads `outcomeReason` and
+goes through `outcomeWordingFa()`. The `success` flag is used only as a fallback
+for a reason this build has never seen. Standing vulnerabilities are derived
+client-side from the resolution stream by `buildVulnerabilities()`; the counter
+gate is shown with both its chance and its roll.
+
+**Context.** The player screen rendered «ناموفق» for any defence with
+`success: false`. The server then told us that a defence does two jobs — it
+guards whatever its roll does, and separately rolls to repair a standing
+vulnerability — so a defence played with nothing to repair reports
+`success: false` having done its whole job. The screen was teaching the
+defender that defending does not work. Counters turned out to be a gate rolled
+*before* the attack rather than a modifier on its probability, which is why
+`currentProbability` always equalled `baseProbability` and why the mechanic
+looked inert.
+
+**Alternatives.** Keep wording from the flag and special-case defences by
+action-code prefix — rejected: guessing the category from a code is exactly the
+class of assumption that produced the bug. Ask the server to send a
+pre-rendered phrase — rejected: the UI owns Persian wording, and a phrase cannot
+carry tone or the numbers.
+
+**Consequence.** Seven reasons must each have a Persian label, a sentence and a
+tone; an unhandled new reason degrades to the bare outcome rather than showing a
+code. Vulnerability state is derived, not pushed, so it is only as good as the
+event history the client holds — a client that joins mid-game sees only what it
+was streamed. `docs/resolution-model.md` is the contract;
+`packages/api/game-plan/resolution-ui.test.ts` enforces it.
+
+---
+
+## 2026-09-24 — `time_unit` is a story label, kept away from the phase clock
+
+**Decision.** `game_config.time_unit` is picked in **تنظیمات پیشرفته** under
+"هر نوبت در داستان چقدر طول می‌کشد؟", well away from the second-based phase
+durations, and validated client-side before publish. The player screen shows it
+beside the turn counter («نوبت ۲ از ۶ · ماه دوم») and never inside the
+countdown.
+
+**Context.** The server made the field required, so an unchanged publish payload
+started failing with a `422` on `body → game_config → time_unit` — and
+`parseApiError` did not understand FastAPI's validation array, so the admin
+would have seen the raw axios message. Meanwhile the field sits one line away
+from `turn_duration_seconds` in the same object, and the two mean completely
+different things.
+
+**Alternatives.** Put both in one "زمان" group — rejected: an admin who sees
+«ماه» beside «۱۱۰ ثانیه» reads the month as a real countdown.
+
+**Consequence.** `parseApiError` now returns `validationErrors` and maps `loc`
+paths to Persian field labels; any new required field gets a Persian message by
+adding one line to `FIELD_LABEL_FA`. The three bundled plan JSONs carry
+`"time_unit": "month"`.
+
+---
+
 ## 2026-09-21 — The admin builder is a tree, and the admin is one app
 
 **Decision.** The 16-tab builder became 7 tabs. Goals → scenarios are edited as

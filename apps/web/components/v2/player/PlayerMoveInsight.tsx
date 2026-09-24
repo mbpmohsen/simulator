@@ -11,6 +11,20 @@ import {
 import { motion } from "framer-motion";
 import { Activity, Repeat, Swords, TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { buildIncomingMoves, buildMoveResults } from "@/lib/moveResults";
+import {
+	formatActionCodeFa,
+	type OutcomeTone,
+	outcomeWordingFa,
+} from "@/lib/runtimeTranslationsFa";
+
+/** Semantic colour for a resolution; never pure red on the dark navy. */
+const TONE_TEXT: Record<OutcomeTone, string> = {
+	success: "text-emerald-300",
+	failure: "text-orange-300",
+	blocked: "text-sky-300",
+	neutral: "text-cyan-300",
+};
 
 interface ResolvedStep {
 	seq: number;
@@ -45,13 +59,8 @@ const readResolved = (event: GameEvent): ResolvedStep | null => {
 	};
 };
 
-/** Turns ATK_BLACKOUT_SERVICE into "Blackout Service" as a last resort. */
-const prettify = (code: string): string =>
-	code
-		.replace(/^(ATK|DEF|GOV)_/, "")
-		.split("_")
-		.map((part) => part.charAt(0) + part.slice(1).toLowerCase())
-		.join(" ");
+/** Persian built from the code's own words, as a last resort. Never the code. */
+const prettify = (code: string): string => formatActionCodeFa(code);
 
 export default function PlayerMoveInsight({
 	events,
@@ -93,16 +102,6 @@ export default function PlayerMoveInsight({
 				: resolved.filter((item) => item.teamId === myTeamId),
 		[resolved, myTeamId],
 	);
-	const theirs = useMemo(
-		() =>
-			myTeamId === null
-				? []
-				: resolved.filter(
-						(item) => item.teamId !== null && item.teamId !== myTeamId,
-					),
-		[resolved, myTeamId],
-	);
-
 	const label = (code: string): string => nameByCode[code] ?? prettify(code);
 
 	const tally = useMemo(() => {
@@ -115,13 +114,31 @@ export default function PlayerMoveInsight({
 			.sort((a, b) => b.count - a.count);
 	}, [mine]);
 
-	const lastMine = mine[mine.length - 1] ?? null;
-	const lastTheirs = theirs[theirs.length - 1] ?? null;
+	// The last verdict has to come from the resolution events, not from the step
+	// events above: only those carry `outcomeReason`, and without it a defence
+	// that never rolled is indistinguishable from one that lost its roll.
+	const lastMine = useMemo(() => {
+		const results = buildMoveResults(events);
+		return results[results.length - 1] ?? null;
+	}, [events]);
+	const lastTheirs = useMemo(() => {
+		const moves = buildIncomingMoves(events);
+		return moves[moves.length - 1] ?? null;
+	}, [events]);
+	const mineOutcome = outcomeWordingFa(
+		lastMine?.outcomeReason,
+		lastMine?.success === true,
+	);
+	const theirsOutcome = outcomeWordingFa(
+		lastTheirs?.outcomeReason,
+		lastTheirs?.success === true,
+	);
+
 	const top = tally[0] ?? null;
 	const share = top && mine.length > 0 ? top.count / mine.length : 0;
 	const isPredictable = mine.length >= 3 && share >= 0.5;
 
-	if (mine.length === 0 && theirs.length === 0) return null;
+	if (mine.length === 0 && lastTheirs === null) return null;
 
 	return (
 		<Card className="border-white/10 bg-slate-950/55 text-slate-100">
@@ -142,13 +159,9 @@ export default function PlayerMoveInsight({
 								</div>
 								{lastMine && (
 									<div
-										className={`mt-1 text-xs ${
-											lastMine.result === "success"
-												? "text-emerald-300"
-												: "text-rose-300"
-										}`}
+										className={`mt-1 text-xs ${TONE_TEXT[mineOutcome.tone]}`}
 									>
-										{lastMine.result === "success" ? "موفق" : "ناموفق"}
+										{mineOutcome.label}
 									</div>
 								)}
 							</div>
@@ -161,13 +174,12 @@ export default function PlayerMoveInsight({
 								</div>
 								{lastTheirs && (
 									<div
-										className={`mt-1 text-xs ${
-											lastTheirs.result === "success"
-												? "text-emerald-300"
-												: "text-rose-300"
-										}`}
+										className={`mt-1 text-xs ${TONE_TEXT[theirsOutcome.tone]}`}
 									>
-										{lastTheirs.result === "success" ? "موفق" : "ناموفق"}
+										{theirsOutcome.label}
+										{lastTheirs.role === "target" && (
+											<span className="text-slate-500"> · روی تیم شما</span>
+										)}
 									</div>
 								)}
 							</div>
@@ -223,13 +235,12 @@ export default function PlayerMoveInsight({
 					<div className="flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-500/[0.08] p-3 text-sm leading-6 text-amber-100">
 						<TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-300" />
 						<span>
-							<span className="font-bold">دارید قابل‌پیش‌بینی می‌شوید.</span>{" "}
-							«{label(top.code)}» را در{" "}
+							<span className="font-bold">دارید قابل‌پیش‌بینی می‌شوید.</span> «
+							{label(top.code)}» را در{" "}
 							{(share * 100).toLocaleString("fa-IR", {
 								maximumFractionDigits: 0,
 							})}
-							٪ حرکت‌هایتان انتخاب کرده‌اید. تیم مقابل می‌تواند روی همین حساب
-							کند.
+							٪ حرکت‌هایتان انتخاب کرده‌اید. تیم مقابل می‌تواند روی همین حساب کند.
 						</span>
 					</div>
 				)}
@@ -238,8 +249,8 @@ export default function PlayerMoveInsight({
 					<div className="flex items-start gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.07] p-3 text-sm leading-6 text-emerald-100">
 						<Repeat className="mt-0.5 size-4 shrink-0 text-emerald-300" />
 						<span>
-							حرکت‌هایتان پخش شده است؛ حدس‌زدن انتخاب بعدی شما برای حریف
-							سخت‌تر است.
+							حرکت‌هایتان پخش شده است؛ حدس‌زدن انتخاب بعدی شما برای حریف سخت‌تر
+							است.
 						</span>
 					</div>
 				)}

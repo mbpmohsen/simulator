@@ -51,6 +51,7 @@ import { CampaignMap, type PlanFocus } from "@/components/builder/CampaignMap";
 import { ConfirmRemove } from "@/components/builder/ConfirmRemove";
 import { JsonToggle } from "@/components/builder/JsonToggle";
 import { PlanHealth } from "@/components/builder/PlanHealth";
+import { TimeUnitField } from "@/components/builder/TimeUnitField";
 import {
 	buildSummaryLookups,
 	describeEntity,
@@ -390,6 +391,10 @@ export default function AdminGamePlanPage() {
 	/** Jumps from an issue to the thing it is about, when that is a plan node. */
 	const focusIssue = (loc: string) => {
 		if (!plan) return;
+		if (loc.startsWith("game_config")) {
+			setActiveTab("advanced");
+			return;
+		}
 		const nonce = Date.now();
 		const nodes: Array<[PlanFocus["kind"], Array<{ id: string }>]> = [
 			["goal", plan.goals],
@@ -575,9 +580,14 @@ export default function AdminGamePlanPage() {
 			storeActiveGameId(response.gameId);
 			setConfiguredGameId(response.gameId);
 			setSource("published");
+			// The 200 echoes the resolved unit as an object, so the label shown
+			// here is the server's own, not one re-derived from the key we sent.
+			const unitName = response.time_unit?.name ?? null;
 			setNotice({
 				tone: "success",
-				text: `بازی با شناسه ${response.gameId} منتشر شد.`,
+				text: unitName
+					? `بازی با شناسه ${response.gameId} منتشر شد. هر نوبت = یک ${unitName}.`
+					: `بازی با شناسه ${response.gameId} منتشر شد.`,
 			});
 			try {
 				await loadAiAssistantConfig();
@@ -596,10 +606,17 @@ export default function AdminGamePlanPage() {
 				}
 			}
 		} catch (error) {
-			setNotice({
-				tone: "error",
-				text: parseApiError(error, "انتشار برنامه ناموفق بود.").message,
-			});
+			const parsed = parseApiError(error, "انتشار برنامه ناموفق بود.");
+			// A 422 on game_config lands on a field the admin can actually fix, so
+			// open the tab that holds it instead of leaving them on this screen.
+			if (
+				parsed.validationErrors.some((item) =>
+					item.path.startsWith("game_config"),
+				)
+			) {
+				setActiveTab("advanced");
+			}
+			setNotice({ tone: "error", text: parsed.message });
 		} finally {
 			setBusy(null);
 		}
@@ -936,6 +953,15 @@ export default function AdminGamePlanPage() {
 									این بخش‌ها کمتر عوض می‌شوند. دولت‌ها و نمایش رویدادها فقط
 									خواندنی‌اند و از فایل برنامه می‌آیند.
 								</p>
+								<TimeUnitField
+									plan={plan}
+									onChange={setEditablePlan}
+									error={
+										liveIssues.find(
+											(issue) => issue.loc === "game_config.time_unit",
+										)?.message ?? null
+									}
+								/>
 								<Card className="border-white/10 bg-slate-950/55 text-slate-100">
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2">

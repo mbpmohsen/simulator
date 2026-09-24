@@ -21,6 +21,7 @@ import {
 	validateGovernmentOrderPayload,
 } from "./runtime";
 import {
+	FALLBACK_TIME_UNITS,
 	normalizeDefaultGamePlan,
 	REQUIRED_VISIBILITY_EVENT_TYPES,
 	validateDefaultGamePlanClientSide,
@@ -30,7 +31,7 @@ import {
 
 const createPlan = (): ConfigureAllRequestV2 => ({
 	version: "2.0",
-	game_config: { num_turns: 3, point_threshold: 2 },
+	game_config: { num_turns: 3, point_threshold: 2, time_unit: "month" },
 	teams: [
 		{
 			id: 1000000001,
@@ -445,6 +446,94 @@ describe("errors and lock reasons", () => {
 
 	it("formats known lock reasons in Persian", () => {
 		expect(formatLockReasonFa("SUBJECT_NOT_ASSIGNED")).toContain("تخصیص");
+	});
+
+	it("turns a 422 on a missing time unit into a Persian sentence", () => {
+		const parsed = parseApiError(
+			{
+				message: "Request failed with status code 422",
+				response: {
+					status: 422,
+					data: {
+						detail: [
+							{
+								type: "missing",
+								loc: ["body", "game_config", "time_unit"],
+								msg: "Field required",
+							},
+						],
+					},
+				},
+			},
+			"انتشار برنامه ناموفق بود.",
+		);
+		expect(parsed.status).toBe(422);
+		expect(parsed.validationErrors).toEqual([
+			{ path: "game_config.time_unit", message: expect.any(String) },
+		]);
+		expect(parsed.message).toContain("واحد زمان بازی");
+		// The axios message must never survive as the text the admin reads.
+		expect(parsed.message).not.toContain("Request failed");
+	});
+
+	it("names the field on an unknown time unit instead of echoing English", () => {
+		const parsed = parseApiError({
+			response: {
+				status: 422,
+				data: {
+					detail: [
+						{
+							type: "value_error",
+							loc: ["body", "game_config", "time_unit"],
+							msg: "Value error, Unknown time_unit 'fortnight'. Allowed: minute, hour, day, week, month.",
+						},
+					],
+				},
+			},
+		});
+		expect(parsed.message).toContain("واحد زمان بازی");
+		expect(parsed.message).not.toContain("fortnight");
+	});
+});
+
+describe("game time unit", () => {
+	it("requires game_config.time_unit before publish", () => {
+		const plan = createPlan();
+		plan.game_config.time_unit = undefined;
+		const result = validateDefaultGamePlanClientSide(plan);
+		expect(
+			result.errors.some((issue) => issue.code === "MISSING_TIME_UNIT"),
+		).toBe(true);
+	});
+
+	it("rejects a unit that is not in the catalog", () => {
+		const plan = createPlan();
+		plan.game_config.time_unit = "fortnight" as never;
+		const result = validateDefaultGamePlanClientSide(plan);
+		expect(
+			result.errors.some((issue) => issue.code === "UNKNOWN_TIME_UNIT"),
+		).toBe(true);
+	});
+
+	it("accepts every unit the catalog advertises, shortest to longest", () => {
+		expect(FALLBACK_TIME_UNITS.map((unit) => unit.key)).toEqual([
+			"minute",
+			"hour",
+			"day",
+			"week",
+			"month",
+		]);
+		for (const unit of FALLBACK_TIME_UNITS) {
+			const plan = createPlan();
+			plan.game_config.time_unit = unit.key;
+			expect(
+				validateDefaultGamePlanClientSide(plan).errors.some((issue) =>
+					issue.loc.startsWith("game_config"),
+				),
+			).toBe(false);
+			// The Persian label is the only name a unit has.
+			expect(unit.name).not.toMatch(/[A-Za-z]/);
+		}
 	});
 });
 

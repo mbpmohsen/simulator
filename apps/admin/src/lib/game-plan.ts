@@ -6,6 +6,7 @@ import type {
 	ConfigureAllResponse,
 	GamePlanGraphResponse,
 	GamePlanValidationResponse,
+	TimeUnitsResponse,
 } from "@workspace/trpc";
 import {
 	createGameServerApi,
@@ -117,6 +118,13 @@ export const validateGamePlanOnServer = (
 	plan: ConfigureAllRequestV2,
 ): Promise<GamePlanValidationResponse> =>
 	createAdminApi().validateGamePlan(plan);
+
+/**
+ * `GET /admin/time-units` — a static catalog. The order it returns is
+ * meaningful (shortest to longest) and is never re-sorted here.
+ */
+export const loadTimeUnits = (): Promise<TimeUnitsResponse> =>
+	createAdminApi().getTimeUnits();
 
 export const submitDefaultGamePlan = (
 	plan: ConfigureAllRequestV2,

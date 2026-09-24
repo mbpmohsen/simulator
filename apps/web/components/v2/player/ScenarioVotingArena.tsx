@@ -19,14 +19,15 @@ import {
 	CircleDot,
 	Coins,
 	Crown,
+	Dices,
 	Gauge,
 	Hourglass,
-	Layers,
 	LoaderCircle,
 	LockKeyhole,
 	Radio,
 	Scale,
 	ShieldAlert,
+	ShieldCheck,
 	ShieldHalf,
 	Sparkles,
 	Swords,
@@ -45,8 +46,31 @@ import {
 	formatActionCodeFa,
 	formatPhaseFa,
 	formatStepStatusFa,
+	type OutcomeTone,
+	outcomeWordingFa,
 	persianOrNull,
 } from "@/lib/runtimeTranslationsFa";
+
+/**
+ * Semantic colour for a resolution, kept apart from the card's accent.
+ *
+ * `neutral` is the one that matters: a defence that never rolled because there
+ * was nothing to repair is not a failure and must not be dressed as one.
+ * Nothing here uses pure red - it vibrates on the dark navy background.
+ */
+const TONE_BOX: Record<OutcomeTone, string> = {
+	success: "border-emerald-400/35 bg-emerald-500/[0.12]",
+	failure: "border-orange-400/30 bg-orange-500/[0.10]",
+	blocked: "border-sky-400/30 bg-sky-500/[0.10]",
+	neutral: "border-cyan-400/25 bg-cyan-500/[0.08]",
+};
+
+const TONE_TEXT: Record<OutcomeTone, string> = {
+	success: "text-emerald-200",
+	failure: "text-orange-200",
+	blocked: "text-sky-200",
+	neutral: "text-cyan-200",
+};
 
 /**
  * What the player already knows about an action from `/client/game_state`.
@@ -235,6 +259,21 @@ export function ScenarioVotingArena({
 		for (const entry of actionCatalog ?? []) map.set(entry.code, entry);
 		return map;
 	}, [actionCatalog]);
+
+	/**
+	 * A Persian name for any action code, including one this team never plays -
+	 * the opponent's counter, for instance. Prefers the catalogue's Persian
+	 * name, then its Latin label only if it reads as Persian, and never the raw
+	 * code.
+	 */
+	const resolveActionName = (code: string): string => {
+		const info = catalogByCode.get(code);
+		return (
+			persianOrNull(info?.nameFa) ??
+			persianOrNull(info?.name) ??
+			formatActionCodeFa(code)
+		);
+	};
 
 	const groups = useMemo<MoveGroup[]>(() => {
 		const byCode = new Map<string, StepView[]>();
@@ -590,6 +629,10 @@ export function ScenarioVotingArena({
 					{groups.map((group, index) => {
 						const nextStep = group.nextStep;
 						const turnResult = turnResults?.get(group.code) ?? null;
+						const turnOutcome = outcomeWordingFa(
+							turnResult?.outcomeReason,
+							turnResult?.success === true,
+						);
 						const turnResultSite =
 							turnResult?.siteId && resolveSiteName
 								? resolveSiteName(turnResult.siteId)
@@ -710,12 +753,6 @@ export function ScenarioVotingArena({
 															{faNumber(group.expectedValue, 2)}
 														</span>
 													)}
-													{group.steps.length > 1 && (
-														<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-400">
-															<Layers className="size-3" />{" "}
-															{faNumber(group.remaining)} فرصت باقی‌مانده
-														</span>
-													)}
 												</div>
 
 												{group.hint && (
@@ -775,22 +812,67 @@ export function ScenarioVotingArena({
 															stiffness: 300,
 															damping: 22,
 														}}
-														className={`mt-3 rounded-xl border px-3 py-2.5 ${turnResult.success ? "border-emerald-400/35 bg-emerald-500/[0.12]" : "border-orange-400/30 bg-orange-500/[0.10]"}`}
+														className={`mt-3 rounded-xl border px-3 py-2.5 ${TONE_BOX[turnOutcome.tone]}`}
 													>
 														<div
-															className={`flex items-center gap-1.5 text-xs font-black ${turnResult.success ? "text-emerald-200" : "text-orange-200"}`}
+															className={`flex items-center gap-1.5 text-xs font-black ${TONE_TEXT[turnOutcome.tone]}`}
 														>
-															{turnResult.success ? (
+															{turnOutcome.tone === "success" ? (
 																<CheckCircle2 className="size-3.5" />
+															) : turnOutcome.tone === "blocked" ? (
+																<ShieldAlert className="size-3.5" />
+															) : turnOutcome.tone === "neutral" ? (
+																<ShieldCheck className="size-3.5" />
 															) : (
 																<XCircle className="size-3.5" />
 															)}
-															نتیجهٔ همین نوبت:{" "}
-															{turnResult.success
-																? "این حرکت گرفت"
-																: "این حرکت نگرفت"}
+															نتیجهٔ همین نوبت: {turnOutcome.label}
 														</div>
+														<p className="mt-1 text-[11px] leading-6 text-slate-300">
+															{turnOutcome.detail}
+														</p>
 														<div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+															{/* The roll is the whole teaching point: a lost
+															    90 % and a lost 30 % must not look alike. */}
+															{turnResult.appliedProbability !== null && (
+																<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/20 px-2 py-0.5 tabular-nums text-slate-300">
+																	<Dices className="size-3" />
+																	شانس{" "}
+																	{faNumber(
+																		Math.round(turnResult.appliedProbability),
+																	)}
+																	٪
+																	{turnResult.roll !== null && (
+																		<>
+																			{" · "}تاس{" "}
+																			{faNumber(Math.round(turnResult.roll))}
+																		</>
+																	)}
+																</span>
+															)}
+															{turnResult.counterActionCode !== null && (
+																<span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/20 bg-sky-400/10 px-2 py-0.5 text-sky-100">
+																	<ShieldAlert className="size-3" />
+																	پادکنش حریف:{" "}
+																	{resolveActionName(
+																		turnResult.counterActionCode,
+																	)}
+																	{turnResult.counterEffectiveness !== null && (
+																		<span className="tabular-nums">
+																			{" "}
+																			{faNumber(
+																				Math.round(
+																					turnResult.counterEffectiveness,
+																				),
+																			)}
+																			٪
+																		</span>
+																	)}
+																	{turnResult.blockedByCounter
+																		? " — گرفت"
+																		: " — نگرفت"}
+																</span>
+															)}
 															{turnResultSite && (
 																<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-black/20 px-2 py-0.5 text-slate-300">
 																	<Target className="size-3" /> روی{" "}
@@ -812,12 +894,26 @@ export function ScenarioVotingArena({
 																		{faNumber(turnResult.points)} امتیاز گرفتید
 																	</span>
 																)}
-															{!turnResult.success && group.cost !== null && (
-																<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-amber-100">
-																	<Coins className="size-3" />{" "}
-																	{faNumber(group.cost)} اعتبار خرج شد
-																</span>
-															)}
+															{!turnResult.success &&
+																group.cost !== null &&
+																turnResult.outcomeReason !==
+																	"INSUFFICIENT_CREDITS" &&
+																turnResult.outcomeReason !== "INVALID" && (
+																	<span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-amber-100">
+																		<Coins className="size-3" />{" "}
+																		{faNumber(group.cost)} اعتبار خرج شد
+																	</span>
+																)}
+															{turnResult.guardActive &&
+																turnResult.guardsAgainstActionCode !== null && (
+																	<span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-cyan-100">
+																		<ShieldCheck className="size-3" /> سد در
+																		برابر{" "}
+																		{resolveActionName(
+																			turnResult.guardsAgainstActionCode,
+																		)}
+																	</span>
+																)}
 															{turnResult.subjectProgress !== null && (
 																<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.03] px-2 py-0.5 text-slate-400">
 																	پیشرفت کل مأموریت{" "}

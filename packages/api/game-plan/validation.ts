@@ -3,6 +3,8 @@ import type {
 	GamePlanValidationError,
 	ImpactEffect,
 	TeamPlayerRequest,
+	TimeUnit,
+	TimeUnitKey,
 } from "../game-server/types";
 
 export const REQUIRED_VISIBILITY_EVENT_TYPES = [
@@ -94,6 +96,23 @@ export interface ClientValidationResult {
 	valid: boolean;
 	errors: ClientValidationIssue[];
 }
+
+/**
+ * Mirrors `GET /admin/time-units` — shortest to longest, the server's order.
+ * Used only as a client-side guard and as an offline fallback for the picker;
+ * whenever the catalog endpoint answers, its list and its order win.
+ */
+export const FALLBACK_TIME_UNITS: readonly TimeUnit[] = [
+	{ key: "minute", name: "دقیقه" },
+	{ key: "hour", name: "ساعت" },
+	{ key: "day", name: "روز" },
+	{ key: "week", name: "هفته" },
+	{ key: "month", name: "ماه" },
+];
+
+const TIME_UNIT_KEYS: readonly TimeUnitKey[] = FALLBACK_TIME_UNITS.map(
+	(unit) => unit.key,
+);
 
 const teamRoleType = (
 	role: ConfigureAllRequestV2["teams"][number]["role"],
@@ -271,6 +290,26 @@ export const validateDefaultGamePlanClientSide = (
 		for (const id of duplicateIds(items))
 			add(group, id, `DUPLICATE_${label}_ID`, `شناسه «${id}» تکراری است.`);
 	}
+	// `game_config.time_unit` is required by `POST /admin/configure_all`; without
+	// it the publish call fails with a 422 the admin cannot act on from the
+	// server's message alone. Catch it here, before publish.
+	const timeUnit = plan.game_config?.time_unit;
+	if (typeof timeUnit !== "string" || timeUnit.length === 0) {
+		add(
+			"general",
+			"game_config.time_unit",
+			"MISSING_TIME_UNIT",
+			"واحد زمان بازی انتخاب نشده است؛ در «تنظیمات پیشرفته» مشخص کنید هر نوبت در داستان چقدر طول می‌کشد.",
+		);
+	} else if (!TIME_UNIT_KEYS.includes(timeUnit as TimeUnitKey)) {
+		add(
+			"general",
+			"game_config.time_unit",
+			"UNKNOWN_TIME_UNIT",
+			"واحد زمان انتخاب‌شده در فهرست سرور نیست؛ دوباره از «تنظیمات پیشرفته» انتخاب کنید.",
+		);
+	}
+
 	const sideIds = new Set(plan.teams.map((team) => team.side_id));
 	const teamIds = new Set(
 		plan.teams.flatMap((team) => (team.id === undefined ? [] : [team.id])),

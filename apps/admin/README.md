@@ -49,8 +49,16 @@ Seven tabs:
   from their parent, removal shows and cascades what goes with it, and renaming
   an id rewrites every reference. Checklist scenarios edit their steps as a
   action × uses grid (`StepGrid.tsx`).
-- **تنظیمات پیشرفته** — governments and event visibility (read-only) and impact
-  rules.
+- **تنظیمات پیشرفته** — the game's time unit, governments and event visibility
+  (read-only), and impact rules. The time unit
+  (`components/builder/TimeUnitField.tsx`) answers "how long is one turn in the
+  story?" — one turn is exactly one unit, so six turns with «ماه» is a six-month
+  campaign. Its catalogue comes from `GET /admin/time-units`: the Persian `name`
+  is displayed, the `key` is submitted, and the server's order is never
+  re-sorted. **It is required by `configure_all`** — publishing without it
+  fails with a 422, so `validateLocally` raises it as a clickable issue first.
+  It is kept away from the second-based phase durations on purpose: it is a
+  narrative label, not a countdown.
 
 Structural edits live in `packages/api/game-plan/structure.ts` and are tested in
 `structure.test.ts`. Validation re-runs on every edit and is always visible in a
@@ -83,6 +91,22 @@ Turn-by-turn results, plus `EquilibriumComparison` — what each team actually
 played against what the equilibrium says was optimal, with a total-variation
 distance badge. It reads the stored plan draft rather than the published plan,
 because the published-plan endpoint is not reachable from this screen.
+
+`ActionDurations` (`components/ActionDurations.tsx`) reads
+`GET /api/games/{gameId}/actions-history`: one row per (team, action) with how
+long it took, counted from first attempt to last success inclusively and
+labelled in the game's time unit. It works for finished games too — it reads
+from storage — so it is the after-action view, not a live monitor.
+
+> **`failures` is not "lost rolls".** Attempts rejected before execution —
+> not enough credits, no target, banned by a directive — are counted inside
+> `failures`, and the server offers no field separating them. The table says so
+> above itself, because an admin who reads three failures as three unlucky rolls
+> draws the wrong conclusion about the balance. Government interventions do not
+> appear here at all.
+>
+> A row in progress reports `duration: null`, rendered as «در جریان» and never
+> as zero.
 
 ---
 

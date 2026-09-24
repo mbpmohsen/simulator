@@ -159,9 +159,31 @@ export interface SideConfig {
 	[key: string]: unknown;
 }
 
+/**
+ * A game declares an imaginary length for one turn ("month", "day", ...).
+ * One turn is exactly one unit: with `month`, turn 1 is month 1.
+ * This is a narrative/display concern only — it is unrelated to
+ * `turn_duration_seconds`, which is the wall-clock budget for a phase.
+ */
+export type TimeUnitKey = "minute" | "hour" | "day" | "week" | "month";
+
+/**
+ * `name` is the Persian label and the only name a unit has: there is no
+ * English name and no `name_fa` sibling. Render `name` directly, send `key`.
+ */
+export interface TimeUnit {
+	key: TimeUnitKey;
+	name: string;
+}
+
+/** `GET /admin/time-units` — returned shortest to longest; never re-sort. */
+export type TimeUnitsResponse = TimeUnit[];
+
 export interface GameConfigRequest {
 	num_turns: number;
 	point_threshold: number;
+	/** Required by `POST /admin/configure_all`. Send the catalog `key`. */
+	time_unit?: TimeUnitKey;
 	turn_duration_seconds?: number;
 	selection_phase_duration?: number;
 	voting_phase_duration?: number;
@@ -1110,10 +1132,41 @@ export interface ConfigureAllResponse extends Record<string, unknown> {
 	sides: unknown[];
 	num_turns: number;
 	point_threshold: number;
+	/** Echoed back as an object so the key never has to be re-resolved. */
+	time_unit?: TimeUnit;
 	actions: Record<string, unknown>;
 	government: Record<string, unknown>;
 	black_market_items: unknown[];
 	events: unknown[];
+}
+
+/** One row of `GET /api/games/{gameId}/actions-history`. */
+export interface ActionHistoryEntry {
+	/** Can be null when the team is no longer resolvable; never key on it alone. */
+	teamId?: number | null;
+	teamName: string;
+	sideName?: string | null;
+	actionCode: string;
+	/** Falls back to `actionCode` for games configured before names were persisted. */
+	actionName?: string | null;
+	/** Null when the game was configured without a `name_fa` on that action. */
+	actionName_fa?: string | null;
+	actionCategory?: string | null;
+	firstAttemptTurn: number;
+	lastSuccessTurn: number | null;
+	/** Always equals `successes + failures`; rejected attempts sit inside `failures`. */
+	attempts: number;
+	successes: number;
+	failures: number;
+	completed: boolean;
+	/** Null whenever `completed` is false — render as in-progress, never as 0. */
+	duration: { value: number; unit: TimeUnit } | null;
+}
+
+export interface ActionsHistoryResponse {
+	gameId: string;
+	timeUnit: TimeUnit;
+	actions: ActionHistoryEntry[];
 }
 
 export type DirectivesConfiguredResponse = ServerApiEnvelope<

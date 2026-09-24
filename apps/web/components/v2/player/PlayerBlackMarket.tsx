@@ -22,6 +22,7 @@ import {
 	TriangleAlert,
 } from "lucide-react";
 import type { BlackMarketStatus } from "@/hooks/usePlayerBlackMarket";
+import { formatActionCodeFa, persianOrNull } from "@/lib/runtimeTranslationsFa";
 
 interface PlayerBlackMarketProps {
 	status: BlackMarketStatus;
@@ -135,7 +136,25 @@ export default function PlayerBlackMarket({
 				)}
 
 				{items.map((item, index) => {
-					const name = item.name_fa?.trim() || item.name;
+					// `name` is the identity key and is often the raw code
+					// (BM_RED_RECON_DOSSIER): purchases and effects are stored
+					// against it, so the server keeps it and sends the readable
+					// text alongside. Never render the key itself.
+					const raw = item as unknown as Record<string, unknown>;
+					const readable = (key: string): string | null => {
+						const value = raw[key];
+						return typeof value === "string" && value.trim()
+							? value.trim()
+							: null;
+					};
+					const name =
+						persianOrNull(item.name_fa) ??
+						persianOrNull(readable("displayName_fa")) ??
+						persianOrNull(readable("display_name_fa")) ??
+						persianOrNull(readable("displayName")) ??
+						persianOrNull(item.name) ??
+						readable("displayName") ??
+						formatActionCodeFa(item.name);
 					const description =
 						item.description_fa?.trim() || item.description?.trim() || null;
 					const effect = effectLabel(item);

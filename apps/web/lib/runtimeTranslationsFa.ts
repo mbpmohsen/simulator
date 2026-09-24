@@ -158,13 +158,40 @@ const describeEventFa = (
 		case "SCENARIO_STEP_RESOLVED": {
 			const code = asString(payload.action_code);
 			if (!code) return null;
-			const outcome = payload.result === "success" ? "موفق بود" : "ناموفق بود";
+			// This event has no `outcomeReason`, so it cannot tell a lost roll
+			// from a defence that had nothing to repair. It says what is true
+			// either way and leaves the verdict to TEAM_ACTION_RESOLVED.
+			const outcome =
+				payload.result === "success" ? "موفق بود" : "نتیجه‌ای نداشت";
 			const move = names?.action?.(code) ?? formatActionCodeFa(code);
 			const siteId = asString(payload.sub_subject_id);
 			const site = siteId ? (names?.site?.(siteId) ?? null) : null;
 			return site
 				? `حرکت «${move}» روی «${site}» ${outcome}.`
 				: `حرکت «${move}» ${outcome}.`;
+		}
+		case "TEAM_ACTION_RESOLVED": {
+			const code = asString(payload.actionCode) ?? asString(payload.actionName);
+			if (!code) return null;
+			const move = names?.action?.(code) ?? formatActionCodeFa(code);
+			const role = asString(payload.role);
+			const wording = outcomeWordingFa(
+				asString(payload.outcomeReason),
+				payload.success === true,
+			);
+			const other = asString(payload.actorTeamName);
+			if (role === "target") {
+				// Every field on this copy describes the attacker's action.
+				return other
+					? `«${other}» با «${move}» به تیم شما حمله کرد — ${wording.label}.`
+					: `حملهٔ «${move}» به تیم شما رسید — ${wording.label}.`;
+			}
+			if (role === "counterparty") {
+				return other
+					? `تیم حریف «${other}» این نوبت «${move}» را بازی کرد — ${wording.label}.`
+					: `تیم حریف این نوبت «${move}» را بازی کرد — ${wording.label}.`;
+			}
+			return `حرکت «${move}» — ${wording.label}. ${wording.detail}`;
 		}
 		case "WINNER_DECLARED":
 			return "برندهٔ بازی مشخص شد.";
@@ -371,3 +398,87 @@ export const formatActionOptionFa = (action: ActionSchema): string => {
 	);
 	return localized?.trim() || formatActionCodeFa(action.name);
 };
+
+/**
+ * What a resolution actually means, in Persian.
+ *
+ * The `success` flag alone is not enough to word a screen. A defence with
+ * `NOTHING_TO_REPAIR` reports `success: false` and yet never rolled and was
+ * guarding all turn - calling it «ناموفق» teaches the player the opposite of
+ * the rule. Every phrase below is keyed on `outcomeReason` instead, and an
+ * unknown reason falls back to the flag rather than showing a raw code.
+ *
+ * See `docs/backend-requests.md` §5 and the server's resolution-semantics doc.
+ */
+
+export type OutcomeTone = "success" | "failure" | "neutral" | "blocked";
+
+export interface OutcomeWording {
+	/** Two or three words for a chip. */
+	label: string;
+	/** One sentence saying what happened and why. */
+	detail: string;
+	tone: OutcomeTone;
+}
+
+const OUTCOME_FA: Record<string, OutcomeWording> = {
+	PROBABILITY_SUCCESS: {
+		label: "موفق",
+		detail: "تاس به نفع شما آمد.",
+		tone: "success",
+	},
+	PROBABILITY_FAILURE: {
+		label: "ناموفق",
+		detail: "تاس ریخته شد و نتیجه نداد.",
+		tone: "failure",
+	},
+	TARGET_VULNERABLE: {
+		label: "موفق بدون تاس",
+		detail:
+			"هدف از ضربهٔ قبلی هنوز ترمیم نشده بود؛ این حرکت بدون تاس و با اطمینان کامل نشست.",
+		tone: "success",
+	},
+	BLOCKED_BY_COUNTER: {
+		label: "سد شد",
+		detail: "پادکنش حریف جلویش را گرفت؛ اصلاً تاسی ریخته نشد.",
+		tone: "blocked",
+	},
+	NOTHING_TO_REPAIR: {
+		label: "دفاع برقرار",
+		detail:
+			"آسیب ترمیم‌نشده‌ای نبود، پس تاسی ریخته نشد. دفاع تمام نوبت سر جایش بود.",
+		tone: "neutral",
+	},
+	INSUFFICIENT_CREDITS: {
+		label: "اعتبار کم",
+		detail: "اعتبار تیم کافی نبود؛ این حرکت اجرا نشد.",
+		tone: "failure",
+	},
+	INVALID: {
+		label: "اجرا نشد",
+		detail: "حرکت پیش از اجرا رد شد — هدف نداشت یا دستور دولت اجازه نداد.",
+		tone: "failure",
+	},
+};
+
+/**
+ * The wording for a resolution. `reason` may be null (older servers) or a value
+ * this build has never seen, and both fall back to the bare outcome.
+ */
+export const outcomeWordingFa = (
+	reason: string | null | undefined,
+	success: boolean,
+): OutcomeWording => {
+	const known = reason ? OUTCOME_FA[reason] : undefined;
+	if (known) return known;
+	return success
+		? { label: "موفق", detail: "این حرکت گرفت.", tone: "success" }
+		: { label: "ناموفق", detail: "این حرکت نگرفت.", tone: "failure" };
+};
+
+/** True when a reason means no roll was ever made. */
+export const hadNoRoll = (reason: string | null | undefined): boolean =>
+	reason === "NOTHING_TO_REPAIR" ||
+	reason === "INSUFFICIENT_CREDITS" ||
+	reason === "INVALID" ||
+	reason === "BLOCKED_BY_COUNTER";

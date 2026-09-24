@@ -99,7 +99,7 @@ Full derivation, payoff formulas and worked numbers: [`docs/equilibrium-formulas
 
 | Document | Covers |
 | --- | --- |
-| [`docs/architecture.md`](docs/architecture.md) | *(not yet written)* how a click becomes a resolved step |
+| [`docs/architecture.md`](docs/architecture.md) | How a click becomes a resolved step, and which machine does what |
 | [`docs/gameplay-api.md`](docs/gameplay-api.md) | The v2 REST contract the frontend actually calls |
 | [`docs/black-market-contract.md`](docs/black-market-contract.md) | Proposed black-market endpoints — spec for the backend |
 | [`docs/game-plan-model.md`](docs/game-plan-model.md) | Every field of the scenario contract, and what validation checks |
@@ -110,9 +110,11 @@ Full derivation, payoff formulas and worked numbers: [`docs/equilibrium-formulas
 | [`docs/decisions.md`](docs/decisions.md) | Architectural decisions and what they cost |
 | [`docs/backend-integration.md`](docs/backend-integration.md) | Backend guide: auth, SSE, state machine, government |
 | [`docs/backend-internals.md`](docs/backend-internals.md) | Python server internals and `config.yml` |
+| [`docs/resolution-model.md`](docs/resolution-model.md) | What a resolved turn means: roles, `outcomeReason`, the counter gate, vulnerabilities |
+| [`docs/backend-requests.md`](docs/backend-requests.md) | Asks to the backend team and their outcome, with captured evidence |
 | [`packages/api/README.md`](packages/api/README.md) | The shared API package |
 | [`apps/admin/README.md`](apps/admin/README.md) | The facilitator console |
-| In-app docs | `/docs` in the player app — 18 sections in Persian, for non-technical players |
+| In-app docs | `/docs` in the player app — 19 sections in Persian, for non-technical players |
 
 `docs/salvage/` holds unwired code and captured responses kept for reference —
 see its README.

@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
 import type {
+	ActionsHistoryResponse,
 	ActiveDirectivesResponse,
 	AddDirectivesRequest,
 	AdminAuthResponse,
@@ -32,6 +33,7 @@ import type {
 	ReadinessStatusResponse,
 	ServerHealthResponse,
 	SubjectStateResponse,
+	TimeUnitsResponse,
 	TurnAnalyticsDetailResponse,
 	TurnAnalyticsListQuery,
 	TurnAnalyticsListResponse,
@@ -134,6 +136,14 @@ export interface GameServerApi {
 	getAdminGameCatalog(
 		config?: AxiosRequestConfig,
 	): Promise<AdminGameCatalogResponse>;
+	/** Static catalog for the configure screen. Render `name`, submit `key`. */
+	getTimeUnits(config?: AxiosRequestConfig): Promise<TimeUnitsResponse>;
+	/** One row per (team, action) with how long that action took. */
+	getActionsHistory(
+		gameId: string,
+		teamId?: string | number | null,
+		config?: AxiosRequestConfig,
+	): Promise<ActionsHistoryResponse>;
 	listTurnAnalytics(
 		gameId: string,
 		query?: TurnAnalyticsListQuery,
@@ -409,6 +419,28 @@ export const createGameServerApi = (
 			const { data } = await http.get<AdminGameCatalogResponse>(
 				"/api/games/admin/catalog",
 				requestConfig,
+			);
+			return data;
+		},
+
+		async getTimeUnits(requestConfig) {
+			const { data } = await http.get<TimeUnitsResponse>(
+				"/admin/time-units",
+				requestConfig,
+			);
+			return data;
+		},
+
+		async getActionsHistory(gameId, teamId, requestConfig) {
+			const { data } = await http.get<ActionsHistoryResponse>(
+				`/api/games/${encodeURIComponent(gameId)}/actions-history`,
+				{
+					...requestConfig,
+					params:
+						teamId === undefined || teamId === null
+							? requestConfig?.params
+							: { ...requestConfig?.params, team_id: teamId },
+				},
 			);
 			return data;
 		},
