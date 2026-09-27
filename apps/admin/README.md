@@ -37,11 +37,19 @@ Every route below sits behind one sign-in (`AdminShell` = `AdminAuthGate` +
 until «بررسی و انتشار». Load a starting point from the default scenario, the
 demo scenario, the currently published plan, or a file.
 
-Seven tabs:
+Eight tabs:
 
-نمای کلی · اعضای تیم‌ها · کنش‌ها · اهداف و سناریوها · تنظیمات پیشرفته ·
-بررسی و انتشار · دستیار هوشمند
+نمای کلی · تیم‌ها و دولت‌ها · اعضای تیم‌ها · کنش‌ها · اهداف و سناریوها ·
+تنظیمات پیشرفته · بررسی و انتشار · دستیار هوشمند
 
+- **تیم‌ها و دولت‌ها** (`components/builder/Roster.tsx`) — the org chart:
+  sides, the teams on each, which team is that side's government, its
+  permissions and intervention budget, per-team starting credits, and which
+  actions each team may play. A side holds exactly one government and any
+  number of player teams; the government runs every team sharing its side.
+  Removing a side or a team shows what goes with it — goals, subjects aimed at
+  those teams, actions nobody else may play — and cascades. **Credits are per
+  team and never pooled**, so the side header shows the running total.
 - **کنش‌ها** (`components/builder/Arsenal.tsx`) — actions as forms, the
   attack × defence counter matrix, and the black market.
 - **اهداف و سناریوها** (`components/builder/CampaignMap.tsx`) — the goal →

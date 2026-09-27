@@ -334,6 +334,28 @@ than typing it out.
   actions?: GovernmentActionRequest[] }
 ```
 
+### One government per side, any number of teams under it
+
+The shape the engine wants:
+
+```
+side ─┬─ exactly one GOVERNMENT team  ──→ government.side_governments[]
+      └─ one or more player teams (ATTACKER / DEFENCER / BOTH)
+```
+
+`side_governments[].team_id` is the government's **own** team. The teams it runs
+are every player team sharing its `side_id` — that link is never written down,
+it is inferred, so moving a team between sides changes who governs it.
+
+> **Credits do not pool.** Each team carries its own `starting_credits`. A side
+> with two teams at 80 brings 160 of spending power, not 80 split two ways. The
+> builder shows the side total and the validator warns when one side ends up
+> half again richer than another, because that is almost never intended.
+
+Sides, teams, roles, credits and government permissions are edited in the
+builder's **تیم‌ها و دولت‌ها** tab; the operations live in
+`packages/api/game-plan/roster.ts` and are tested in `roster.test.ts`.
+
 `permissions` and `intervention_config` are open records — **not validated**. The
 demo uses `can_ban_actions`, `can_modify_credits`, `can_impose_penalties`,
 `can_unban_actions`, and `{ interventions_per_game: 2, intervention_cooldown_turns: 1 }`.
@@ -391,6 +413,12 @@ accepts use these.
 - every effect `target` is a known id
 - **all 66 required visibility event types are present**
 - `visibility_config.cross_side_result` exists
+- **the org chart** — every side has exactly one government and at least one
+  player team, at least two sides exist, every team has at least one action it
+  may play, no action is given to a team that does not exist, and a government
+  entry's `side_id` matches its team's side. It also **warns** when one side's
+  team credits are half again more than another's, since credits are per team
+  and adding a team raises a side's spending power
 - **`game_config.time_unit` is present and is one of the catalog keys** — the
   server requires it, and catching it here means the admin sees a Persian issue
   they can click rather than a 422 at publish time

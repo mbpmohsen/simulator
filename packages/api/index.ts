@@ -7,6 +7,7 @@ export * from "./game-plan/equilibrium";
 export * from "./game-plan/government-catalog";
 export * from "./game-plan/graph";
 export * from "./game-plan/localization";
+export * from "./game-plan/roster";
 export * from "./game-plan/runtime";
 export * from "./game-plan/structure";
 export * from "./game-plan/validation";

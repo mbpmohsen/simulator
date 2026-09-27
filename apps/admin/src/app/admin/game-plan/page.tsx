@@ -51,6 +51,7 @@ import { CampaignMap, type PlanFocus } from "@/components/builder/CampaignMap";
 import { ConfirmRemove } from "@/components/builder/ConfirmRemove";
 import { JsonToggle } from "@/components/builder/JsonToggle";
 import { PlanHealth } from "@/components/builder/PlanHealth";
+import { Roster } from "@/components/builder/Roster";
 import { TimeUnitField } from "@/components/builder/TimeUnitField";
 import {
 	buildSummaryLookups,
@@ -74,6 +75,7 @@ import {
 
 type TabKey =
 	| "overview"
+	| "roster"
 	| "members"
 	| "campaign"
 	| "arsenal"
@@ -87,6 +89,7 @@ type SourceMode = "none" | "default" | "demo" | "published" | "custom";
 
 const TAB_ITEMS: Array<{ key: TabKey; label: string }> = [
 	{ key: "overview", label: "نمای کلی" },
+	{ key: "roster", label: "تیم‌ها و دولت‌ها" },
 	{ key: "members", label: "اعضای تیم‌ها" },
 	{ key: "arsenal", label: "کنش‌ها" },
 	{ key: "campaign", label: "اهداف و سناریوها" },
@@ -137,6 +140,7 @@ const sourceLabel: Record<SourceMode, string> = {
 
 const groupLabel: Record<string, string> = {
 	members: "اعضای تیم‌ها",
+	teams: "تیم‌ها و دولت‌ها",
 	goals: "اهداف",
 	subjects: "موضوع‌ها",
 	sub_subjects: "زیرموضوع‌ها",
@@ -393,6 +397,10 @@ export default function AdminGamePlanPage() {
 		if (!plan) return;
 		if (loc.startsWith("game_config")) {
 			setActiveTab("advanced");
+			return;
+		}
+		if (loc.startsWith("side.") || loc.startsWith("teams")) {
+			setActiveTab("roster");
 			return;
 		}
 		const nonce = Date.now();
@@ -939,6 +947,14 @@ export default function AdminGamePlanPage() {
 							/>
 						)}
 
+						{activeTab === "roster" && plan && (
+							<Roster
+								plan={plan}
+								onChange={setEditablePlan}
+								issues={liveIssues}
+							/>
+						)}
+
 						{activeTab === "arsenal" && plan && (
 							<Arsenal
 								plan={plan}
@@ -968,49 +984,21 @@ export default function AdminGamePlanPage() {
 											<Users className="text-amber-300" /> دولت‌ها و سمت‌ها
 										</CardTitle>
 									</CardHeader>
-									<CardContent className="grid gap-4 lg:grid-cols-2">
-										{plan?.government?.side_governments.map((government) => {
-											const team = plan.teams.find(
-												(item) => item.id === government.team_id,
-											);
-											return (
-												<div
-													key={government.team_id}
-													className="rounded-2xl border border-amber-400/15 bg-amber-500/5 p-5"
-												>
-													<div className="flex items-center justify-between">
-														<div className="text-lg font-black">
-															{getLocalized(
-																team?.display_name ?? team?.name,
-																team?.display_name_fa ?? team?.name_fa,
-															)}
-														</div>
-														<Badge className="bg-amber-400/15 text-amber-200">
-															سمت {government.side_id}
-														</Badge>
-													</div>
-													<div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-														<div className="rounded-xl bg-white/5 p-3">
-															<span className="text-slate-500">تیم دولت</span>
-															<div className="mt-1 font-bold">
-																{government.team_id}
-															</div>
-														</div>
-														<div className="rounded-xl bg-white/5 p-3">
-															<span className="text-slate-500">کاربر دولت</span>
-															<div className="mt-1 font-bold">
-																{government.player.name ??
-																	government.player.userId}
-															</div>
-														</div>
-													</div>
-												</div>
-											);
-										}) ?? (
-											<div className="text-slate-500">
-												ابتدا برنامه بازی را بارگذاری کنید.
-											</div>
-										)}
+									<CardContent>
+										{/* This used to be a read-only list. Sides, teams and
+										    governments are now edited in their own tab, so the
+										    only thing left here is the way there. */}
+										<p className="text-sm leading-7 text-slate-400">
+											سمت‌ها، تیم‌ها، دولت هر سمت و اختیاراتش در تب «تیم‌ها و
+											دولت‌ها» ویرایش می‌شوند.
+										</p>
+										<Button
+											variant="outline"
+											onClick={() => setActiveTab("roster")}
+											className="mt-3 border-white/10 bg-white/5"
+										>
+											<Users className="size-4" /> رفتن به تیم‌ها و دولت‌ها
+										</Button>
 									</CardContent>
 								</Card>
 								<Card className="border-white/10 bg-slate-950/55 text-slate-100">

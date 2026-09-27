@@ -84,6 +84,7 @@ export type ValidationGroup =
 	| "steps"
 	| "actions"
 	| "members"
+	| "teams"
 	| "effects"
 	| "visibility"
 	| "general";
@@ -117,6 +118,134 @@ const TIME_UNIT_KEYS: readonly TimeUnitKey[] = FALLBACK_TIME_UNITS.map(
 const teamRoleType = (
 	role: ConfigureAllRequestV2["teams"][number]["role"],
 ): string => (typeof role === "string" ? role : role.type);
+
+/**
+ * The org chart: sides, the teams on them, and the government over each side.
+ *
+ * A plan can hold several teams per side and one government per side, so these
+ * relationships can now be got wrong - they could not be while every plan was
+ * hand-written with exactly one team per side. This runs on every edit, not
+ * only when the server's user list has loaded, because none of it depends on
+ * who the players are.
+ */
+export const validateTeamStructure = (
+	plan: ConfigureAllRequestV2,
+): ClientValidationIssue[] => {
+	const issues: ClientValidationIssue[] = [];
+	const add = (loc: string, code: string, message: string): void => {
+		issues.push({ group: "teams", loc, code, message });
+	};
+
+	// The org chart itself. A plan can now hold several teams per side and a
+	// government over each side, so the relationships between them have to be
+	// checked - none of this was possible to get wrong while every plan was
+	// hand-written with one team per side.
+	const sideIds = [
+		...new Set(
+			plan.teams.flatMap((team) =>
+				team.side_id === undefined ? [] : [team.side_id],
+			),
+		),
+	];
+	for (const sideId of sideIds) {
+		const onSide = plan.teams.filter((team) => team.side_id === sideId);
+		const governments = onSide.filter(
+			(team) => teamRoleType(team.role) === "GOVERNMENT",
+		);
+		const players = onSide.filter(
+			(team) => teamRoleType(team.role) !== "GOVERNMENT",
+		);
+		const sideName =
+			onSide[0]?.side_name_fa?.trim() ||
+			onSide[0]?.side_name?.trim() ||
+			String(sideId);
+		if (governments.length === 0) {
+			add(
+				`side.${sideId}`,
+				"SIDE_HAS_NO_GOVERNMENT",
+				`سمت «${sideName}» دولت ندارد؛ تیم‌های این سمت بدون فرمانده می‌مانند.`,
+			);
+		}
+		if (governments.length > 1) {
+			add(
+				`side.${sideId}`,
+				"SIDE_HAS_MULTIPLE_GOVERNMENTS",
+				`سمت «${sideName}» ${governments.length} دولت دارد؛ هر سمت باید دقیقاً یک دولت داشته باشد.`,
+			);
+		}
+		if (players.length === 0) {
+			add(
+				`side.${sideId}`,
+				"SIDE_HAS_NO_PLAYER_TEAM",
+				`سمت «${sideName}» هیچ تیم بازیکنی ندارد.`,
+			);
+		}
+	}
+	if (sideIds.length < 2) {
+		add("teams", "NOT_ENOUGH_SIDES", "بازی حداقل به دو سمت نیاز دارد.");
+	}
+
+	// Credits are per team and never pooled: a side with two teams brings twice
+	// the spending power of a side with one. That is a legitimate setup, but it
+	// is almost never what someone means to build, so it is worth saying.
+	const sideCredits = sideIds.map((sideId) => ({
+		sideId,
+		total: plan.teams
+			.filter(
+				(team) =>
+					team.side_id === sideId && teamRoleType(team.role) !== "GOVERNMENT",
+			)
+			.reduce((sum, team) => sum + (team.starting_credits ?? 0), 0),
+	}));
+	const richest = sideCredits.reduce(
+		(best, item) => (item.total > best.total ? item : best),
+		sideCredits[0] ?? { sideId: 0, total: 0 },
+	);
+	const poorest = sideCredits.reduce(
+		(worst, item) => (item.total < worst.total ? item : worst),
+		sideCredits[0] ?? { sideId: 0, total: 0 },
+	);
+	if (poorest.total > 0 && richest.total >= poorest.total * 1.5) {
+		add(
+			"teams",
+			"SIDE_CREDITS_UNBALANCED",
+			`اعتبار تیم‌های یک سمت ${richest.total.toLocaleString("fa-IR")} و سمت دیگر ${poorest.total.toLocaleString("fa-IR")} است. اعتبار بین تیم‌های یک سمت تقسیم نمی‌شود؛ هر تیم اعتبار خودش را دارد، پس افزودن تیم توان خرید آن سمت را بالا می‌برد.`,
+		);
+	}
+
+	for (const team of plan.teams) {
+		if (teamRoleType(team.role) === "GOVERNMENT") continue;
+		if (team.id === undefined) continue;
+		const playable = plan.actions.filter((action) => {
+			const allowed = action.requirements?.allowed_team_ids ?? [];
+			return allowed.length === 0 || allowed.includes(team.id as number);
+		});
+		if (playable.length === 0) {
+			add(
+				`teams.${team.id}`,
+				"TEAM_HAS_NO_ACTIONS",
+				`تیم «${team.name}» هیچ کنشی برای بازی ندارد؛ در «کنش‌ها» دست‌کم یک کنش به این تیم بدهید.`,
+			);
+		}
+	}
+
+	for (const action of plan.actions) {
+		const allowed = action.requirements?.allowed_team_ids ?? [];
+		if (allowed.length === 0) continue;
+		const missing = allowed.filter(
+			(id) => !plan.teams.some((team) => team.id === id),
+		);
+		if (missing.length > 0) {
+			add(
+				action.code,
+				"ACTION_TEAM_NOT_FOUND",
+				"این کنش به تیمی داده شده که در برنامه وجود ندارد.",
+			);
+		}
+	}
+
+	return issues;
+};
 
 export const validateTeamMemberAssignments = (
 	plan: ConfigureAllRequestV2,
@@ -183,6 +312,13 @@ export const validateTeamMemberAssignments = (
 				"تیم دولتی متناظر با این سمت پیدا نشد.",
 			);
 			continue;
+		}
+		if (team.side_id !== undefined && team.side_id !== government.side_id) {
+			add(
+				`government.side_governments[${governmentIndex}].side_id`,
+				"GOVERNMENT_SIDE_MISMATCH",
+				`دولت «${team.name}» به سمتی وصل شده که تیمش روی آن نیست.`,
+			);
 		}
 		if (operator && government.player.userId !== operator.userId) {
 			add(
@@ -309,6 +445,10 @@ export const validateDefaultGamePlanClientSide = (
 			"واحد زمان انتخاب‌شده در فهرست سرور نیست؛ دوباره از «تنظیمات پیشرفته» انتخاب کنید.",
 		);
 	}
+
+	// The org chart is validated on its own and folded in here, so every caller
+	// of the contract validator gets it without having to remember.
+	errors.push(...validateTeamStructure(plan));
 
 	const sideIds = new Set(plan.teams.map((team) => team.side_id));
 	const teamIds = new Set(
