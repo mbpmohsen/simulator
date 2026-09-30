@@ -67,7 +67,7 @@ Local chat uses `node:sqlite` and needs no separate service. **Local SQLite cann
 | Package | Owns |
 | --- | --- |
 | `apps/web` | Player and government UI, the docs page, the chat API route |
-| `apps/admin` | Scenario builder (16 tabs), monitoring console, analytics, AI assistant config |
+| `apps/admin` | Scenario builder (16 tabs), monitoring console, analytics, assistant config |
 | `packages/api` | `@workspace/trpc` — typed clients for the game server, the game-plan contract, validation, localization, and the equilibrium solver |
 | `packages/ui` | Shared shadcn/ui components |
 | `packages/eslint-config`, `packages/typescript-config` | Shared tooling config |

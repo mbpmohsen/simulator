@@ -152,14 +152,14 @@ export const SubjectAiInsightDialog = memo(function SubjectAiInsightDialog({
 				<DialogHeader className="text-right sm:text-right">
 					<div className="flex flex-wrap items-center gap-2">
 						<Badge className="bg-cyan-500/15 text-cyan-100">
-							<Bot className="size-3.5" /> سطح AI{" "}
+							<Bot className="size-3.5" /> سطح دستیار{" "}
 							{aiLevel.toLocaleString("fa-IR")}
 						</Badge>
 						<Badge className="bg-violet-500/15 text-violet-100">
 							{levelLabel(aiLevel)}
 						</Badge>
 					</div>
-					<DialogTitle className="text-xl font-black">تحلیل AI</DialogTitle>
+					<DialogTitle className="text-xl font-black">تحلیل هوشمند</DialogTitle>
 					<DialogDescription className="text-right text-slate-400">
 						{subjectTitle}
 					</DialogDescription>

@@ -7,8 +7,8 @@ interface CapturedRequest {
 	url?: string;
 }
 
-describe("GameClientApi AI Assistant contract", () => {
-	it("reads the team's AI level and purchases the next level", async () => {
+describe("GameClientApi smart assistant contract", () => {
+	it("reads the team's assistant level and purchases the next level", async () => {
 		const requests: CapturedRequest[] = [];
 		const adapter: AxiosAdapter = async (request) => {
 			requests.push({

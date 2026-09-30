@@ -63,7 +63,7 @@ export class RuleBasedAiInsightProvider implements AiInsightProvider {
 // TODO: Replace this provider when a backend endpoint such as POST /ai/subject-insight exists.
 export class RemoteAiInsightProvider implements AiInsightProvider {
 	async generateSubjectInsight(): Promise<SubjectAiInsight> {
-		throw new Error("Remote AI insight endpoint is not available yet.");
+		throw new Error("Remote smart insight endpoint is not available yet.");
 	}
 }
 
@@ -263,10 +263,10 @@ export const generateSubjectAiInsight = (
 	const subjectTitle = getLocalized(subject.title, subject.title_fa);
 	const analysisTier =
 		aiLevel >= 3
-			? "تحلیل AI استراتژیک"
+			? "تحلیل هوشمند استراتژیک"
 			: aiLevel >= 2
-				? "تحلیل AI پیشرفته"
-				: "تحلیل AI سطح پایه";
+				? "تحلیل هوشمند پیشرفته"
+				: "تحلیل هوشمند سطح پایه";
 	const costText = formatInsightMetric(
 		averageCost,
 		"",
@@ -306,7 +306,7 @@ export const generateSubjectAiInsight = (
 		strengthCandidates.length > 0
 			? strengthCandidates
 			: [
-					"ساختار موضوع برای تحلیل AI قابل استفاده است و می‌توان مسیر تصمیم را از روی زیرموضوع‌ها و سناریوهای قابل مشاهده شروع کرد.",
+					"ساختار موضوع برای تحلیل هوشمند قابل استفاده است و می‌توان مسیر تصمیم را از روی زیرموضوع‌ها و سناریوهای قابل مشاهده شروع کرد.",
 				]
 	).slice(0, aiLevel >= 2 ? 3 : 2);
 

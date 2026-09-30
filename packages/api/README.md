@@ -17,7 +17,7 @@ import type { ConfigureAllRequestV2, StepView } from "@workspace/trpc";
 
 | Module | Owns |
 | --- | --- |
-| `game-client/` | `GameClientApi` — the player, government and AI endpoints |
+| `game-client/` | `GameClientApi` — the player, government and assistant endpoints |
 | `game-server/` | `GameServerApi` — admin and configuration endpoints, plus `types.ts`, the contract every plan is written against |
 | `game-plan/equilibrium.ts` | Mixed-strategy Nash equilibrium solver |
 | `game-plan/validation.ts` | `validateDefaultGamePlanClientSide`, `normalizeDefaultGamePlan` |
@@ -103,4 +103,4 @@ pnpm --filter @workspace/trpc test
 
 Nine suites under `game-client/`, `game-plan/` and `game-server/`, covering the
 router, the equilibrium solver, plan validation, the government catalogue, the
-communication server contract and the AI assistant UI helpers.
+communication server contract and the smart assistant UI helpers.

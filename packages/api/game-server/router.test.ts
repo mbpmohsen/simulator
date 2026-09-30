@@ -156,7 +156,7 @@ describe("GameServerApi admin lifecycle contract", () => {
 		expect(requests[12]?.responseType).toBe("blob");
 	});
 
-	it("sets and reads the AI Assistant ladder through the admin config endpoints", async () => {
+	it("sets and reads the assistant ladder through the admin config endpoints", async () => {
 		const requests: CapturedRequest[] = [];
 		const adapter: AxiosAdapter = async (request) => {
 			requests.push({

@@ -260,7 +260,7 @@ contains no tRPC.
 
 | Module | Both apps use it for |
 | --- | --- |
-| `game-client/router.ts` | `GameClientApi` — player, government, AI |
+| `game-client/router.ts` | `GameClientApi` — player, government, assistant |
 | `game-server/router.ts` | `GameServerApi` — admin and configuration |
 | `game-server/types.ts` | the contract every plan is written against |
 | `game-plan/equilibrium.ts` | the solver |

@@ -22,8 +22,8 @@ export function SubjectAiButton({
 	const title =
 		disabledMessage ??
 		(locked
-			? "برای مشاهده تحلیل، ابتدا AI را ارتقا دهید."
-			: "تحلیل موضوع با AI");
+			? "برای مشاهده تحلیل، ابتدا دستیار را ارتقا دهید."
+			: "تحلیل هوشمند موضوع");
 	const Icon = loading ? LoaderCircle : locked ? LockKeyhole : Sparkles;
 
 	return (

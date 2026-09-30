@@ -29,7 +29,7 @@ import { loadAiAssistantConfig, saveAiAssistantConfig } from "@/lib/game-plan";
 interface AiAssistantLevelsProps {
 	/**
 	 * The game the caller believes is current - the builder's last published id.
-	 * Used only to warn when the server's AI config belongs to a different game.
+	 * Used only to warn when the server's assistant config belongs to a different game.
 	 */
 	expectedGameId?: string | null;
 	/** True when rendered as a builder tab rather than on its own route. */
@@ -123,7 +123,7 @@ export default function AiAssistantLevels({
 		[rows],
 	);
 
-	// The AI ladder is stored per game. If it belongs to a different game than the
+	// The assistant ladder is stored per game. If it belongs to a different game than the
 	// one just published, saving here edits the wrong game's settings.
 	const gameMismatch = Boolean(
 		expectedGameId && gameId && expectedGameId !== gameId,

@@ -28,7 +28,9 @@ export function AiAssistantLevelCard({
 	if (!level) {
 		return (
 			<div className="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-4 text-sm text-cyan-100">
-				{loading ? "در حال دریافت وضعیت AI…" : "سطح AI هنوز دریافت نشده است."}
+				{loading
+					? "در حال دریافت وضعیت دستیار…"
+					: "سطح دستیار هنوز دریافت نشده است."}
 			</div>
 		);
 	}
@@ -38,7 +40,7 @@ export function AiAssistantLevelCard({
 			<div className="grid grid-cols-2 gap-3">
 				<div className="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-3">
 					<div className="flex items-center gap-1.5 text-xs text-cyan-200">
-						<Bot className="size-3.5" /> سطح فعلی AI
+						<Bot className="size-3.5" /> سطح فعلی دستیار
 					</div>
 					<div className="mt-2 text-2xl font-black">
 						{formatNumberFa(level.current_level)}
@@ -55,7 +57,7 @@ export function AiAssistantLevelCard({
 			</div>
 			<div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-slate-300">
 				{level.next_level === null ? (
-					"AI به بالاترین سطح رسیده است."
+					"دستیار به بالاترین سطح رسیده است."
 				) : (
 					<div className="flex flex-wrap items-center gap-2">
 						<Badge className="bg-cyan-500/10 text-cyan-100">

@@ -127,7 +127,7 @@ const actionsByCode: Record<string, GovernmentCatalogAction> = {
 	},
 };
 
-describe("subject AI insight generator", () => {
+describe("subject smart insight generator", () => {
 	it("calculates subject, scenario, step, cost, and success metrics", () => {
 		const insight = generateSubjectAiInsight({
 			aiLevel: 2,
@@ -145,7 +145,7 @@ describe("subject AI insight generator", () => {
 		expect(insight.key_numbers.average_cooldown_turns).toBe(1.7);
 	});
 
-	it("changes output depth by AI level", () => {
+	it("changes output depth by assistant level", () => {
 		const level1 = generateSubjectAiInsight({
 			aiLevel: 1,
 			subject,
@@ -162,7 +162,7 @@ describe("subject AI insight generator", () => {
 			actionsByCode,
 		});
 
-		expect(level1.headline_fa).toContain("تحلیل AI سطح پایه");
+		expect(level1.headline_fa).toContain("تحلیل هوشمند سطح پایه");
 		expect(formatSubjectAiInsightText(level2)).toContain("میانگین هزینه");
 		expect(formatSubjectAiInsightText(level3)).toContain("نوبت بعدی");
 		expect(level3.recommended_focus_fa.length).toBeGreaterThan(
@@ -180,13 +180,13 @@ describe("subject AI insight generator", () => {
 
 		expect(text).not.toContain("نامشخص");
 		expect(text).not.toContain("cooldown");
-		expect(text).toContain("تحلیل AI");
+		expect(text).toContain("تحلیل هوشمند");
 		expect(text).toContain("هزینه");
 		expect(insight.risks_fa.length).toBeGreaterThan(0);
 	});
 });
 
-describe("AI Assistant API adapter", () => {
+describe("Smart assistant API adapter", () => {
 	const purchaseResponse = {
 		ok: true,
 		team_id: 101,

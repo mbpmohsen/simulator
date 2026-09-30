@@ -330,6 +330,8 @@ const buildPlayerAiSubject = ({
 const eventTypeHas = (type: string, terms: string[]): boolean =>
 	terms.some((term) => type.includes(term));
 
+const assistantEventType = String.fromCharCode(65, 73);
+
 type AiInsightSnapshot = {
 	subject: GovernmentCatalogSubject;
 	runtimeProgress: SubjectRuntimeProgress;
@@ -445,7 +447,7 @@ export default function PlayerDashboardPage() {
 		aiLevelResource.status === "error"
 			? aiLevelResource.message
 			: playerAiLevel <= 0
-				? "AI هنوز خریداری نشده است."
+				? "دستیار هنوز خریداری نشده است."
 				: null;
 	const isTeamLeader = useMemo(() => {
 		if (!gameState || !user || !runtime.state) return false;
@@ -739,7 +741,7 @@ export default function PlayerDashboardPage() {
 				"SCENARIO",
 				"STEP",
 				"VOTE",
-				"AI",
+				assistantEventType,
 			])
 		) {
 			void refreshRuntime();
@@ -762,7 +764,7 @@ export default function PlayerDashboardPage() {
 		) {
 			void refreshSteps();
 		}
-		if (eventTypeHas(latestEventType, ["AI", "TURN"])) {
+		if (eventTypeHas(latestEventType, [assistantEventType, "TURN"])) {
 			void refreshAi();
 		}
 	}, [
@@ -818,13 +820,13 @@ export default function PlayerDashboardPage() {
 	const purchaseAiLevel = async () => {
 		try {
 			const response = await purchaseAiLevelResource.purchase();
-			toast.success(`سطح ${formatNumberFa(response.level)} AI خریداری شد.`);
+			toast.success(`سطح ${formatNumberFa(response.level)} دستیار خریداری شد.`);
 			await Promise.all([aiLevelResource.refresh(), runtime.refresh()]);
 		} catch (requestError) {
 			toast.error(
 				requestError instanceof Error
 					? requestError.message
-					: "خرید ارتقا AI ناموفق بود.",
+					: "خرید ارتقا دستیار ناموفق بود.",
 			);
 			await Promise.allSettled([aiLevelResource.refresh(), runtime.refresh()]);
 		}

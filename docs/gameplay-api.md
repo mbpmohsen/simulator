@@ -2,7 +2,7 @@
 
 > **What this is.** The REST contract the frontend actually runs on today: the
 > subject / sub-subject / scenario / step model, the government order system,
-> and the AI assistant.
+> and the smart assistant.
 >
 > **Why it exists.** Neither `docs/backend-integration.md` nor
 > `docs/backend-internals.md` mentions any of these endpoints — both describe
@@ -276,7 +276,7 @@ team disables do not move the equilibrium weights.
 
 ---
 
-## 7. AI assistant
+## 7. Smart assistant
 
 A paid, per-team level ladder, independent of the game plan.
 

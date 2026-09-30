@@ -756,7 +756,7 @@ export default function AdminGamePlanPage() {
 						</div>
 						<nav className="space-y-1">
 							{TAB_ITEMS.map((tab, index) => {
-								// The AI ladder is stored per published game, so it cannot be
+								// The assistant ladder is stored per published game, so it cannot be
 								// edited before configure_all has produced a gameId.
 								const locked = tab.key === "ai" && !configuredGameId;
 								return (

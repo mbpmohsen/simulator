@@ -30,10 +30,10 @@ const getStatusMessage = (
 	loading: boolean,
 	unavailableMessage?: string | null,
 ): string => {
-	if (loading && !level) return "در حال دریافت وضعیت AI…";
+	if (loading && !level) return "در حال دریافت وضعیت دستیار…";
 	if (unavailableMessage) return unavailableMessage;
-	if (!level) return "AI برای این بازی فعال نیست.";
-	if (level.next_level === null) return "AI به بالاترین سطح رسیده است.";
+	if (!level) return "دستیار برای این بازی فعال نیست.";
+	if (level.next_level === null) return "دستیار به بالاترین سطح رسیده است.";
 	if (!isLeader) return "فقط رهبر تیم می‌تواند ارتقا بخرد.";
 	if (level.already_purchased_this_turn)
 		return "این نوبت ارتقا خریداری شده است.";
@@ -68,7 +68,7 @@ export function AiAssistantUpgradePanel({
 			<CardHeader>
 				<CardTitle className="flex items-center justify-between gap-2 text-base">
 					<span className="flex items-center gap-2">
-						<Bot className="size-5 text-cyan-300" /> AI
+						<Bot className="size-5 text-cyan-300" /> دستیار هوشمند
 					</span>
 					{onRefresh && (
 						<Button

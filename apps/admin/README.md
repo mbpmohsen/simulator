@@ -26,7 +26,7 @@ Every route below sits behind one sign-in (`AdminShell` = `AdminAuthGate` +
 | `/admin/current-flow` | نسخهٔ منتشرشده | The published plan as a read-only graph |
 | `/monitoring` | پایش بازی | Live event stream, team readiness, active orders, game control |
 | `/analytics` | تحلیل بازی | Turn results, and actual play against optimal play |
-| `/admin/ai` | دستیار هوشمند | AI assistant levels (also a tab in the builder) |
+| `/admin/ai` | دستیار هوشمند | Smart assistant levels (also a tab in the builder) |
 | `/docs` | راهنما | Facilitator documentation |
 
 ---

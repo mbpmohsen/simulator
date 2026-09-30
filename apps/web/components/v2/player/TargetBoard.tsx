@@ -54,7 +54,7 @@ export interface TargetBoardProps {
 	onActivate: (scenarioId: string) => void;
 	/** sub_subject id -> this team's past results there, oldest first. */
 	outcomesBySite: Map<string, TargetOutcome[]>;
-	/** Slot for the AI insight button, which belongs to the whole board. */
+	/** Slot for the smart insight button, which belongs to the whole board. */
 	aiSlot?: ReactNode;
 	/**
 	 * Folded form for the phases where the target is settled and the move cards
