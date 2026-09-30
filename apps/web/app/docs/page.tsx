@@ -179,20 +179,21 @@ export default function DocsPage() {
 								))}
 							</div>
 							<h1 className="mt-6 text-3xl font-black leading-tight text-white md:text-5xl">
-								راهنمای شبیه‌ساز عملیات سایبری
+								راهنمای شبیه‌ساز جنگ سایبری
 							</h1>
 							<p className="mt-4 max-w-4xl text-sm leading-8 text-zinc-300 md:text-base">
-								یک بازی آموزشی نوبتی برای تمرین تصمیم‌گیری، دفاع، هماهنگی تیمی،
-								مدیریت بحران و تحلیل اثرات عملیاتی.
+								دو طرف رو‌در‌روی هم‌اند؛ یکی حمله می‌کند و دیگری دفاع. هر نوبت شما
+								تصمیم می‌گیرید، حریف هم تصمیم می‌گیرد، و نتیجه به هر دو بستگی دارد.
+								اینجا یاد می‌گیرید بازی چطور کار می‌کند و چطور بهتر بازی کنید.
 							</p>
 							<Alert className="mt-6 max-w-4xl rounded-lg border-amber-300/25 bg-amber-500/10 text-amber-50">
 								<ShieldCheck className="size-4" />
 								<AlertTitle className="text-sm font-bold">
-									هشدار ایمنی
+									فقط یک بازی
 								</AlertTitle>
 								<AlertDescription className="text-amber-100/85">
-									این سامانه برای آموزش و شبیه‌سازی طراحی شده است و شامل
-									دستورالعمل واقعی حمله یا سوءاستفاده عملیاتی نیست.
+									همه‌چیز اینجا شبیه‌سازی آموزشی است. هیچ دستورالعمل واقعی حمله
+									یا نفوذی در کار نیست.
 								</AlertDescription>
 							</Alert>
 						</div>
@@ -200,7 +201,7 @@ export default function DocsPage() {
 							<div className="rounded-lg border border-white/10 bg-zinc-950/55 p-4">
 								<div className="flex items-center gap-2 text-sm font-bold text-zinc-100">
 									<Network className="size-4 text-cyan-300" />
-									مدل v2
+									از هدف تا نتیجه
 								</div>
 								<div className="mt-3 grid gap-2 text-sm text-zinc-300">
 									{GAME_MODEL_NODES.map((node, index) => (
@@ -271,7 +272,7 @@ export default function DocsPage() {
 							<Input
 								value={query}
 								onChange={(event) => setQuery(event.target.value)}
-								placeholder="جست‌وجو در راهنما؛ مثلا قفل، دولت یا آنالیتیکس"
+								placeholder="جست‌وجو؛ مثلاً قفل، دولت یا تاس"
 								className="h-12 rounded-lg border-white/10 bg-zinc-950/80 pr-10 text-zinc-100 placeholder:text-zinc-500"
 							/>
 						</div>
@@ -287,7 +288,7 @@ export default function DocsPage() {
 								{activeTabMeta?.label ?? "راهنما"}
 							</div>
 							<div className="mt-1 text-xs leading-6 text-zinc-500">
-								{sections.length} بخش قابل مشاهده
+								{sections.length.toLocaleString("fa-IR")} بخش
 							</div>
 						</div>
 						<nav className="max-h-[70vh] space-y-1 overflow-y-auto pr-1">
@@ -298,7 +299,7 @@ export default function DocsPage() {
 									className="flex items-center justify-between gap-2 rounded-md px-2 py-2 text-xs text-zinc-400 transition hover:bg-white/5 hover:text-cyan-100"
 								>
 									<span className="min-w-0 truncate">
-										{index + 1}. {section.title}
+										{(index + 1).toLocaleString("fa-IR")}. {section.title}
 									</span>
 									<ChevronLeft className="size-3 shrink-0" />
 								</a>
@@ -309,7 +310,7 @@ export default function DocsPage() {
 					<div className="mt-3 rounded-lg border border-white/10 bg-zinc-950/60 p-3">
 						<div className="flex items-center gap-2 px-2 text-xs font-bold text-zinc-300">
 							<LinkIcon className="size-4 text-lime-300" />
-							لینک‌های کاربردی
+							میان‌بُرها
 						</div>
 						<div className="mt-3 grid gap-2">
 							{GAME_DOCS_LINKS.map((item) => {
@@ -347,7 +348,7 @@ export default function DocsPage() {
 						</div>
 					) : (
 						<div className="rounded-lg border border-dashed border-white/15 p-10 text-center text-zinc-500">
-							نتیجه‌ای برای این جست‌وجو پیدا نشد.
+							چیزی پیدا نشد. کلمهٔ دیگری امتحان کنید.
 						</div>
 					)}
 				</div>
@@ -491,10 +492,10 @@ function ModelComparison() {
 							بخش
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							نسخه قبلی
+							قبلاً
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							نسخه v2
+							حالا
 						</th>
 					</tr>
 				</thead>
@@ -601,7 +602,7 @@ function PhaseGrid() {
 				>
 					<div className="flex items-start justify-between gap-3">
 						<div className="grid size-8 place-items-center rounded-md bg-lime-400/15 text-sm font-black text-lime-200">
-							{index + 1}
+							{(index + 1).toLocaleString("fa-IR")}
 						</div>
 						<Badge
 							dir="ltr"
@@ -628,7 +629,7 @@ function PlayerGuide() {
 						className="grid grid-cols-[36px_minmax(0,1fr)] items-start gap-3 rounded-lg border border-white/10 bg-zinc-900/40 p-3"
 					>
 						<span className="grid size-9 place-items-center rounded-md bg-sky-400/15 text-sm font-black text-sky-200">
-							{index + 1}
+							{(index + 1).toLocaleString("fa-IR")}
 						</span>
 						<span className="pt-1 text-sm leading-7 text-zinc-300">{step}</span>
 					</li>
@@ -683,13 +684,13 @@ function GovernmentGuide() {
 			>
 				<AccordionItem value="government-advanced" className="border-white/10">
 					<AccordionTrigger className="text-right text-sm font-bold text-zinc-100 hover:no-underline">
-						جزئیات پیشرفته برای دولت و مربی
+						جزئیات فنی (برای دولت و مربی)
 					</AccordionTrigger>
 					<AccordionContent className="text-sm leading-8 text-zinc-400">
-						دولت در نمای خود از کاتالوگ دولت برای دیدن هدف‌ها، موضوع‌ها، تیم‌ها،
-						کنش‌های قابل دستور و گره‌های مربوط به سمت استفاده می‌کند. در مستندات
-						فنی، این داده با مسیر <span dir="ltr">/government/catalog</span>{" "}
-						شناخته می‌شود؛ بازیکن عادی نیازی به کار مستقیم با این مسیر ندارد.
+						صفحهٔ دولت فهرست هدف‌ها، موضوع‌ها، تیم‌ها و حرکت‌هایی را که می‌شود
+						درباره‌شان دستور داد از «کاتالوگ دولت» می‌خواند. در مستندات فنی این
+						داده با مسیر <span dir="ltr">/government/catalog</span> آمده است.
+						بازیکنان با این مسیر کاری ندارند.
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>
@@ -703,7 +704,7 @@ function AdminGuide() {
 			<div className="rounded-lg border border-violet-300/15 bg-violet-500/5 p-4">
 				<div className="flex items-center gap-2 font-black text-violet-100">
 					<FileCheck2 className="size-4" />
-					چرخه انتشار
+					از ساخت تا اجرا
 				</div>
 				<ol className="mt-4 grid gap-2">
 					{ADMIN_LIFECYCLE_STEPS.map((step, index) => (
@@ -712,7 +713,7 @@ function AdminGuide() {
 							className="grid grid-cols-[32px_minmax(0,1fr)] items-start gap-3 text-sm leading-7 text-zinc-300"
 						>
 							<span className="grid size-8 place-items-center rounded-md bg-violet-400/15 text-xs font-black text-violet-100">
-								{index + 1}
+								{(index + 1).toLocaleString("fa-IR")}
 							</span>
 							<span>{step}</span>
 						</li>
@@ -722,7 +723,7 @@ function AdminGuide() {
 			<div className="rounded-lg border border-white/10 bg-zinc-900/40 p-4">
 				<div className="flex items-center gap-2 font-black text-white">
 					<LayoutDashboard className="size-4 text-cyan-300" />
-					صفحه‌های مدیریتی
+					صفحه‌های پنل مدیر
 				</div>
 				<div className="mt-4 grid gap-2 md:grid-cols-2">
 					{ADMIN_PAGES.map((page) => (
@@ -745,7 +746,7 @@ function CurrentFlowGuide() {
 			<div className="rounded-lg border border-cyan-300/15 bg-cyan-500/5 p-4">
 				<div className="flex items-center gap-2 font-black text-cyan-100">
 					<Route className="size-4" />
-					چه چیزهایی در نقشه دیده می‌شود؟
+					در این نقشه چه می‌بینید؟
 				</div>
 				<div className="mt-4 grid gap-2 md:grid-cols-2">
 					{CURRENT_FLOW_ITEMS.map((item) => (
@@ -761,7 +762,7 @@ function CurrentFlowGuide() {
 			<div className="rounded-lg border border-lime-300/15 bg-lime-500/5 p-4">
 				<div className="flex items-center gap-2 font-black text-lime-100">
 					<Eye className="size-4" />
-					چطور استفاده می‌شود؟
+					به چه کار می‌آید؟
 				</div>
 				<ul className="mt-4 grid gap-2">
 					{CURRENT_FLOW_USAGE.map((item) => (
@@ -818,7 +819,7 @@ function LockReasonsTable() {
 							کد
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							معنی فارسی
+							یعنی چه؟
 						</th>
 					</tr>
 				</thead>
@@ -851,7 +852,7 @@ function CityWaterExample() {
 					className="grid grid-cols-[36px_minmax(0,1fr)] items-start gap-3 rounded-lg border border-white/10 bg-zinc-900/40 p-3"
 				>
 					<span className="grid size-9 place-items-center rounded-md bg-cyan-400/15 text-sm font-black text-cyan-100">
-						{index + 1}
+						{(index + 1).toLocaleString("fa-IR")}
 					</span>
 					<span className="pt-1 text-sm leading-7 text-zinc-300">{item}</span>
 				</li>
@@ -892,16 +893,16 @@ function GlossaryTable() {
 				<thead className="bg-zinc-900 text-zinc-200">
 					<tr>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							English term
+							اصطلاح انگلیسی
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							ترجمه فارسی
+							فارسی
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							توضیح ساده
+							یعنی چه؟
 						</th>
 						<th className="border-b border-white/10 px-4 py-3 text-right">
-							کاربر اصلی
+							به کار چه کسی می‌آید
 						</th>
 					</tr>
 				</thead>
