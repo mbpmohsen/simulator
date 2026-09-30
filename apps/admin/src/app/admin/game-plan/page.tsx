@@ -30,6 +30,7 @@ import {
 	CloudUpload,
 	Database,
 	FileCheck2,
+	GitBranch,
 	Layers3,
 	LoaderCircle,
 	Lock,
@@ -80,6 +81,7 @@ type TabKey =
 	| "campaign"
 	| "arsenal"
 	| "advanced"
+	| "graph"
 	| "publish"
 	| "ai";
 
@@ -94,6 +96,7 @@ const TAB_ITEMS: Array<{ key: TabKey; label: string }> = [
 	{ key: "arsenal", label: "کنش‌ها" },
 	{ key: "campaign", label: "اهداف و سناریوها" },
 	{ key: "advanced", label: "تنظیمات پیشرفته" },
+	{ key: "graph", label: "گراف بازی" },
 	{ key: "publish", label: "بررسی و انتشار" },
 	{ key: "ai", label: "دستیار هوشمند" },
 ];
@@ -961,6 +964,49 @@ export default function AdminGamePlanPage() {
 								onChange={setEditablePlan}
 								focus={arsenalFocus}
 							/>
+						)}
+
+						{activeTab === "graph" && (
+							<Card className="overflow-hidden border-white/10 bg-slate-950/55 text-slate-100">
+								<CardContent className="relative min-h-[520px] p-0">
+									<div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(34,211,238,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.08)_1px,transparent_1px)] [background-size:32px_32px]" />
+									<div className="relative flex min-h-[520px] flex-col items-center justify-center p-8 text-center">
+										<div className="grid size-20 place-items-center rounded-3xl bg-cyan-400/10 text-cyan-300">
+											<GitBranch className="size-10" />
+										</div>
+										<h2 className="mt-6 text-3xl font-black">
+											نقشه زنده برنامه بازی
+										</h2>
+										<p className="mt-3 max-w-xl leading-8 text-slate-400">
+											هر بار یک موضوع را انتخاب کنید و مسیر فشرده آن را از هدف
+											تا زیرموضوع، سناریو، گام، کنش و اثرهای مرتبط در فلوچارت
+											تعاملی ببینید.
+										</p>
+										<div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+											<Badge className="bg-violet-500/15 text-violet-100">
+												{summary.goals.toLocaleString("fa-IR")} هدف
+											</Badge>
+											<Badge className="bg-cyan-500/15 text-cyan-100">
+												{summary.subjects.toLocaleString("fa-IR")} موضوع
+											</Badge>
+											<Badge className="bg-amber-500/15 text-amber-100">
+												{summary.scenarios.toLocaleString("fa-IR")} سناریو
+											</Badge>
+											<Badge className="bg-emerald-500/15 text-emerald-100">
+												{summary.steps.toLocaleString("fa-IR")} گام
+											</Badge>
+										</div>
+										<Button
+											asChild
+											className="mt-7 h-12 bg-cyan-400 px-6 text-slate-950 hover:bg-cyan-300"
+										>
+											<Link href="/admin/game-plan/graph">
+												<GitBranch className="size-5" /> بازکردن گراف تعاملی
+											</Link>
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
 						)}
 
 						{activeTab === "advanced" && plan && (
