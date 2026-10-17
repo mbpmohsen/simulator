@@ -52,6 +52,7 @@ import { CampaignMap, type PlanFocus } from "@/components/builder/CampaignMap";
 import { ConfirmRemove } from "@/components/builder/ConfirmRemove";
 import { JsonToggle } from "@/components/builder/JsonToggle";
 import { PlanHealth } from "@/components/builder/PlanHealth";
+import { PlanOverviewGraph } from "@/components/builder/PlanOverviewGraph";
 import { Roster } from "@/components/builder/Roster";
 import { TimeUnitField } from "@/components/builder/TimeUnitField";
 import {
@@ -966,47 +967,70 @@ export default function AdminGamePlanPage() {
 							/>
 						)}
 
-						{activeTab === "graph" && (
-							<Card className="overflow-hidden border-white/10 bg-slate-950/55 text-slate-100">
-								<CardContent className="relative min-h-[520px] p-0">
-									<div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(34,211,238,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.08)_1px,transparent_1px)] [background-size:32px_32px]" />
-									<div className="relative flex min-h-[520px] flex-col items-center justify-center p-8 text-center">
-										<div className="grid size-20 place-items-center rounded-3xl bg-cyan-400/10 text-cyan-300">
-											<GitBranch className="size-10" />
-										</div>
-										<h2 className="mt-6 text-3xl font-black">
-											نقشه زنده برنامه بازی
-										</h2>
-										<p className="mt-3 max-w-xl leading-8 text-slate-400">
-											هر بار یک موضوع را انتخاب کنید و مسیر فشرده آن را از هدف
-											تا زیرموضوع، سناریو، گام، کنش و اثرهای مرتبط در فلوچارت
-											تعاملی ببینید.
-										</p>
-										<div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
-											<Badge className="bg-violet-500/15 text-violet-100">
-												{summary.goals.toLocaleString("fa-IR")} هدف
-											</Badge>
-											<Badge className="bg-cyan-500/15 text-cyan-100">
-												{summary.subjects.toLocaleString("fa-IR")} موضوع
-											</Badge>
-											<Badge className="bg-amber-500/15 text-amber-100">
-												{summary.scenarios.toLocaleString("fa-IR")} سناریو
-											</Badge>
-											<Badge className="bg-emerald-500/15 text-emerald-100">
-												{summary.steps.toLocaleString("fa-IR")} گام
-											</Badge>
+						{activeTab === "graph" && plan && (
+							<div className="space-y-4">
+								<Card className="border-white/10 bg-slate-950/55 text-slate-100">
+									<CardHeader>
+										<CardTitle className="flex flex-wrap items-center justify-between gap-3">
+											<span className="flex items-center gap-2">
+												<GitBranch className="text-cyan-300" /> نقشه زنده برنامه
+												بازی
+											</span>
+											<div className="flex flex-wrap items-center gap-2 text-xs">
+												<Badge className="bg-violet-500/15 text-violet-100">
+													{summary.goals.toLocaleString("fa-IR")} هدف
+												</Badge>
+												<Badge className="bg-cyan-500/15 text-cyan-100">
+													{summary.subjects.toLocaleString("fa-IR")} موضوع
+												</Badge>
+												<Badge className="bg-amber-500/15 text-amber-100">
+													{summary.subSubjects.toLocaleString("fa-IR")} زیرموضوع
+												</Badge>
+												<Badge className="bg-emerald-500/15 text-emerald-100">
+													{summary.scenarios.toLocaleString("fa-IR")} سناریو
+												</Badge>
+												<Badge className="bg-white/5 text-slate-300">
+													{summary.steps.toLocaleString("fa-IR")} گام
+												</Badge>
+											</div>
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										{/* The shape of the plan, drawn here. Counting nodes is
+										    not seeing a shape - an empty goal or a subject
+										    carrying everything is invisible in a counter. */}
+										<PlanOverviewGraph
+											plan={plan}
+											issues={liveIssues}
+											onOpen={(kind, id) => {
+												setCampaignFocus({ kind, id, nonce: Date.now() });
+												setActiveTab("campaign");
+											}}
+										/>
+									</CardContent>
+								</Card>
+
+								<Card className="border-white/10 bg-slate-950/55 text-slate-100">
+									<CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
+										<div>
+											<div className="font-black">گراف تعاملی</div>
+											<p className="mt-1 max-w-xl text-sm leading-7 text-slate-400">
+												برای ردیابی یک مسیر کامل — از هدف تا گام، کنش و اثرهای
+												مرتبط — با جست‌وجو و بزرگ‌نمایی.
+											</p>
 										</div>
 										<Button
 											asChild
-											className="mt-7 h-12 bg-cyan-400 px-6 text-slate-950 hover:bg-cyan-300"
+											variant="outline"
+											className="border-cyan-400/30 bg-cyan-500/5 text-cyan-100"
 										>
 											<Link href="/admin/game-plan/graph">
-												<GitBranch className="size-5" /> بازکردن گراف تعاملی
+												<GitBranch className="size-4" /> بازکردن گراف تعاملی
 											</Link>
 										</Button>
-									</div>
-								</CardContent>
-							</Card>
+									</CardContent>
+								</Card>
+							</div>
 						)}
 
 						{activeTab === "advanced" && plan && (
