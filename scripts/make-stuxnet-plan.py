@@ -10,7 +10,7 @@ import argparse, json, sys
 from collections import OrderedDict
 from pathlib import Path
 
-SIDE_NAMES = {"red": ("Operation", "عملیات"), "blue": ("Natanz", "نطنز")}
+SIDE_NAMES = {"red": ("Operation", "عملیات مهاجم"), "blue": ("Natanz", "تأسیسات نطنز")}
 TEAM_NAMES = {
     ("red", "GOVERNMENT"): ("Sponsor State", "دولت پشتیبان"),
     ("red", "PLAYER"): ("Operations Cell", "تیم عملیات"),
@@ -20,21 +20,25 @@ TEAM_NAMES = {
 SECOND_BLUE_TEAM = ("Control Room", "تیم اتاق کنترل")
 
 ACTIONS = OrderedDict([
+    # Persian here is the operative language of the UI, so the terms are the
+    # ones used in Persian security writing - not word-for-word renderings of
+    # the English. "Air gap" in particular has no literal Persian equivalent
+    # that carries its meaning; it is described as an isolated network.
     ("ATK_PROBE_ACCESS", ("ATK_SUPPLY_MEDIA", "Supply Chain — Removable Media",
-        "زنجیرهٔ تأمین — رسانهٔ جداشدنی",
-        "آلوده‌کردن حافظهٔ جداشدنی یک پیمانکار، تا بار اول از فاصلهٔ هوایی عبور کند.")),
-    ("ATK_DISRUPT_WORKFLOW", ("ATK_LATERAL_ZERODAY", "Lateral Spread — Zero Day",
-        "گسترش جانبی — آسیب‌پذیری روز صفر",
-        "رسیدن از ایستگاه کاری اداری به شبکهٔ کنترل صنعتی، با نقصی که هنوز وصله ندارد.")),
+        "زنجیرهٔ تأمین — حافظهٔ جداشدنی",
+        "آلوده‌کردن حافظهٔ جداشدنی یک پیمانکار، تا بدافزار بار اول وارد شبکه‌ای شود که هیچ اتصالی به بیرون ندارد.")),
+    ("ATK_DISRUPT_WORKFLOW", ("ATK_LATERAL_ZERODAY", "Lateral Movement — Zero Day",
+        "حرکت جانبی — آسیب‌پذیری روز صفر",
+        "رسیدن از ایستگاه کاری اداری به شبکهٔ کنترل صنعتی، با نقصی که هنوز وصله‌ای برایش منتشر نشده است.")),
     ("ATK_BLACKOUT_SERVICE", ("ATK_ROTOR_SABOTAGE", "Rotor Sabotage — Speed Manipulation",
-        "خرابکاری روتور — دستکاری سرعت",
-        "تغییر فرکانس محرکه‌ها تا سانتریفیوژها از پا دربیایند، در حالی که نمایشگر اتاق کنترل همان اعداد همیشگی را نشان می‌دهد.")),
+        "دستکاری دور سانتریفیوژ",
+        "تغییر فرکانس درایوهای کنترل دور تا سانتریفیوژها از کار بیفتند، در حالی که اتاق کنترل همان اعداد همیشگی را می‌بیند.")),
     ("DEF_HARDEN_IDENTITY", ("DEF_MEDIA_CONTROL", "Removable Media Control",
-        "کنترل رسانهٔ جداشدنی",
+        "کنترل حافظه‌های جداشدنی",
         "محدودکردن و بازرسی هر حافظه‌ای که وارد محوطه می‌شود.")),
     ("DEF_CONTAIN_TRIAGE", ("DEF_NETWORK_SEGMENT", "Control Network Segmentation",
         "جداسازی شبکهٔ کنترل",
-        "بریدن مسیر میان شبکهٔ اداری و شبکهٔ کنترل صنعتی، تا عبور جانبی ممکن نباشد.")),
+        "قطع مسیر میان شبکهٔ اداری و شبکهٔ کنترل صنعتی، تا حرکت جانبی ممکن نباشد.")),
     ("DEF_RESTORE_CONTINUITY", ("DEF_SENSOR_INTEGRITY", "Sensor Data Integrity",
         "صحت‌سنجی دادهٔ سنسور",
         "مقایسهٔ آنچه کنترل‌کننده گزارش می‌دهد با اندازه‌گیری مستقل — تنها راهی که دستکاری پنهان دیده می‌شود.")),
@@ -45,13 +49,13 @@ MARKET = {
     # target - otherwise a "stolen certificate" ends up boosting the wrong move.
     "BM_RED_RECON_DOSSIER": ("BM_RED_CENTRIFUGE_DOSSIER", "Centrifuge Dossier", "پروندهٔ فنی سانتریفیوژ",
         "نقشهٔ دقیق آرایش و فرکانس کاری سانتریفیوژها — بدون آن، دستکاری سرعت فقط یک حدس است."),
-    "BM_RED_COVER_TOKEN": ("BM_RED_STOLEN_CERT", "Stolen Signing Certificate", "گواهی امضای سرقتی",
-        "درایور امضاشده با گواهی یک شرکت معتبر، هنگام ورود از رسانه به چشم نمی‌آید."),
-    "BM_RED_PRESSURE_VOUCHER": ("BM_RED_INSIDER_ACCESS", "Insider Access", "دسترسی خودی",
+    "BM_RED_COVER_TOKEN": ("BM_RED_STOLEN_CERT", "Stolen Code-Signing Certificate", "گواهی امضای کد سرقتی",
+        "درایور امضاشده با گواهی یک شرکت معتبر، هنگام ورود از حافظهٔ جداشدنی به چشم نمی‌آید."),
+    "BM_RED_PRESSURE_VOUCHER": ("BM_RED_INSIDER_ACCESS", "Insider Access", "دسترسی فرد خودی",
         "همکاری یک پیمانکار، که هزینهٔ رسیدن به شبکهٔ کنترل را پایین می‌آورد."),
     "BM_BLUE_CONTINUITY_DRILL": ("BM_BLUE_INDEPENDENT_TELEMETRY", "Independent Telemetry", "تله‌متری مستقل",
         "اندازه‌گیری خارج از زنجیرهٔ کنترل‌کننده، که نمی‌شود از داخل جعلش کرد."),
-    "BM_BLUE_IDENTITY_AUDIT": ("BM_BLUE_MEDIA_AUDIT", "Media Audit", "ممیزی رسانه",
+    "BM_BLUE_IDENTITY_AUDIT": ("BM_BLUE_MEDIA_AUDIT", "Removable Media Audit", "ممیزی حافظه‌های جداشدنی",
         "ردگیری اینکه هر حافظه از کجا آمده و به کدام دستگاه خورده است."),
     "BM_BLUE_TRIAGE_BUDGET": ("BM_BLUE_SEGMENT_BUDGET", "Emergency Segmentation Budget", "بودجهٔ جداسازی اضطراری",
         "پول و مجوز برای اینکه جداسازی شبکه این بار واقعاً انجام شود، نه اینکه به جلسهٔ بعد بیفتد."),
@@ -70,12 +74,12 @@ SUBJECTS = {"red": ("Natanz enrichment facility", "تأسیسات غنی‌سا�
 STAGES = [("Contractor workstations", "ایستگاه‌های کاری پیمانکار"),
           ("Industrial control network", "شبکهٔ کنترل صنعتی"),
           ("Centrifuge control system", "سامانهٔ کنترل سانتریفیوژ")]
-SCENARIOS = {"red": [("Cross the air gap", "عبور از فاصلهٔ هوایی"),
+SCENARIOS = {"red": [("Cross the air gap", "نفوذ به شبکهٔ ایزوله"),
                      ("Reach the controllers", "رسیدن به کنترل‌کننده‌ها"),
-                     ("Break the centrifuges", "ازپادرآوردن سانتریفیوژها")],
-             "blue": [("Close the media path", "بستن مسیر رسانه"),
-                      ("Cut the lateral path", "بریدن مسیر جانبی"),
-                      ("Trust the readings", "اعتماد به اعداد")]}
+                     ("Break the centrifuges", "از کار انداختن سانتریفیوژها")],
+             "blue": [("Close the media path", "بستن مسیر حافظه‌های جداشدنی"),
+                      ("Cut the lateral path", "قطع مسیر حرکت جانبی"),
+                      ("Trust the readings", "راستی‌آزمایی اعداد")]}
 STAGE_SLUGS = ["WORKSTATION", "CONTROLNET", "CENTRIFUGE"]
 
 

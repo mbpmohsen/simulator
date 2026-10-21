@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminAuth } from "@/components/AdminAuthGate";
+import { UniversityMark } from "@/components/UniversityMark";
 
 /**
  * The one navigation bar for every admin page.
@@ -40,6 +41,7 @@ export default function AdminNav() {
 			className="sticky top-0 z-40 border-b border-white/10 bg-[#070b17]/95 backdrop-blur"
 		>
 			<div className="mx-auto flex max-w-[1680px] items-center gap-1 overflow-x-auto px-4 py-2 lg:px-8">
+				<UniversityMark size="sm" withTitle={false} className="ml-2 shrink-0" />
 				<span className="ml-3 shrink-0 text-sm font-black text-slate-200">
 					پنل مدیریت
 				</span>

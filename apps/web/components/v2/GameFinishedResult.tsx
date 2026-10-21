@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { UniversityMark } from "@/components/UniversityMark";
 import { GameReportDecisive } from "@/components/v2/GameReportDecisive";
 import { GameReportScorecard } from "@/components/v2/GameReportScorecard";
 import { GameReportTimeline } from "@/components/v2/GameReportTimeline";
@@ -393,12 +394,15 @@ export function GameFinishedResult({
 					</section>
 				)}
 
-				<footer className="mt-6 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-500">
-					<CheckCircle2 className="size-4 text-emerald-300" /> نتیجه نهایی ثبت
-					شد.
-					{terminalEventReceived && (
-						<span>اعلان پایان بازی برای حساب شما دریافت شد.</span>
-					)}
+				<footer className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4 text-xs text-slate-500">
+					<UniversityMark size="md" />
+					<div className="flex flex-wrap items-center gap-2">
+						<CheckCircle2 className="size-4 text-emerald-300" /> نتیجه نهایی ثبت
+						شد.
+						{terminalEventReceived && (
+							<span>اعلان پایان بازی برای حساب شما دریافت شد.</span>
+						)}
+					</div>
 				</footer>
 			</div>
 		</main>

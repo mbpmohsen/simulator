@@ -18,6 +18,7 @@ import {
 	ShieldCheck,
 } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
+import { UniversityMark } from "@/components/UniversityMark";
 import { loginAdmin } from "@/lib/game-plan";
 
 interface LoginCardProps {
@@ -59,6 +60,7 @@ export default function LoginCard({ onAuthenticated }: LoginCardProps) {
 			className="grid min-h-screen place-items-center bg-[#070b17] px-4 py-10 text-slate-100"
 		>
 			<div className="w-full max-w-md">
+				<UniversityMark size="lg" className="mb-5 justify-center" />
 				<div className="mb-5 flex items-center justify-center gap-2 text-xs text-cyan-300">
 					<ShieldCheck className="size-4" /> پنل مدیریت شبیه‌ساز
 				</div>

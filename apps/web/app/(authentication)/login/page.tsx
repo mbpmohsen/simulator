@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { UniversityMark } from "@/components/UniversityMark";
 import { loginUser, signupUser } from "@/server/api.ts";
 import {
 	type AuthErrorResponse,
@@ -73,11 +74,11 @@ export default function LoginPage() {
 		setIsLoading(true);
 
 		try {
-			const response = (mode === "signup"
-				? await signupUser({ username: username.trim(), password })
-				: await loginUser({ username: username.trim(), password })) as
-				| AuthSuccessResponse
-				| AuthErrorResponse;
+			const response = (
+				mode === "signup"
+					? await signupUser({ username: username.trim(), password })
+					: await loginUser({ username: username.trim(), password })
+			) as AuthSuccessResponse | AuthErrorResponse;
 
 			if (!response.success) {
 				setErrorMessage(response.error.message);
@@ -119,10 +120,9 @@ export default function LoginPage() {
 					className="grid overflow-hidden rounded-2xl border border-[#325647] bg-[#0f1a15]/90 shadow-[0_35px_120px_rgba(0,0,0,0.52)] lg:grid-cols-[1.2fr_1fr]"
 				>
 					<div className="relative border-b border-[#2a4238] p-6 sm:p-10 lg:border-b-0 lg:border-l">
+						<UniversityMark size="lg" className="mb-6" />
 						<div className="mb-8 flex flex-wrap items-center gap-3">
-							<motion.div
-								className="inline-flex items-center gap-2 rounded-full border border-[#3f7c65] bg-[#0c231a] px-4 py-2 text-xs tracking-wide text-[#9ccbb3]"
-							>
+							<motion.div className="inline-flex items-center gap-2 rounded-full border border-[#3f7c65] bg-[#0c231a] px-4 py-2 text-xs tracking-wide text-[#9ccbb3]">
 								<Shield className="h-4 w-4" />
 								سامانه شبیه‌ساز عملیات
 							</motion.div>
@@ -147,11 +147,15 @@ export default function LoginPage() {
 						<div className="mt-8 grid gap-3 sm:grid-cols-2">
 							<div className="rounded-xl border border-[#385b4c] bg-[#12241d] p-4">
 								<p className="text-xs text-[#97bba8]">وضعیت بازی</p>
-								<p className="mt-2 text-lg font-bold text-[#dbf4e5]">بازی فعال</p>
+								<p className="mt-2 text-lg font-bold text-[#dbf4e5]">
+									بازی فعال
+								</p>
 							</div>
 							<div className="rounded-xl border border-[#5f3f3f] bg-[#261313] p-4">
 								<p className="text-xs text-[#cdacac]">وضعیت سامانه</p>
-								<p className="mt-2 text-lg font-bold text-[#f4d9d9]">آماده ورود</p>
+								<p className="mt-2 text-lg font-bold text-[#f4d9d9]">
+									آماده ورود
+								</p>
 							</div>
 						</div>
 					</div>
